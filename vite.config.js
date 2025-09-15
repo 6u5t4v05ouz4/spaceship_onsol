@@ -2,8 +2,12 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  base: '/',
+  base: './',
   publicDir: 'public',
+  server: {
+    host: true,
+    port: 3000
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

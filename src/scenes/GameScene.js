@@ -17,30 +17,29 @@ export default class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        // Carrega a spritesheet e o JSON
+        // Define o caminho base para os assets
         this.load.setPath('');
         
-        // Carrega a spritesheet e o JSON com caminhos relativos
-        this.load.atlas('ship', 'assets/images/01.png', 'assets/images/01.json');
+        // Carrega os assets com caminhos absolutos
+        this.load.atlas('ship', '/assets/images/01.png', '/assets/images/01.json');
         
         // Carrega a imagem de idle
-        this.load.image('ship_idle', 'assets/images/idle.png');
+        this.load.image('ship_idle', '/assets/images/idle.png');
         
         // Carrega as imagens de background para o efeito parallax
-        this.load.image('stars', 'assets/background/stars.png');
-        this.load.image('planets', 'assets/images/planets.png');
+        this.load.image('stars', '/assets/background/stars.png');
+        this.load.image('planets', '/assets/images/planets.png');
         
         // Carrega o efeito sonoro do foguete
-        this.load.audio('rocket', 'assets/sounds_effects/rocket.mp3');
+        this.load.audio('rocket', '/assets/sounds_effects/rocket.mp3');
         
-        // Habilita o carregamento de texturas baseado em webp se suportado
-        this.textures.once('addtexture', () => {
-            // Textura carregada com sucesso
-            console.log('Textura carregada com sucesso');
+        // Adiciona logs de depuração
+        this.load.on('filecomplete', function (key, type, data) {
+            console.log('Asset carregado:', key, type);
         });
         
-        this.textures.on('onerror', () => {
-            console.error('Erro ao carregar textura');
+        this.load.on('loaderror', function (file) {
+            console.error('Erro ao carregar asset:', file.src);
         });
     }
 

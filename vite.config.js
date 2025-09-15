@@ -6,26 +6,25 @@ export default defineConfig({
   publicDir: 'public',
   server: {
     host: true,
-    port: 3000
+    port: 3000,
+    strictPort: true,
+    open: true,
   },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
+    assetsInlineLimit: 0, // Força todos os assets a serem copiados em vez de inline
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
       },
       output: {
-        entryFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash][extname]',
         chunkFileNames: 'assets/[name].[hash].js',
-        assetFileNames: 'assets/[name].[hash].[ext]',
-      },
-    },
-  },
-  server: {
-    port: 3000,
-    open: true,
+        entryFileNames: 'assets/[name].[hash].js',
+      }
+    }
   },
   optimizeDeps: {
     include: ['phaser'],

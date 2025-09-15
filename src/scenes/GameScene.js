@@ -18,7 +18,11 @@ export default class GameScene extends Phaser.Scene {
 
     preload() {
         // Carrega a spritesheet e o JSON
+        this.load.setPath('');
+        
+        // Carrega a spritesheet e o JSON com caminhos relativos
         this.load.atlas('ship', 'assets/images/01.png', 'assets/images/01.json');
+        
         // Carrega a imagem de idle
         this.load.image('ship_idle', 'assets/images/idle.png');
         
@@ -28,6 +32,16 @@ export default class GameScene extends Phaser.Scene {
         
         // Carrega o efeito sonoro do foguete
         this.load.audio('rocket', 'assets/sounds_effects/rocket.mp3');
+        
+        // Habilita o carregamento de texturas baseado em webp se suportado
+        this.textures.once('addtexture', () => {
+            // Textura carregada com sucesso
+            console.log('Textura carregada com sucesso');
+        });
+        
+        this.textures.on('onerror', () => {
+            console.error('Erro ao carregar textura');
+        });
     }
 
     create() {

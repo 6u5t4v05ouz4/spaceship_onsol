@@ -30,6 +30,9 @@ export default class GameScene extends Phaser.Scene {
         this.load.image('stars', '/assets/background/stars.png');
         this.load.image('planets', '/assets/images/planets.png');
         
+        // Carrega os assets do projétil
+        this.load.atlas('rocket', '/assets/images/rocket.png', '/assets/images/rocket.json');
+        
         // Carrega o efeito sonoro do foguete
         this.load.audio('rocket', '/assets/sounds_effects/rocket.mp3');
         
@@ -113,6 +116,16 @@ export default class GameScene extends Phaser.Scene {
         // Captura a entrada do teclado
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        
+        // Cria um grupo para os projéteis
+        this.projectiles = this.physics.add.group();
+        
+        // Configura o clique esquerdo do mouse para disparar
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.leftButtonDown()) {
+                this.fireProjectile();
+            }
+        });
     }
 
     createBackground() {
@@ -264,7 +277,70 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
-    update() {
+    fireProjectile() {
+        // Cria um novo projétil na posição da nave
+        const offsetX = Math.cos(this.ship.rotation - Math.PI/2) * 30;
+        const offsetY = Math.sin(this.ship.rotation - Math.PI/2) * 30;
+        
+        // Cria o projétil sem física inicialmente
+        const projectile = this.add.sprite(
+            this.ship.x + offsetX,
+            this.ship.y + offsetY,
+            'rocket',
+            'Sprite-0002-Recovered 0.'
+        );
+        
+        // Configura o projétil
+        projectile.setScale(0.5);
+        projectile.setDepth(1);
+        
+        // Define a rotação do projétil para a mesma da nave
+        projectile.rotation = this.ship.rotation;
+        
+        // Calcula a direção do movimento
+        const angle = this.ship.rotation - Math.PI/2;
+        const speed = 10; // Velocidade mais lenta para melhor controle
+        
+        // Adiciona propriedades de movimento
+        projectile.speedX = Math.cos(angle) * speed;
+        projectile.speedY = Math.sin(angle) * speed;
+        
+        // Adiciona o projétil ao grupo
+        this.projectiles.add(projectile);
+        
+        // Adiciona animação do projétil
+        if (!this.anims.exists('rocket_anim')) {
+            this.anims.create({
+                key: 'rocket_anim',
+                frames: this.anims.generateFrameNames('rocket', {
+                    frames: [0, 1],
+                    prefix: 'Sprite-0002-Recovered ',
+                    suffix: '.'
+                }),
+                frameRate: 5,
+                repeat: -1
+            });
+        }
+        
+        projectile.play('rocket_anim');
+        
+        // Remove o projétil após 3 segundos
+        this.time.delayedCall(3000, () => {
+            if (projectile && projectile.active) {
+                projectile.destroy();
+            }
+        });
+    }
+    
+    update(time, delta) {
+        // Atualiza a posição de todos os projéteis
+        this.projectiles.getChildren().forEach(projectile => {
+            if (projectile.active) {
+                projectile.x += projectile.speedX;
+                projectile.y += projectile.speedY;
+            }
+        });
+
         if (this.ship) {
             // Atualiza o efeito parallax baseado na posição da câmera
             if (this.stars && this.planets) {

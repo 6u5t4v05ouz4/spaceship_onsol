@@ -7,6 +7,8 @@ export default class GameScene extends Phaser.Scene {
         this.cryptoBalance = 0; // Saldo de criptomoedas
         this.miningRate = 0; // Taxa de mineração atual
         this.miningPlanets = []; // Planetas que podem ser minerados
+        this.playerName = 'Piloto'; // Nome padrão do jogador
+        this.playerNameText = null; // Referência para o texto do nome
         
         // Propriedades da nave
         this.shipMaxHealth = 100;
@@ -46,7 +48,11 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
-    create() {
+    create(data) {
+        // Recebe o nome do jogador da cena anterior, se existir
+        if (data && data.playerName) {
+            this.playerName = data.playerName;
+        }
         // Obtém as dimensões da tela
         const screenWidth = this.game.config.width;
         const screenHeight = this.game.config.height;
@@ -91,6 +97,17 @@ export default class GameScene extends Phaser.Scene {
         // Adiciona a nave na tela e inicia a animação de idle
         this.ship = this.physics.add.sprite(0, 0, 'ship_idle');
         this.ship.play('ship_idle');
+        
+        // Adiciona o nome do jogador atrás da nave
+        this.playerNameText = this.add.text(0, 30, this.playerName, {
+            fontFamily: 'Arial',
+            fontSize: '16px',
+            color: '#ffffff',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: { x: 8, y: 4 },
+            borderRadius: 10
+        }).setOrigin(0.5);
+        this.playerNameText.setScrollFactor(1); // Faz o texto seguir a câmera
         
         // Configura a nave
         this.ship.setDrag(0.95); // Adiciona resistência para parar gradualmente
@@ -331,15 +348,23 @@ export default class GameScene extends Phaser.Scene {
             }
         });
     }
-    
+
     update(time, delta) {
         // Atualiza a posição de todos os projéteis
-        this.projectiles.getChildren().forEach(projectile => {
-            if (projectile.active) {
-                projectile.x += projectile.speedX;
-                projectile.y += projectile.speedY;
-            }
-        });
+        if (this.projectiles) {
+            this.projectiles.getChildren().forEach(projectile => {
+                if (projectile.active && projectile.speedX !== undefined) {
+                    projectile.x += projectile.speedX;
+                    projectile.y += projectile.speedY;
+                }
+            });
+        }
+
+        // Atualiza a posição do texto do nome do jogador
+        if (this.playerNameText && this.ship) {
+            this.playerNameText.x = this.ship.x;
+            this.playerNameText.y = this.ship.y + 40; // Posição abaixo da nave
+        }
 
         if (this.ship) {
             // Atualiza o efeito parallax baseado na posição da câmera

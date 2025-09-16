@@ -10,7 +10,9 @@ export default class MenuScene extends Phaser.Scene {
 
     preload() {
         // Carrega os assets do menu
-        this.load.image('ship_idle', '/assets/images/idle.png');
+        this.load.image('phantom_logo', '/assets/icones/phantom_logo.png'); // Assumindo que o logo está aqui
+        this.load.image('input_bg', '/assets/icones/input_bg.png'); // Assumindo que existe uma imagem para o fundo do input
+        // Removidas as cargas de astronaut_icon e naves para a tela inicial
     }
 
     create() {
@@ -23,7 +25,7 @@ export default class MenuScene extends Phaser.Scene {
 
         // Título estilizado (look digital)
         const titleY = H * 0.08;
-        this.add.text(W / 2, titleY, 'SPACE CRYPTO MINER', {
+        const titleText = this.add.text(W / 2 + 30, titleY, 'SPACE CRYPTO MINER', {
             fontFamily: 'Arial',
             fontSize: Math.round(44 * scaleFactor) + 'px',
             color: '#00ffcc',
@@ -32,27 +34,21 @@ export default class MenuScene extends Phaser.Scene {
             shadow: { offsetX: 2, offsetY: 2, color: '#000000', blur: 4 }
         }).setOrigin(0.5).setDepth(5);
 
+        // Astronauta removido da tela inicial
+
         // Subtítulo / efeito digital
-        this.add.text(W / 2, titleY + (36 * scaleFactor), 'CONQUISTE O ESPAÇO COM SUA CARTEIRA', {
+        this.add.text(W / 2, titleY + (36 * scaleFactor), 'CONQUISTE O ESPAÇO COM SUA CARTEIRA PHANTOM', {
             fontFamily: 'Arial',
-            fontSize: Math.round(16 * scaleFactor) + 'px',
-            color: '#99ffe6'
+            fontSize: Math.round(18 * scaleFactor) + 'px',
+            color: '#aef7ee',
+            stroke: '#002830',
+            strokeThickness: Math.max(1, Math.round(2 * scaleFactor)),
+            align: 'center'
         }).setOrigin(0.5).setDepth(5).setAlpha(0.95);
 
-        // Adiciona a nave mais acima para liberar espaço para input e opções
-        const shipY = H * 0.28;
-        this.ship = this.add.image(W / 2, shipY, 'ship_idle');
-        this.ship.setScale(0.45 * scaleFactor).setDepth(4);
-        this.tweens.add({
-            targets: this.ship,
-            y: this.ship.y - (6 * scaleFactor),
-            duration: 2200,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
+        // Seção de seleção de nave removida por solicitação
 
-        // Cria o input de nome de usuário
+        // Cria o texto "DIGITE SEU NOME:"
         this.add.text(
             this.cameras.main.width / 2,
             this.cameras.main.height / 2 - 150,
@@ -101,10 +97,8 @@ export default class MenuScene extends Phaser.Scene {
             // Atualiza o texto / placeholder
             if (this.playerName.length === 0) {
                 this.playerNameText.setText('DIGITE AQUI (EX: NOME123)').setAlpha(0.7);
-                if (this.playerNameUnderShip) this.playerNameUnderShip.setText('');
             } else {
                 this.playerNameText.setText(this.playerName).setAlpha(1);
-                if (this.playerNameUnderShip) this.playerNameUnderShip.setText(this.playerName);
             }
         });
 
@@ -237,13 +231,13 @@ export default class MenuScene extends Phaser.Scene {
             phantomText.setPosition(centerX, baseY + (btnHeight / 2) + (mobileGap / 2));
         }
 
-        // Nome do jogador sob a nave
-        const nameUnderShipY = shipY + Math.round(48 * scaleFactor);
-        this.playerNameUnderShip = this.add.text(W / 2, nameUnderShipY, '', {
-            fontFamily: 'Arial',
-            fontSize: Math.round(18 * scaleFactor) + 'px',
-            color: '#ffffff'
-        }).setOrigin(0.5).setDepth(6);
+        // store references so mobile stacking logic can run later
+        this.guestButton = guestBg;
+        this.phantomButton = phantomBg;
+
+        // adiciona ícone Phantom no botão
+        const phantomIconX = phantomBg.x - Math.round(btnWidth / 2) + 28;
+        this.add.image(phantomIconX, phantomBg.y, 'phantom_logo').setDepth(7).setScale(Math.max(0.28, scaleFactor * 0.6));
 
         // Efeito de fade in
         this.cameras.main.fadeIn(1000, 0, 0, 0);
@@ -278,27 +272,18 @@ export default class MenuScene extends Phaser.Scene {
         if (this.guestButton && this.phantomButton) {
             // For mobile screens, stack buttons vertically
             if (this.scale.width < 480) {
-                const centerX = this.cameras.main.centerX;
-                this.guestButton.setPosition(centerX, this.guestButton.y);
-                this.phantomButton.setPosition(centerX, this.guestButton.y + this.guestButton.displayHeight + 10);
+                const centerX2 = this.cameras.main.centerX;
+                this.guestButton.setPosition(centerX2, this.guestButton.y);
+                this.phantomButton.setPosition(centerX2, this.guestButton.y + this.guestButton.displayHeight + 10);
             }
         }
 
-        // Add player name text below the ship if not already created
-        if (this.ship && !this.playerNameUnderShip) {
-            this.playerNameUnderShip = this.add.text(
-                this.ship.x,
-                this.ship.y + this.ship.displayHeight + 20,
-                "",
-                { font: "20px digitalFont", fill: "#FFFFFF" }
-            ).setOrigin(0.5, 0).setDepth(10);
-        }
-
-        // Listen to changes in the input field and update the player's name under the ship
-        if (this.nameInput && this.playerNameUnderShip) {
+        // Listen to changes in the input field (se existir)
+        if (this.nameInput) {
             // Ensure the DOM element has been created; for Phaser DOM element use node property
             this.nameInput.node.addEventListener('input', (e) => {
-                this.playerNameUnderShip.setText(e.target.value);
+                this.playerNameText.setText(e.target.value);
+                this.playerName = e.target.value;
             });
         }
     }
@@ -425,10 +410,8 @@ export default class MenuScene extends Phaser.Scene {
         }
     }
 
-    // Ensure player's name text stays under the ship during gameplay
+    // update vazio pois a nave foi removida da tela inicial
     update() {
-        if (this.ship && this.playerNameUnderShip) {
-            this.playerNameUnderShip.setPosition(this.ship.x, this.ship.y + this.ship.displayHeight + 20);
-        }
+        // nada para atualizar aqui no menu por enquanto
     }
 }

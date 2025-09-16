@@ -10,8 +10,6 @@ export default class MenuScene extends Phaser.Scene {
 
     preload() {
         // Carrega os assets do menu
-        this.load.image('stars', '/assets/background/stars.png');
-        this.load.image('planets', '/assets/images/planets.png');
         this.load.image('ship_idle', '/assets/images/idle.png');
     }
 
@@ -122,21 +120,37 @@ export default class MenuScene extends Phaser.Scene {
     }
     
     createBackground() {
-        // Configuração do efeito parallax (mesmo da gameplay)
-        const worldWidth = this.cameras.main.width;
-        const worldHeight = this.cameras.main.height;
+        // Cria um fundo preto para o espaço
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
         
-        // Camada de fundo (estrelas)
-        this.stars = this.add.tileSprite(0, 0, worldWidth, worldHeight, 'stars');
-        this.stars.setOrigin(0);
-        this.stars.setScale(2);
-        this.stars.setDepth(-10);
+        this.add.rectangle(
+            0, 
+            0, 
+            width, 
+            height, 
+            0x000000
+        ).setOrigin(0).setDepth(-10);
         
-        // Camada de planetas
-        this.planets = this.add.tileSprite(0, 0, worldWidth, worldHeight, 'planets');
-        this.planets.setOrigin(0);
-        this.planets.setScale(1.5);
-        this.planets.setDepth(-5);
+        // Cria estrelas distantes (camada 1 - parallax lento)
+        this.distantStars = this.add.group();
+        for (let i = 0; i < 50; i++) {
+            const x = Phaser.Math.Between(0, width);
+            const y = Phaser.Math.Between(0, height);
+            const star = this.add.rectangle(x, y, 1, 1, 0xffffff);
+            star.setDepth(-9);
+            this.distantStars.add(star);
+        }
+        
+        // Cria estrelas brilhantes (camada 2 - parallax mais rápido)
+        this.brightStars = this.add.group();
+        for (let i = 0; i < 10; i++) {
+            const x = Phaser.Math.Between(0, width);
+            const y = Phaser.Math.Between(0, height);
+            const star = this.add.rectangle(x, y, 2, 2, 0xffffff);
+            star.setDepth(-8);
+            this.brightStars.add(star);
+        }
     }
     
     selectOption(index) {

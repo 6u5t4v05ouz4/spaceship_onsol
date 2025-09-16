@@ -136,6 +136,14 @@ export default class GameScene extends Phaser.Scene {
         // Adiciona a nave na tela e inicia a animação de idle
         this.ship = this.physics.add.sprite(0, 0, 'ship_idle');
         this.ship.play('ship_idle');
+
+        // Adiciona o nome do jogador abaixo da nave
+        this.playerNameText = this.add.text(this.ship.x, this.ship.y + 40, this.playerName, {
+            fontFamily: 'Arial',
+            fontSize: '16px',
+            color: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(5);
         
         // Cria inimigos
         this.createEnemies();

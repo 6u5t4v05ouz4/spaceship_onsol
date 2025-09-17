@@ -49,6 +49,10 @@ export default class GameScene extends Phaser.Scene {
         
         // Carrega o efeito sonoro do foguete
         this.load.audio('rocket', '/assets/sounds_effects/rocket.mp3');
+        // Carrega o efeito sonoro da explosão
+        this.load.audio('explosion', '/assets/sounds_effects/explosion.mp3');
+        // Carrega o efeito sonoro do projétil
+        this.load.audio('bullet', '/assets/sounds_effects/bullet.mp3');
         
         // Adiciona logs de depuração
         this.load.on('filecomplete', function (key, type, data) {
@@ -429,7 +433,11 @@ export default class GameScene extends Phaser.Scene {
 
             // Reproduz a animação de explosão (e finaliza quando completar). Se a animação não existir, finalizamos após um breve delay.
             if (this.anims.exists('explosion_anim')) {
-                explosion.once('animationstart', () => console.log('DEBUG: explosion animation started at', explosion.x, explosion.y));
+                explosion.once('animationstart', () => {
+                    console.log('DEBUG: explosion animation started at', explosion.x, explosion.y);
+                    // Toca o som de explosão ao iniciar a animação
+                    try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) { console.warn('Falha ao tocar som de explosao', e); }
+                });
                 explosion.once('animationcomplete', () => {
                     console.log('DEBUG: explosion animation complete for enemy at', enemy.x, enemy.y);
                     finalizeExplosion();
@@ -602,6 +610,8 @@ export default class GameScene extends Phaser.Scene {
         }
         
         projectile.play('rocket_anim');
+        // Toca som do projétil ao disparar
+        try { this.sound.play('bullet', { volume: 0.9 }); } catch (e) { console.warn('Falha ao tocar som de bullet', e); }
         
         // Remove o projétil após 3 segundos
         this.time.delayedCall(3000, () => {

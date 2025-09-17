@@ -36,6 +36,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Carrega os assets do projétil
         this.load.atlas('rocket', '/assets/images/rocket.png', '/assets/images/rocket.json');
+        this.load.atlas('minibullet', '/assets/images/minibullet.png', '/assets/images/minibullet.json');
         
         // Carrega a imagem do inimigo
         this.load.atlas('enemy', '/assets/images/02.png', '/assets/images/02.json');
@@ -563,53 +564,53 @@ export default class GameScene extends Phaser.Scene {
     }
 
     fireProjectile() {
-        // Cria um novo projétil na posição da nave
-        const offsetX = Math.cos(this.ship.rotation - Math.PI/2) * 30;
-        const offsetY = Math.sin(this.ship.rotation - Math.PI/2) * 30;
-        // Cria o projétil como sprite com física
+        // Cria um novo projétil (minibullet) na posição da nave
+        // Calcula primeiro o ângulo de disparo para garantir que o sprite fique alinhado à direção
+        const angle = this.ship.rotation - Math.PI/2;
+        const offsetX = Math.cos(angle) * 30;
+        const offsetY = Math.sin(angle) * 30;
+        // Usa o atlas 'minibullet' para os tiros atuais
         const projectile = this.physics.add.sprite(
             this.ship.x + offsetX,
             this.ship.y + offsetY,
-            'rocket',
-            'Sprite-0002-Recovered 0.'
+            'minibullet',
+            'minibullet 0.aseprite'
         );
-        projectile.setScale(0.5);
+        projectile.setScale(0.6);
         projectile.setDepth(1);
         projectile.setOrigin(0.5, 0.5);
         projectile.body.setAllowGravity(false);
         projectile.setCollideWorldBounds(false);
 
-        // Define a rotação do projétil para a mesma da nave
-        projectile.rotation = this.ship.rotation;
+        // Define a rotação do projétil igual ao ângulo de movimento (corrige orientação "deitada")
+        projectile.rotation = angle;
 
-        // Calcula a direção do movimento e aplica velocidade via física
-        const angle = this.ship.rotation - Math.PI/2;
+        // Aplica velocidade via física
         const speed = 800; // velocidade aplicada ao corpo físico
         projectile.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
 
         // Adiciona o projétil ao grupo de projéteis (grupo físico)
         this.projectiles.add(projectile);
-    // Também define propriedades de movimento manual para compatibilidade com o loop de update
-    // (mantém o comportamento anterior onde o projétil era movido manualmente)
-    const manualSpeed = 10; // pixels por frame, como antes
-    projectile.speedX = Math.cos(angle) * manualSpeed;
-    projectile.speedY = Math.sin(angle) * manualSpeed;
-        
-        // Adiciona animação do projétil
-        if (!this.anims.exists('rocket_anim')) {
+
+        // Também define propriedades de movimento manual para compatibilidade com o loop de update
+        const manualSpeed = 12; // pixels por frame
+        projectile.speedX = Math.cos(angle) * manualSpeed;
+        projectile.speedY = Math.sin(angle) * manualSpeed;
+
+        // Cria/usa animação do minibullet
+        if (!this.anims.exists('minibullet_anim')) {
             this.anims.create({
-                key: 'rocket_anim',
-                frames: this.anims.generateFrameNames('rocket', {
-                    frames: [0, 1],
-                    prefix: 'Sprite-0002-Recovered ',
-                    suffix: '.'
-                }),
-                frameRate: 5,
+                key: 'minibullet_anim',
+                frames: [
+                    { key: 'minibullet', frame: 'minibullet 0.aseprite' },
+                    { key: 'minibullet', frame: 'minibullet 1.aseprite' }
+                ],
+                frameRate: 12,
                 repeat: -1
             });
         }
-        
-        projectile.play('rocket_anim');
+
+        projectile.play('minibullet_anim');
         // Toca som do projétil ao disparar
         try { this.sound.play('bullet', { volume: 0.9 }); } catch (e) { console.warn('Falha ao tocar som de bullet', e); }
         

@@ -491,20 +491,25 @@ export default class GameScene extends Phaser.Scene {
             ).setOrigin(0.5).setDepth(3);
             
             // Adiciona movimento aleatório
-            this.time.addEvent({
+            // guardamos o evento para poder removê-lo quando o inimigo for destruído
+            const movementEvent = this.time.addEvent({
                 delay: Phaser.Math.Between(2000, 5000),
                 callback: () => {
-                    if (enemy.active) {
-                        const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-                        enemy.setVelocity(
-                            Math.cos(angle) * enemy.speed,
-                            Math.sin(angle) * enemy.speed
-                        );
+                    // proteção: o inimigo pode ter sido destruído/invalidado
+                    if (!enemy || !enemy.active || !enemy.body || typeof enemy.setVelocity !== 'function') {
+                        return;
                     }
+                    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+                    enemy.setVelocity(
+                        Math.cos(angle) * enemy.speed,
+                        Math.sin(angle) * enemy.speed
+                    );
                 },
                 callbackScope: this,
                 loop: true
             });
+            // armazena referência para limpar depois
+            enemy._movementTimer = movementEvent;
             
             this.enemies.push(enemy);
             // Add to physics group for collisions
@@ -527,160 +532,106 @@ export default class GameScene extends Phaser.Scene {
     }
 
     hitEnemy(projectile, enemy) {
-        // Remove o projétil
-        projectile.destroy();
-        
-        // Dano ao inimigo (10 de dano por tiro)
-        enemy.health -= 10;
-        
-        // Efeito visual de dano
-        const damageText = this.add.text(enemy.x, enemy.y - 20, '-10', {
-            fontFamily: 'Arial',
-            fontSize: '16px',
-            color: '#ff0000',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5).setDepth(10);
-        
-        // Animação do texto de dano
-        this.tweens.add({
-            targets: damageText,
-            y: enemy.y - 80,
-            alpha: 0,
-            duration: 1000,
-            onComplete: () => {
-                damageText.destroy();
+        // Lógica de dano ao inimigo
+        projectile.destroy(); // Destrói o projétil
+        enemy.health -= 50; // Reduz a vida do inimigo
+    
+        // Atualiza a barra de vida do inimigo
+        const healthPercentage = Math.max(0, enemy.health / enemy.maxHealth);
+        enemy.healthBar.scaleX = healthPercentage;
+    
+        // Se a vida do inimigo chegar a zero, destrói o inimigo
+        if (enemy.health <= 0) {
+            this.createExplosion(enemy.x, enemy.y);
+            this.sound.play('explosion', { volume: 0.5 });
+    
+            // Limpa o timer de movimento antes de destruir o inimigo
+            if (enemy._movementTimer) {
+                enemy._movementTimer.remove(false);
             }
-        });
-        
-        // NOTE: efeito procedural removido — usaremos apenas a animação do atlas para explosões
-        
-        // Atualiza a barra de vida se existir
-        if (enemy.healthBar) {
-            const healthPercent = Math.max(0, enemy.health / enemy.maxHealth);
-            enemy.healthBar.setScale(healthPercent, 1);
-        }
-        
-        // Se o inimigo foi destruído
-        if (enemy.health <= 0 && !enemy.destroyed) {
-            enemy.destroyed = true; // Marca como destruído para evitar chamadas múltiplas
-            console.log('Inimigo destruído, criando explosão...');
-
-            // Guarda posição para spawn da explosão
-            const ex = enemy.x;
-            const ey = enemy.y;
-
-            // Remove e destrói o inimigo imediatamente to avoid lingering
-            try {
-                const idx = this.enemies.indexOf(enemy);
-                if (idx > -1) this.enemies.splice(idx, 1);
-            } catch (ee) { /* ignore */ }
-            try { if (enemy.healthBar) enemy.healthBar.destroy(); } catch (e) {}
-            try { if (enemy.healthBarBg) enemy.healthBarBg.destroy(); } catch (e) {}
-            try { if (this.enemiesGroup && this.enemiesGroup.contains && this.enemiesGroup.contains(enemy)) this.enemiesGroup.remove(enemy, true, true); } catch (e) {}
-            try { if (enemy && enemy.destroy) enemy.destroy(); } catch (e) { console.warn('Error destroying enemy immediately', e); }
-
-            // Cria o sprite de explosão no local removido
-            const firstExplosionFrame = (this.explosionFrameNames && this.explosionFrameNames.length) ? this.explosionFrameNames[0] : null;
-            const explosion = firstExplosionFrame ? this.add.sprite(ex, ey, 'explosion', firstExplosionFrame) : this.add.sprite(ex, ey, 'explosion');
-            explosion.setScale(1.2);
-            explosion.setDepth(2000);
-            explosion.setOrigin(0.5, 0.5);
-            explosion.setScrollFactor(1);
-
-            // Quando explodir, apenas recompensa e destrói a animação
-            if (this.anims.exists('explosion_anim')) {
-                explosion.once('animationstart', () => {
-                    try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) {}
-                });
-                explosion.once('animationcomplete', () => {
-                    try { explosion.destroy(); } catch (e) {}
-                    // reward
-                    this.cryptoBalance += 10;
-                    if (this.cryptoText) this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
-                });
-                explosion.play('explosion_anim');
-                this.activeExplosions.push(explosion);
-            } else {
-                // fallback
-                this.time.delayedCall(400, () => {
-                    try { explosion.destroy(); } catch (e) {}
-                    this.cryptoBalance += 10;
-                    if (this.cryptoText) this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
-                });
+    
+            // Destroi as barras de vida e o inimigo
+            if (enemy.healthBar) enemy.healthBar.destroy();
+            if (enemy.healthBarBg) enemy.healthBarBg.destroy();
+            
+            // Remove o inimigo do array de inimigos
+            const index = this.enemies.indexOf(enemy);
+            if (index > -1) {
+                this.enemies.splice(index, 1);
             }
+            
+            enemy.destroy();
         }
-    }
-
-    // Handler quando projétil atinge meteoro
-    hitMeteor(projectile, meteor) {
-        try { if (projectile && projectile.destroy) projectile.destroy(); } catch (e) {}
-        if (!meteor || !meteor.active) return;
-        console.log('Meteoro atingido, criando explosão...');
-
-        // Cria explosão reutilizando lógica de hitEnemy
-        const firstFrame = (this.explosionFrameNames && this.explosionFrameNames.length) ? this.explosionFrameNames[0] : null;
-        const explosion = firstFrame ? this.add.sprite(meteor.x, meteor.y, 'explosion', firstFrame) : this.add.sprite(meteor.x, meteor.y, 'explosion');
-        explosion.setScale(1.0);
-        explosion.setDepth(2000);
-        explosion.setOrigin(0.5);
-        if (this.anims.exists('explosion_anim')) {
-            explosion.once('animationstart', () => { try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) {} });
-            explosion.once('animationcomplete', () => { try { explosion.destroy(); } catch (e) {}; });
-            explosion.play('explosion_anim');
-        } else {
-            this.time.delayedCall(400, () => { try { explosion.destroy(); } catch (e) {} });
-        }
-
-        try { if (meteor && meteor.destroy) meteor.destroy(); } catch (e) {}
-    }
-
-    shipHitByMeteor(ship, meteor) {
-        if (!meteor || !meteor.active) return;
-        console.log('Nave colidiu com meteoro');
-        // Dano à nave
-        this.shipHealth -= 20;
-        if (this.shipHealth < 0) this.shipHealth = 0;
-
-        // Cria explosão
-        const firstFrame = (this.explosionFrameNames && this.explosionFrameNames.length) ? this.explosionFrameNames[0] : null;
-        const explosion = firstFrame ? this.add.sprite(meteor.x, meteor.y, 'explosion', firstFrame) : this.add.sprite(meteor.x, meteor.y, 'explosion');
-        explosion.setScale(1.1);
-        explosion.setDepth(2000);
-        explosion.setOrigin(0.5);
-        if (this.anims.exists('explosion_anim')) {
-            explosion.once('animationstart', () => { try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) {} });
-            explosion.once('animationcomplete', () => { try { explosion.destroy(); } catch (e) {} });
-            explosion.play('explosion_anim');
-        } else {
-            this.time.delayedCall(400, () => { try { explosion.destroy(); } catch (e) {} });
-        }
-
-        try { if (meteor && meteor.destroy) meteor.destroy(); } catch (e) {}
     }
 
     shipHitByEnemy(ship, enemy) {
-        if (!enemy || !enemy.active) return;
-        console.log('Nave colidiu com inimigo');
-        // Apply damage
-        this.shipHealth -= 30;
-        if (this.shipHealth < 0) this.shipHealth = 0;
-
-        // Small explosion at collision
-        const firstFrame = (this.explosionFrameNames && this.explosionFrameNames.length) ? this.explosionFrameNames[0] : null;
-        const explosion = firstFrame ? this.add.sprite(enemy.x, enemy.y, 'explosion', firstFrame) : this.add.sprite(enemy.x, enemy.y, 'explosion');
-        explosion.setScale(1.0);
-        explosion.setDepth(2000);
-        explosion.setOrigin(0.5);
-        if (this.anims.exists('explosion_anim')) {
-            explosion.once('animationstart', () => { try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) {} });
-            explosion.once('animationcomplete', () => { try { explosion.destroy(); } catch (e) {} });
-            explosion.play('explosion_anim');
-        } else {
-            this.time.delayedCall(300, () => { try { explosion.destroy(); } catch (e) {} });
+        // Reduz a vida da nave do jogador
+        this.shipHealth -= 25;
+        this.updateUI(); // CORREÇÃO: Chamada para a função correta
+    
+        // Cria uma explosão no ponto de colisão
+        this.createExplosion(ship.x, ship.y);
+        this.sound.play('explosion', { volume: 0.5 });
+    
+        // Limpa o timer de movimento antes de destruir o inimigo
+        if (enemy._movementTimer) {
+            enemy._movementTimer.remove(false);
         }
+    
+        // Destroi as barras de vida e o inimigo
+        if (enemy.healthBar) enemy.healthBar.destroy();
+        if (enemy.healthBarBg) enemy.healthBarBg.destroy();
+        
+        // Remove o inimigo do array de inimigos
+        const index = this.enemies.indexOf(enemy);
+        if (index > -1) {
+            this.enemies.splice(index, 1);
+        }
+        
+        enemy.destroy();
+    
+        // Se a vida da nave do jogador chegar a zero, reinicia a cena
+        if (this.shipHealth <= 0) {
+            this.gameOver();
+        }
+    }
 
-        try { if (enemy && enemy.destroy) enemy.destroy(); } catch (e) {}
+    hitMeteor(projectile, meteor) {
+        projectile.destroy();
+        meteor.health -= 15;
+        if (meteor.health <= 0) {
+            this.createExplosion(meteor.x, meteor.y);
+            this.sound.play('explosion', { volume: 0.3 });
+            meteor.destroy();
+        }
+    }
+
+    shipHitByMeteor(ship, meteor) {
+        this.shipHealth -= 10;
+        this.updateUI();
+        this.createExplosion(meteor.x, meteor.y);
+        this.sound.play('explosion', { volume: 0.3 });
+        meteor.destroy();
+
+        if (this.shipHealth <= 0) {
+            this.gameOver();
+        }
+    }
+
+    createExplosion(x, y) {
+        const explosion = this.add.sprite(x, y, 'explosion');
+        explosion.setDepth(100);
+        explosion.play('explosion_anim');
+        explosion.once('animationcomplete', () => {
+            explosion.destroy();
+        });
+    }
+
+    gameOver() {
+        console.log('Game Over');
+        // Para todos os sons e reinicia a cena
+        this.sound.stopAll();
+        this.scene.restart({ playerName: this.playerName });
     }
 
     createCrosshair() {

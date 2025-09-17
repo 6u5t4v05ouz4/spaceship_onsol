@@ -22,6 +22,12 @@ export default class GameScene extends Phaser.Scene {
         this.shipSpeed = 0.1; // Velocidade base da nave
         this.shipMaxSpeed = 500; // Velocidade máxima
         this.shipAcceleration = 800; // Aceleração da nave
+        // Combustível
+        this.shipMaxFuel = 100; // capacidade máxima do tanque
+        this.shipFuel = this.shipMaxFuel; // combustível atual
+        this.fuelConsumptionRate = 20; // unidades por segundo enquanto acelera
+        this.fuelRechargeRate = 10; // unidades por segundo quando não está acelerando
+        this.fuelDepleted = false; // flag quando tanque vazio
     }
 
     preload() {
@@ -40,6 +46,8 @@ export default class GameScene extends Phaser.Scene {
         
         // Carrega a imagem do inimigo
         this.load.atlas('enemy', '/assets/images/02.png', '/assets/images/02.json');
+        // Carrega atlas de meteoros
+        this.load.atlas('meteoro', '/assets/images/meteoro.png', '/assets/images/meteoro.json');
         
         // Carrega a animação de explosão
         console.log('Carregando textura de explosão...');
@@ -141,7 +149,10 @@ export default class GameScene extends Phaser.Scene {
         // Adiciona a nave na tela e inicia a animação de idle
         this.ship = this.physics.add.sprite(0, 0, 'ship_idle');
         this.ship.play('ship_idle');
-
+        // Ajusta corpo de colisão da nave (circle) para melhorar detecção
+        this.ship.body.setCircle(Math.max(this.ship.width, this.ship.height) / 2 * 0.6);
+        this.ship.body.setOffset(this.ship.width * 0.5 - (Math.max(this.ship.width, this.ship.height) / 2 * 0.6), this.ship.height * 0.5 - (Math.max(this.ship.width, this.ship.height) / 2 * 0.6));
+        
         // Adiciona o nome do jogador abaixo da nave
         this.playerNameText = this.add.text(this.ship.x, this.ship.y + 40, this.playerName, {
             fontFamily: 'Arial',
@@ -209,9 +220,13 @@ export default class GameScene extends Phaser.Scene {
         
         // Cria um grupo para os projéteis
         this.projectiles = this.physics.add.group();
+        // Grupo de meteoros
+        this.meteorsGroup = this.physics.add.group();
         
         // Configura colisões
         this.setupCollisions();
+        // Inicia spawn de meteoros
+        this.createMeteors();
         
         // Configura o clique esquerdo do mouse para disparar
         this.input.on('pointerdown', (pointer) => {
@@ -221,6 +236,78 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
+    createMeteors() {
+        // Spawn periódico de meteoros vindos de bordas do mundo
+        this.time.addEvent({
+            delay: 1200,
+            callback: () => this.spawnMeteor(),
+            callbackScope: this,
+            loop: true
+        });
+    }
+
+    spawnMeteor() {
+        // Spawn relative to the camera viewport edges so meteoros are visible to player
+        const cam = this.cameras && this.cameras.main ? this.cameras.main : null;
+        let x, y;
+        if (cam) {
+            const halfW = cam.width / 2 / cam.zoom;
+            const halfH = cam.height / 2 / cam.zoom;
+            const centerX = cam.scrollX + halfW;
+            const centerY = cam.scrollY + halfH;
+            const side = Phaser.Math.Between(0, 3); // 0:left 1:right 2:top 3:bottom
+            const offset = 80;
+            if (side === 0) { x = centerX - halfW - offset; y = Phaser.Math.Between(centerY - halfH, centerY + halfH); }
+            else if (side === 1) { x = centerX + halfW + offset; y = Phaser.Math.Between(centerY - halfH, centerY + halfH); }
+            else if (side === 2) { x = Phaser.Math.Between(centerX - halfW, centerX + halfW); y = centerY - halfH - offset; }
+            else { x = Phaser.Math.Between(centerX - halfW, centerX + halfW); y = centerY + halfH + offset; }
+        } else {
+            // fallback to world edges
+            const minX = -2000, maxX = 2000, minY = -2000, maxY = 2000;
+            const side = Phaser.Math.Between(0, 3);
+            if (side === 0) { x = minX - 100; y = Phaser.Math.Between(minY, maxY); }
+            else if (side === 1) { x = maxX + 100; y = Phaser.Math.Between(minY, maxY); }
+            else if (side === 2) { x = Phaser.Math.Between(minX, maxX); y = minY - 100; }
+            else { x = Phaser.Math.Between(minX, maxX); y = maxY + 100; }
+        }
+
+        const meteor = this.physics.add.sprite(x, y, 'meteoro', 'meteoro 0.aseprite');
+        meteor.setScale(0.6);
+        meteor.setDepth(1);
+        meteor.setOrigin(0.5);
+        meteor.body.setAllowGravity(false);
+        meteor.setCollideWorldBounds(false);
+        // Ensure body exists and set a circular body for meteor
+        if (meteor.body) {
+            const r = Math.max(meteor.displayWidth, meteor.displayHeight) * 0.45;
+            meteor.body.setCircle(r);
+            meteor.body.setOffset((meteor.displayWidth - r) / 2, (meteor.displayHeight - r) / 2);
+        }
+        meteor.health = 30;
+
+        // Direção aproximada para o centro do mundo com variação
+        const targetX = Phaser.Math.Between(-800, 800);
+        const targetY = Phaser.Math.Between(-800, 800);
+        const angle = Phaser.Math.Angle.Between(meteor.x, meteor.y, targetX, targetY);
+        const speed = Phaser.Math.Between(60, 180);
+        meteor.rotation = angle;
+        meteor.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+
+        // Animação simples de rotação visual (gira enquanto se move)
+        meteor.rotationSpeed = Phaser.Math.FloatBetween(-0.06, 0.06);
+
+        this.meteorsGroup.add(meteor);
+        console.log('Spawned meteor at', x, y, 'velocity', meteor.body.velocity);
+        if (this.meteors && Array.isArray(this.meteors)) {
+            this.meteors.push(meteor);
+        } else {
+            this.meteors = [meteor];
+        }
+
+        // Destroy after a while to avoid memory leak
+        this.time.delayedCall(20000, () => { if (meteor && meteor.active) meteor.destroy(); });
+    }
+    
     createBackground() {
         // Cria um fundo preto para o espaço
         this.add.rectangle(
@@ -352,8 +439,16 @@ export default class GameScene extends Phaser.Scene {
         // Colisão entre projéteis do jogador e inimigos (use the physics group)
         if (!this.enemiesGroup) this.enemiesGroup = this.physics.add.group();
         this.physics.add.overlap(this.projectiles, this.enemiesGroup, this.hitEnemy, null, this);
+        // Colisão entre projéteis e meteoros
+        if (!this.meteorsGroup) this.meteorsGroup = this.physics.add.group();
+        this.physics.add.overlap(this.projectiles, this.meteorsGroup, this.hitMeteor, null, this);
+        // Colisão entre a nave e meteoros
+        this.physics.add.overlap(this.ship, this.meteorsGroup, this.shipHitByMeteor, null, this);
+        // Colisão entre a nave e inimigos (overlap) — também adicionamos collider físico
+        this.physics.add.overlap(this.ship, this.enemiesGroup, this.shipHitByEnemy, null, this);
+        this.physics.add.collider(this.ship, this.enemiesGroup, this.shipHitByEnemy, null, this);
     }
-    
+
     hitEnemy(projectile, enemy) {
         // Remove o projétil
         projectile.destroy();
@@ -458,6 +553,77 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    // Handler quando projétil atinge meteoro
+    hitMeteor(projectile, meteor) {
+        try { if (projectile && projectile.destroy) projectile.destroy(); } catch (e) {}
+        if (!meteor || !meteor.active) return;
+        console.log('Meteoro atingido, criando explosão...');
+
+        // Cria explosão reutilizando lógica de hitEnemy
+        const firstFrame = (this.explosionFrameNames && this.explosionFrameNames.length) ? this.explosionFrameNames[0] : null;
+        const explosion = firstFrame ? this.add.sprite(meteor.x, meteor.y, 'explosion', firstFrame) : this.add.sprite(meteor.x, meteor.y, 'explosion');
+        explosion.setScale(1.0);
+        explosion.setDepth(2000);
+        explosion.setOrigin(0.5);
+        if (this.anims.exists('explosion_anim')) {
+            explosion.once('animationstart', () => { try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) {} });
+            explosion.once('animationcomplete', () => { try { explosion.destroy(); } catch (e) {}; });
+            explosion.play('explosion_anim');
+        } else {
+            this.time.delayedCall(400, () => { try { explosion.destroy(); } catch (e) {} });
+        }
+
+        try { if (meteor && meteor.destroy) meteor.destroy(); } catch (e) {}
+    }
+
+    shipHitByMeteor(ship, meteor) {
+        if (!meteor || !meteor.active) return;
+        console.log('Nave colidiu com meteoro');
+        // Dano à nave
+        this.shipHealth -= 20;
+        if (this.shipHealth < 0) this.shipHealth = 0;
+
+        // Cria explosão
+        const firstFrame = (this.explosionFrameNames && this.explosionFrameNames.length) ? this.explosionFrameNames[0] : null;
+        const explosion = firstFrame ? this.add.sprite(meteor.x, meteor.y, 'explosion', firstFrame) : this.add.sprite(meteor.x, meteor.y, 'explosion');
+        explosion.setScale(1.1);
+        explosion.setDepth(2000);
+        explosion.setOrigin(0.5);
+        if (this.anims.exists('explosion_anim')) {
+            explosion.once('animationstart', () => { try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) {} });
+            explosion.once('animationcomplete', () => { try { explosion.destroy(); } catch (e) {} });
+            explosion.play('explosion_anim');
+        } else {
+            this.time.delayedCall(400, () => { try { explosion.destroy(); } catch (e) {} });
+        }
+
+        try { if (meteor && meteor.destroy) meteor.destroy(); } catch (e) {}
+    }
+
+    shipHitByEnemy(ship, enemy) {
+        if (!enemy || !enemy.active) return;
+        console.log('Nave colidiu com inimigo');
+        // Apply damage
+        this.shipHealth -= 30;
+        if (this.shipHealth < 0) this.shipHealth = 0;
+
+        // Small explosion at collision
+        const firstFrame = (this.explosionFrameNames && this.explosionFrameNames.length) ? this.explosionFrameNames[0] : null;
+        const explosion = firstFrame ? this.add.sprite(enemy.x, enemy.y, 'explosion', firstFrame) : this.add.sprite(enemy.x, enemy.y, 'explosion');
+        explosion.setScale(1.0);
+        explosion.setDepth(2000);
+        explosion.setOrigin(0.5);
+        if (this.anims.exists('explosion_anim')) {
+            explosion.once('animationstart', () => { try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) {} });
+            explosion.once('animationcomplete', () => { try { explosion.destroy(); } catch (e) {} });
+            explosion.play('explosion_anim');
+        } else {
+            this.time.delayedCall(300, () => { try { explosion.destroy(); } catch (e) {} });
+        }
+
+        try { if (enemy && enemy.destroy) enemy.destroy(); } catch (e) {}
+    }
+
     createCrosshair() {
         // Cria a mira do mouse como um círculo vermelho
         this.crosshair = this.add.circle(0, 0, 5, 0xff0000);
@@ -511,12 +677,30 @@ export default class GameScene extends Phaser.Scene {
             fontSize: '16px'
         });
         
+        // Combustível (barra e texto)
+        const fuelBarY = healthBarY + spacing * 1.5 + 30;
+        const fuelBarWidth = 180;
+        const fuelBarHeight = 16;
+        this.fuelBarBg = this.add.rectangle(startX, fuelBarY + fuelBarHeight/2, fuelBarWidth, fuelBarHeight, 0x000000, 0.7)
+            .setOrigin(0, 0.5)
+            .setScrollFactor(0);
+        this.fuelBar = this.add.rectangle(startX, fuelBarY + fuelBarHeight/2, fuelBarWidth, fuelBarHeight, 0x00aaff, 0.95)
+            .setOrigin(0, 0.5)
+            .setScrollFactor(0);
+        this.fuelText = this.add.text(startX + fuelBarWidth + 10, fuelBarY + fuelBarHeight/2, 'Fuel', { ...style, fontSize: '14px' })
+            .setScrollFactor(0)
+            .setDepth(20);
+        
         // Aplica configurações comuns a todos os textos
         [this.cryptoText, this.healthText, this.speedText].forEach(text => {
             text.setScrollFactor(0);
             text.setDepth(20);
             text.setPadding(10, 5);
         });
+        // Ensure fuel UI elements also have scroll factor/depth
+        if (this.fuelBarBg) this.fuelBarBg.setDepth(20).setScrollFactor(0);
+        if (this.fuelBar) this.fuelBar.setDepth(21).setScrollFactor(0);
+        if (this.fuelText) this.fuelText.setDepth(22).setScrollFactor(0);
     }
 
     // Função de zoom removida - agora usamos um zoom fixo
@@ -623,6 +807,14 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+        // rotate meteors visually
+        if (this.meteorsGroup) {
+            this.meteorsGroup.getChildren().forEach(m => {
+                if (m && m.active && m.rotationSpeed) {
+                    m.angle += m.rotationSpeed * (delta/16.66);
+                }
+            });
+        }
         // Debug: spawn de explosão com tecla E
         if (this.testExplosionKey && Phaser.Input.Keyboard.JustDown(this.testExplosionKey)) {
             const cam = this.cameras.main;
@@ -700,7 +892,7 @@ export default class GameScene extends Phaser.Scene {
             this.ship.rotation = Phaser.Math.Angle.Between(this.ship.x, this.ship.y, worldPoint.x, worldPoint.y) + Math.PI / 2;
             
             // Verifica se a barra de espaço está pressionada
-            if (this.spaceKey.isDown) {
+            if (this.spaceKey.isDown && !this.fuelDepleted) {
                 if (!this.isThrusting) {
                     this.ship.play('ship_thrust', true);
                     this.isThrusting = true;
@@ -711,17 +903,28 @@ export default class GameScene extends Phaser.Scene {
                         this.isRocketPlaying = true;
                     }
                 }
-                
                 // Aplica força na direção em que a nave está apontando
                 const angle = this.ship.rotation - Math.PI / 2;
                 const vx = Math.cos(angle) * this.shipSpeed;
                 const vy = Math.sin(angle) * this.shipSpeed;
-                
                 // Aplica a aceleração à nave
                 this.ship.setAcceleration(
                     vx * this.shipAcceleration,
                     vy * this.shipAcceleration
                 );
+
+                // Consome combustível (baseado no delta em segundos)
+                const deltaSec = delta / 1000;
+                this.shipFuel -= this.fuelConsumptionRate * deltaSec;
+                if (this.shipFuel <= 0) {
+                    this.shipFuel = 0;
+                    this.fuelDepleted = true;
+                    // Para a aceleração imediata
+                    this.ship.setAcceleration(0);
+                    this.ship.play('ship_idle', true);
+                    this.isThrusting = false;
+                    if (this.isRocketPlaying) { this.rocketSound.stop(); this.isRocketPlaying = false; }
+                }
             } else {
                 if (this.isThrusting) {
                     this.ship.play('ship_idle', true);
@@ -734,6 +937,27 @@ export default class GameScene extends Phaser.Scene {
                     }
                 }
                 this.ship.setAcceleration(0);
+
+                // Recarrega combustível lentamente quando não está acelerando
+                const deltaSec = delta / 1000;
+                if (!this.fuelDepleted) {
+                    this.shipFuel = Math.min(this.shipMaxFuel, this.shipFuel + this.fuelRechargeRate * deltaSec);
+                } else {
+                    // Se tanque estava vazio, recarrega automaticamente até um pequeno limiar para permitir retomar
+                    this.shipFuel = Math.min(this.shipMaxFuel, this.shipFuel + (this.fuelRechargeRate/2) * deltaSec);
+                    if (this.shipFuel >= 5) {
+                        this.fuelDepleted = false;
+                    }
+                }
+            }
+
+            // Atualiza UI de combustível (se existir)
+            if (this.fuelBar) {
+                const fuelPercent = Math.max(0, this.shipFuel / this.shipMaxFuel);
+                this.fuelBar.setScale(fuelPercent, 1);
+            }
+            if (this.fuelText) {
+                this.fuelText.setText(`${Math.round(this.shipFuel)}/${this.shipMaxFuel}`);
             }
             
             // Limita a velocidade máxima
@@ -797,6 +1021,11 @@ export default class GameScene extends Phaser.Scene {
         const velocity = this.ship.body.velocity;
         const speed = Math.round(Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y));
         this.speedText.setText(`Velocidade: ${speed}`);
+        
+        // Atualiza o combustível
+        const fuelPercent = Math.max(0, this.shipFuel / this.shipMaxFuel);
+        this.fuelBar.setScale(fuelPercent, 1);
+        this.fuelText.setText(`Combustível: ${Math.round(this.shipFuel)}`);
         
         // Muda a cor da velocidade com base na velocidade
         const speedPercent = Math.min(1, speed / this.shipMaxSpeed);

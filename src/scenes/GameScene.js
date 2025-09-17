@@ -28,6 +28,8 @@ export default class GameScene extends Phaser.Scene {
         this.fuelConsumptionRate = 20; // unidades por segundo enquanto acelera
         this.fuelRechargeRate = 10; // unidades por segundo quando não está acelerando
         this.fuelDepleted = false; // flag quando tanque vazio
+        // Culling distance (only render/enable objects within this radius of the ship)
+        this.cullRadius = 1200; // pixels
     }
 
     preload() {
@@ -145,6 +147,19 @@ export default class GameScene extends Phaser.Scene {
             frameRate: 15,
             repeat: 0
         });
+        
+        // Create meteor animation if atlas available
+        if (!this.anims.exists('meteoro_anim') && this.textures.exists('meteoro')) {
+            this.anims.create({
+                key: 'meteoro_anim',
+                frames: [
+                    { key: 'meteoro', frame: 'meteoro 0.aseprite' },
+                    { key: 'meteoro', frame: 'meteoro 1.aseprite' }
+                ],
+                frameRate: 6,
+                repeat: -1
+            });
+        }
         
         // Adiciona a nave na tela e inicia a animação de idle
         this.ship = this.physics.add.sprite(0, 0, 'ship_idle');
@@ -291,10 +306,16 @@ export default class GameScene extends Phaser.Scene {
         const angle = Phaser.Math.Angle.Between(meteor.x, meteor.y, targetX, targetY);
         const speed = Phaser.Math.Between(60, 180);
         meteor.rotation = angle;
-        meteor.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+        // store velocity (pixels per second) for both physics and manual updates
+        meteor.vx = Math.cos(angle) * speed;
+        meteor.vy = Math.sin(angle) * speed;
+        // apply to physics body initially
+        meteor.setVelocity(meteor.vx, meteor.vy);
 
-        // Animação simples de rotação visual (gira enquanto se move)
-        meteor.rotationSpeed = Phaser.Math.FloatBetween(-0.06, 0.06);
+        // Play frames animation if exists (no self-spin)
+        if (this.anims.exists('meteoro_anim')) {
+            meteor.play('meteoro_anim');
+        }
 
         this.meteorsGroup.add(meteor);
         console.log('Spawned meteor at', x, y, 'velocity', meteor.body.velocity);
@@ -308,6 +329,62 @@ export default class GameScene extends Phaser.Scene {
         this.time.delayedCall(20000, () => { if (meteor && meteor.active) meteor.destroy(); });
     }
     
+    // Disable/enable visibility and physics of entities that are far from the player ship to save render/physics work
+    cullEntities() {
+        if (!this.ship) return;
+        const sx = this.ship.x;
+        const sy = this.ship.y;
+        const r = this.cullRadius;
+        const r2 = r * r;
+
+        // Meteors (group)
+        if (this.meteorsGroup) {
+            this.meteorsGroup.getChildren().forEach(m => {
+                if (!m) return;
+                const dx = m.x - sx;
+                const dy = m.y - sy;
+                const inside = (dx*dx + dy*dy) <= r2;
+                // Toggle visible/active/body
+                m.setVisible(inside);
+                if (m.body) {
+                    m.body.enable = inside;
+                }
+                // Keep sprite active flag consistent
+                m.active = inside;
+            });
+        }
+
+        // Enemies (array)
+        if (this.enemies && this.enemies.length) {
+            this.enemies.forEach(e => {
+                if (!e) return;
+                const dx = e.x - sx;
+                const dy = e.y - sy;
+                const inside = (dx*dx + dy*dy) <= r2;
+                e.setVisible(inside);
+                if (e.body) e.body.enable = inside;
+                e.active = inside;
+                // pause/play thrust animation depending on active
+                if (inside) {
+                    if (e.anims && !e.anims.isPlaying) e.play('enemy_thrust', true);
+                } else {
+                    if (e.anims && e.anims.isPlaying) e.anims.pause();
+                }
+            });
+        }
+
+        // Mining planets (array of images)
+        if (this.miningPlanets && this.miningPlanets.length) {
+            this.miningPlanets.forEach(p => {
+                if (!p) return;
+                const dx = p.x - sx;
+                const dy = p.y - sy;
+                const inside = (dx*dx + dy*dy) <= r2;
+                p.setVisible(inside);
+            });
+        }
+    }
+
     createBackground() {
         // Cria um fundo preto para o espaço
         this.add.rectangle(
@@ -489,66 +566,48 @@ export default class GameScene extends Phaser.Scene {
             enemy.destroyed = true; // Marca como destruído para evitar chamadas múltiplas
             console.log('Inimigo destruído, criando explosão...');
 
-            // Esconde o inimigo e desativa seu corpo físico
-            enemy.setVisible(false);
-            enemy.body.enable = false;
+            // Guarda posição para spawn da explosão
+            const ex = enemy.x;
+            const ey = enemy.y;
 
-            // Remove as barras de vida imediatamente
-            if (enemy.healthBar) enemy.healthBar.destroy();
-            if (enemy.healthBarBg) enemy.healthBarBg.destroy();
+            // Remove e destrói o inimigo imediatamente to avoid lingering
+            try {
+                const idx = this.enemies.indexOf(enemy);
+                if (idx > -1) this.enemies.splice(idx, 1);
+            } catch (ee) { /* ignore */ }
+            try { if (enemy.healthBar) enemy.healthBar.destroy(); } catch (e) {}
+            try { if (enemy.healthBarBg) enemy.healthBarBg.destroy(); } catch (e) {}
+            try { if (this.enemiesGroup && this.enemiesGroup.contains && this.enemiesGroup.contains(enemy)) this.enemiesGroup.remove(enemy, true, true); } catch (e) {}
+            try { if (enemy && enemy.destroy) enemy.destroy(); } catch (e) { console.warn('Error destroying enemy immediately', e); }
 
-            // Cria o sprite de explosão no local do inimigo
-            // Cria o sprite de explos e3o no local do inimigo
-            console.log('DEBUG: explosion texture exists?', this.textures.exists('explosion'));
-            if (this.textures.exists('explosion')) {
-                console.log('DEBUG: explosion frames:', this.textures.get('explosion').getFrameNames());
-            }
-
-            // Escolhe o frame inicial correto (se disponível) para garantir que a animação comece no frame Aseprite
+            // Cria o sprite de explosão no local removido
             const firstExplosionFrame = (this.explosionFrameNames && this.explosionFrameNames.length) ? this.explosionFrameNames[0] : null;
-            const explosion = firstExplosionFrame ? this.add.sprite(enemy.x, enemy.y, 'explosion', firstExplosionFrame) : this.add.sprite(enemy.x, enemy.y, 'explosion');
-            // Aumenta depth/scale para garantir visibilidade da animação
+            const explosion = firstExplosionFrame ? this.add.sprite(ex, ey, 'explosion', firstExplosionFrame) : this.add.sprite(ex, ey, 'explosion');
             explosion.setScale(1.2);
             explosion.setDepth(2000);
             explosion.setOrigin(0.5, 0.5);
-            explosion.setAlpha(1);
-            // Garante que a explosão não se mova com a câmera (opcional):
             explosion.setScrollFactor(1);
-            console.log('Sprite de explosão criado:', explosion, 'firstFrame:', firstExplosionFrame);
 
-            // Função de finalização única
-            const finalizeExplosion = () => {
-                console.log('DEBUG: finalizeExplosion called for enemy:', enemy);
-                const index = this.enemies.indexOf(enemy);
-                if (index > -1) this.enemies.splice(index, 1);
-                try { if (enemy && enemy.destroy) enemy.destroy(); } catch (e) { console.warn('Error destroying enemy:', e); }
-                try { if (explosion && explosion.destroy) explosion.destroy(); } catch (e) { console.warn('Error destroying explosion:', e); }
-                this.cryptoBalance += 10;
-                if (this.cryptoText) this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
-            };
-
-            // Reproduz a animação de explosão (e finaliza quando completar). Se a animação não existir, finalizamos após um breve delay.
+            // Quando explodir, apenas recompensa e destrói a animação
             if (this.anims.exists('explosion_anim')) {
                 explosion.once('animationstart', () => {
-                    console.log('DEBUG: explosion animation started at', explosion.x, explosion.y);
-                    // Toca o som de explosão ao iniciar a animação
-                    try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) { console.warn('Falha ao tocar som de explosao', e); }
+                    try { this.sound.play('explosion', { volume: 0.8 }); } catch (e) {}
                 });
                 explosion.once('animationcomplete', () => {
-                    console.log('DEBUG: explosion animation complete for enemy at', enemy.x, enemy.y);
-                    finalizeExplosion();
+                    try { explosion.destroy(); } catch (e) {}
+                    // reward
+                    this.cryptoBalance += 10;
+                    if (this.cryptoText) this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
                 });
                 explosion.play('explosion_anim');
-                // marca como ativo para debug
                 this.activeExplosions.push(explosion);
-                if (this.debugExplosionMarkers) {
-                    const marker = this.add.circle(explosion.x, explosion.y, 6, 0x00ff00).setDepth(3000).setScrollFactor(1);
-                    this.time.delayedCall(800, () => marker.destroy());
-                }
             } else {
-                // fallback: mostra frame estático por 500ms
-                console.warn('WARN: explosion_anim not found; using fallback delay');
-                this.time.delayedCall(500, finalizeExplosion);
+                // fallback
+                this.time.delayedCall(400, () => {
+                    try { explosion.destroy(); } catch (e) {}
+                    this.cryptoBalance += 10;
+                    if (this.cryptoText) this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
+                });
             }
         }
     }
@@ -807,14 +866,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        // rotate meteors visually
-        if (this.meteorsGroup) {
-            this.meteorsGroup.getChildren().forEach(m => {
-                if (m && m.active && m.rotationSpeed) {
-                    m.angle += m.rotationSpeed * (delta/16.66);
-                }
-            });
-        }
+        // Cull entities each frame to limit rendering/physics to nearby objects
+        this.cullEntities();
         // Debug: spawn de explosão com tecla E
         if (this.testExplosionKey && Phaser.Input.Keyboard.JustDown(this.testExplosionKey)) {
             const cam = this.cameras.main;

@@ -23,16 +23,13 @@ export default class MenuScene extends Phaser.Scene {
         const H = this.cameras.main.height;
         const scaleFactor = Phaser.Math.Clamp(W / 900, 0.8, 1.2);
 
-        // Título estilizado (look digital)
+        // Título minimalista mantendo o tema e cores
         const titleY = H * 0.08;
-        const titleText = this.add.text(W / 2 + 30, titleY, 'SPACE CRYPTO MINER', {
+        const titleText = this.add.text(W / 2, titleY, 'SPACE CRYPTO MINER', {
             fontFamily: 'Arial',
-            fontSize: Math.round(44 * scaleFactor) + 'px',
-            color: '#00ffcc',
-            stroke: '#00222a',
-            strokeThickness: Math.round(6 * scaleFactor),
-            shadow: { offsetX: 2, offsetY: 2, color: '#000000', blur: 4 }
-        }).setOrigin(0.5).setDepth(5);
+            fontSize: Math.round(36 * scaleFactor) + 'px',
+            color: '#00ffcc'
+        }).setOrigin(0.5).setDepth(5).setAlpha(0.95);
 
         // Astronauta removido da tela inicial
 
@@ -286,6 +283,29 @@ export default class MenuScene extends Phaser.Scene {
                 this.playerName = e.target.value;
             });
         }
+        // Versão do jogo (minimal, canto inferior direito)
+        // Create visible version label in bottom-right. Create text first so we can size background to fit.
+        this.versionText = this.add.text(W - 12, H - 8, 'ALPHA 0.0.1', {
+            fontFamily: 'Arial',
+            fontSize: '14px',
+            color: '#aef7ee'
+        }).setOrigin(1, 1).setDepth(9999).setScrollFactor(0).setAlpha(1);
+        // compute bounds and draw subtle panel behind the text
+        const vb = this.versionText.getBounds();
+        const padX = 12; const padY = 6;
+        this.versionBg = this.add.rectangle(vb.x + vb.width/2, vb.y + vb.height/2, vb.width + padX, vb.height + padY, 0x001a18, 0.85)
+            .setOrigin(0.5).setDepth(9998).setScrollFactor(0).setStrokeStyle(1, 0x00ffcc, 0.6);
+        console.log('MenuScene: version UI created at', vb);
+        // Keep version positioned after resize
+        this.scale.on('resize', (gameSize) => {
+            const newW = this.cameras.main.width;
+            const newH = this.cameras.main.height;
+            this.versionText.setPosition(newW - 12, newH - 8);
+            const nb = this.versionText.getBounds();
+            this.versionBg.setPosition(nb.x + nb.width/2, nb.y + nb.height/2);
+            this.versionBg.width = nb.width + padX;
+            this.versionBg.height = nb.height + padY;
+        });
     }
     
     createBackground() {

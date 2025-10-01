@@ -14,6 +14,7 @@ export default class GameScene extends Phaser.Scene {
         // Physics group for enemies (used for collisions)
         this.enemiesGroup = null;
         this.isThrusting = false; // Estado do motor da nave
+        this.isGameOver = false; // Flag para prevenir múltiplas chamadas de game over
         this.cryptoBalance = 0; // Saldo de criptomoedas
         this.miningRate = 0; // Taxa de mineração atual
         this.miningPlanets = []; // Planetas que podem ser minerados
@@ -319,10 +320,18 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createMeteors() {
-        // Spawn periódico de meteoros vindos de bordas do mundo - MAIS FREQUENTE
-        this.time.addEvent({
-            delay: 800, // Reduzido de 1200 para 800ms
-            callback: () => this.spawnMeteor(),
+        // Spawn periódico de meteoros vindos de bordas do mundo
+        this.meteorSpawnTimer = this.time.addEvent({
+            delay: 1200, // Spawn a cada 1.2 segundos (mais controlado)
+            callback: () => {
+                // Limita o número máximo de meteoros ativos para evitar sobrecarga
+                const maxMeteors = 20;
+                const currentMeteors = this.meteorsGroup ? this.meteorsGroup.getLength() : 0;
+                
+                if (currentMeteors < maxMeteors) {
+                    this.spawnMeteor();
+                }
+            },
             callbackScope: this,
             loop: true
         });
@@ -359,6 +368,8 @@ export default class GameScene extends Phaser.Scene {
         meteor.setOrigin(0.5);
         meteor.body.setAllowGravity(false);
         meteor.setCollideWorldBounds(false);
+        meteor.body.setDrag(0); // CORREÇÃO: Remove qualquer arrasto que freie o meteoro
+        meteor.body.setMaxVelocity(1000); // CORREÇÃO: Permite velocidades altas
         
         // Ensure body exists and set a circular body for meteor
         if (meteor.body) {
@@ -382,23 +393,22 @@ export default class GameScene extends Phaser.Scene {
         }
         
         const angle = Phaser.Math.Angle.Between(meteor.x, meteor.y, targetX, targetY);
-        const speed = Phaser.Math.Between(80, 220);
-        
-        // CORREÇÃO: Rotação correta baseada na direção do movimento
-        // Ajusta a rotação para que a "frente" do meteoro aponte na direção do movimento
-        meteor.rotation = angle + Math.PI / 2; // Ajuste baseado na orientação do sprite
+        const speed = Phaser.Math.Between(120, 280); // CORREÇÃO: Aumenta velocidade para movimento mais visível
         
         // Armazena velocidade para movimento manual e física
         meteor.vx = Math.cos(angle) * speed;
         meteor.vy = Math.sin(angle) * speed;
         meteor.moveAngle = angle; // Armazena o ângulo de movimento
         
-        // Aplica velocidade inicial
+        // CORREÇÃO: Aplica velocidade constante via física (não será afetada por arrasto)
         meteor.setVelocity(meteor.vx, meteor.vy);
+        
+        // CORREÇÃO: Rotação inicial alinhada com movimento
+        meteor.initialRotation = angle + Math.PI / 2;
+        meteor.rotation = meteor.initialRotation;
 
-        // Adiciona rotação lenta no próprio eixo (tumbling)
-        meteor.angularVelocity = Phaser.Math.FloatBetween(-50, 50); // graus por segundo
-        meteor.setAngularVelocity(meteor.angularVelocity);
+        // Adiciona rotação lenta no próprio eixo (tumbling) - REDUZIDA
+        meteor.tumbleSpeed = Phaser.Math.FloatBetween(-30, 30); // graus por segundo (reduzido)
 
         // Play frames animation if exists
         if (this.anims.exists('meteoro_anim')) {
@@ -417,7 +427,7 @@ export default class GameScene extends Phaser.Scene {
         }
 
         this.meteorsGroup.add(meteor);
-        console.log('Spawned meteor at', x, y, 'moving towards', targetX, targetY);
+        console.log('Spawned meteor at', x, y, 'moving towards', targetX, targetY, 'speed:', speed);
         
         if (this.meteors && Array.isArray(this.meteors)) {
             this.meteors.push(meteor);
@@ -445,24 +455,29 @@ export default class GameScene extends Phaser.Scene {
         const r = this.cullRadius;
         const r2 = r * r;
 
-        // Meteors (group)
+        // Meteors (group) - CORREÇÃO: Mantém física ativa mas controla visibilidade
         if (this.meteorsGroup) {
             this.meteorsGroup.getChildren().forEach(m => {
                 if (!m) return;
                 const dx = m.x - sx;
                 const dy = m.y - sy;
-                const inside = (dx*dx + dy*dy) <= r2;
-                // Toggle visible/active/body
-                m.setVisible(inside);
-                if (m.body) {
-                    m.body.enable = inside;
-                }
-                // Keep sprite active flag consistent
-                m.active = inside;
+                const dist2 = dx*dx + dy*dy;
+                const inside = dist2 <= r2;
                 
-                // Update trail if meteor is active and has trail
+                // Apenas controla visibilidade, NÃO desabilita física
+                m.setVisible(inside);
+                
+                // Update trail if meteor is active and visible and has trail
                 if (inside && m.trailId && this.trailEffects) {
                     this.trailEffects.updateLineTrail(m.trailId, m.x, m.y);
+                }
+                
+                // Se o meteoro estiver MUITO longe (2x o raio de culling), destrói para economizar memória
+                if (dist2 > (r * 2) * (r * 2)) {
+                    if (m.trailId && this.trailEffects) {
+                        this.trailEffects.removeTrail(m.trailId);
+                    }
+                    m.destroy();
                 }
             });
         }
@@ -778,6 +793,9 @@ export default class GameScene extends Phaser.Scene {
     }
 
     shipHitByEnemy(ship, enemy) {
+        // CORREÇÃO: Não sofre dano se já estiver em game over
+        if (this.isGameOver) return;
+        
         // Efeito visual de dano no jogador
         this.juiceManager.damageFlash(ship, 150);
         this.juiceManager.screenShake(200, 8);
@@ -841,6 +859,9 @@ export default class GameScene extends Phaser.Scene {
     }
 
     shipHitByMeteor(ship, meteor) {
+        // CORREÇÃO: Não sofre dano se já estiver em game over
+        if (this.isGameOver) return;
+        
         // Efeitos de dano
         this.juiceManager.damageFlash(ship, 120);
         this.juiceManager.screenShake(150, 5);
@@ -872,12 +893,28 @@ export default class GameScene extends Phaser.Scene {
     gameOver() {
         console.log('Game Over');
         
+        // Previne múltiplas chamadas
+        if (this.isGameOver) return;
+        this.isGameOver = true;
+        
+        // CORREÇÃO: Desabilita colisões imediatamente
+        if (this.ship && this.ship.body) {
+            this.ship.body.enable = false;
+        }
+        
         // Efeito dramático: slow motion + zoom + explosão final
         this.juiceManager.slowMotion(1000, 0.2);
         
         // Explosão grande na nave
         this.particleEffects.createExplosion(this.ship.x, this.ship.y, 'large');
         this.audioManager.playExplosion('large');
+        
+        // Destrói a nave visualmente após um delay
+        this.time.delayedCall(500, () => {
+            if (this.ship) {
+                this.ship.setVisible(false);
+            }
+        });
         
         // Zoom dramático
         this.tweens.add({
@@ -887,11 +924,245 @@ export default class GameScene extends Phaser.Scene {
             ease: 'Cubic.easeIn'
         });
         
-        // Fade out
-        this.juiceManager.fadeOut(1500, () => {
-            // Para todos os sons e reinicia a cena
-            this.sound.stopAll();
-            this.scene.restart({ playerName: this.playerName });
+        // Aguarda os efeitos e então mostra a tela de Game Over
+        this.time.delayedCall(1500, () => {
+            this.showGameOverScreen();
+        });
+    }
+    
+    showGameOverScreen() {
+        // Para todos os sons
+        this.sound.stopAll();
+        
+        // Overlay escuro semi-transparente TELA INTEIRA
+        const overlay = this.add.rectangle(
+            this.cameras.main.scrollX + this.cameras.main.width / 2,
+            this.cameras.main.scrollY + this.cameras.main.height / 2,
+            this.cameras.main.width * 3,
+            this.cameras.main.height * 3,
+            0x000000,
+            0.9
+        ).setScrollFactor(0).setDepth(200);
+        
+        // Container para a tela de Game Over
+        const centerX = this.cameras.main.width / 2;
+        const centerY = this.cameras.main.height / 2;
+        
+        // Painel principal de Game Over - MUITO MAIOR
+        const panelWidth = 700;
+        const panelHeight = 550;
+        
+        const gameOverPanel = this.add.rectangle(
+            centerX,
+            centerY,
+            panelWidth,
+            panelHeight,
+            0x0a0a0f,
+            0.98
+        ).setScrollFactor(0).setDepth(201);
+        
+        // Borda neon MAIS GROSSA
+        const gameOverBorder = this.add.rectangle(
+            centerX,
+            centerY,
+            panelWidth,
+            panelHeight,
+            0xff0000,
+            0
+        ).setScrollFactor(0).setDepth(201).setStrokeStyle(5, 0xff0000, 1);
+        
+        // Borda interna
+        this.add.rectangle(
+            centerX,
+            centerY,
+            panelWidth - 10,
+            panelHeight - 10,
+            0xff0000,
+            0
+        ).setScrollFactor(0).setDepth(201).setStrokeStyle(2, 0xff0000, 0.6);
+        
+        // Título "GAME OVER" - MUITO MAIOR
+        const gameOverText = this.add.text(centerX, centerY - 180, 'GAME OVER', {
+            fontFamily: 'Arial',
+            fontSize: '80px',
+            color: '#ff0000',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 6
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
+        
+        // Efeito de pulso no título
+        this.tweens.add({
+            targets: gameOverText,
+            scale: { from: 1, to: 1.08 },
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Estatísticas do jogador
+        const statsY = centerY - 60;
+        
+        this.add.text(centerX, statsY, '━━━━━━━━━ ESTATÍSTICAS ━━━━━━━━━', {
+            fontFamily: 'Arial',
+            fontSize: '26px',
+            color: '#00d4ff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
+        
+        this.add.text(centerX, statsY + 60, `💰 Crypto Minerado: ${this.cryptoBalance.toFixed(2)}`, {
+            fontFamily: 'Arial',
+            fontSize: '32px',
+            color: '#00ff88',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
+        
+        this.add.text(centerX, statsY + 110, `👤 Piloto: ${this.playerName}`, {
+            fontFamily: 'Arial',
+            fontSize: '26px',
+            color: '#ffffff'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
+        
+        // Botão de Reiniciar - MAIOR
+        const restartBtn = this.add.rectangle(
+            centerX,
+            centerY + 150,
+            400,
+            80,
+            0x00ff00,
+            0.3
+        ).setScrollFactor(0).setDepth(202).setInteractive({ useHandCursor: true })
+        .setStrokeStyle(4, 0x00ff00, 1);
+        
+        const restartText = this.add.text(centerX, centerY + 150, '🔄 JOGAR NOVAMENTE', {
+            fontFamily: 'Arial',
+            fontSize: '30px',
+            color: '#00ff00',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(203);
+        
+        // Botão de Voltar ao Menu - MAIOR
+        const menuBtn = this.add.rectangle(
+            centerX,
+            centerY + 245,
+            400,
+            70,
+            0x00d4ff,
+            0.3
+        ).setScrollFactor(0).setDepth(202).setInteractive({ useHandCursor: true })
+        .setStrokeStyle(3, 0x00d4ff, 0.8);
+        
+        const menuText = this.add.text(centerX, centerY + 245, '🏠 VOLTAR AO MENU', {
+            fontFamily: 'Arial',
+            fontSize: '26px',
+            color: '#00d4ff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(203);
+        
+        // Hover effects - MAIS EVIDENTES
+        restartBtn.on('pointerover', () => {
+            restartBtn.setFillStyle(0x00ff00, 0.6);
+            restartText.setScale(1.1);
+            this.tweens.add({
+                targets: restartBtn,
+                scaleX: 1.05,
+                scaleY: 1.05,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+        });
+        
+        restartBtn.on('pointerout', () => {
+            restartBtn.setFillStyle(0x00ff00, 0.3);
+            restartText.setScale(1);
+            this.tweens.add({
+                targets: restartBtn,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 200
+            });
+        });
+        
+        menuBtn.on('pointerover', () => {
+            menuBtn.setFillStyle(0x00d4ff, 0.6);
+            menuText.setScale(1.1);
+            this.tweens.add({
+                targets: menuBtn,
+                scaleX: 1.05,
+                scaleY: 1.05,
+                duration: 200,
+                ease: 'Back.easeOut'
+            });
+        });
+        
+        menuBtn.on('pointerout', () => {
+            menuBtn.setFillStyle(0x00d4ff, 0.3);
+            menuText.setScale(1);
+            this.tweens.add({
+                targets: menuBtn,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 200
+            });
+        });
+        
+        // Click events
+        restartBtn.on('pointerdown', () => {
+            // Efeito de click
+            restartBtn.setScale(0.95);
+            this.time.delayedCall(100, () => {
+                // Fade out e reinicia
+                this.juiceManager.fadeOut(500, () => {
+                    this.isGameOver = false;
+                    this.scene.restart({ playerName: this.playerName });
+                });
+            });
+        });
+        
+        menuBtn.on('pointerdown', () => {
+            // Efeito de click
+            menuBtn.setScale(0.95);
+            this.time.delayedCall(100, () => {
+                // Fecha o game e volta para a página principal
+                this.juiceManager.fadeOut(500, () => {
+                    // Esconde o container do jogo
+                    const gameLaunch = document.getElementById('game-launch');
+                    if (gameLaunch) {
+                        gameLaunch.style.display = 'none';
+                    }
+                    // Para a cena
+                    this.scene.stop();
+                });
+            });
+        });
+        
+        // Animação de entrada - MAIS DRAMÁTICA
+        overlay.setAlpha(0);
+        gameOverPanel.setScale(0.3);
+        gameOverBorder.setScale(0.3);
+        gameOverText.setScale(0);
+        
+        this.tweens.add({
+            targets: overlay,
+            alpha: 0.9,
+            duration: 600,
+            ease: 'Power2'
+        });
+        
+        this.tweens.add({
+            targets: [gameOverPanel, gameOverBorder],
+            scale: 1,
+            duration: 600,
+            ease: 'Back.easeOut'
+        });
+        
+        this.tweens.add({
+            targets: gameOverText,
+            scale: 1,
+            duration: 800,
+            delay: 300,
+            ease: 'Elastic.easeOut'
         });
     }
 
@@ -903,75 +1174,139 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createUI() {
-        // Estilo base para os textos da UI
-        const style = {
+        // Estilo base para os textos da UI - MELHORADO
+        const titleStyle = {
+            fontSize: '13px',
+            fill: '#00d4ff',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        };
+        
+        const valueStyle = {
             fontSize: '20px',
             fill: '#ffffff',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            padding: { x: 10, y: 5 },
-            stroke: '#000000',
-            strokeThickness: 2,
-            fontFamily: 'Arial, sans-serif'
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
         };
 
-        // Posições ajustadas para o canto superior esquerdo
-        const startX = 20;
-        const startY = 20;
-        const spacing = 35;
+        // Container principal da UI no canto superior esquerdo
+        const startX = 16;
+        const startY = 16;
+        const panelWidth = 280;
+        const panelPadding = 18;
         
-        // Mostra o saldo de criptomoedas
-        this.cryptoText = this.add.text(startX, startY, 'Crypto: 0.00', { ...style, fill: '#00ff00' });
+        // Calcula altura dinâmica do painel
+        const panelHeight = 200;
         
-        // Barra de vida
-        const healthBarY = startY + spacing;
-        const healthBarWidth = 180;
-        const healthBarHeight = 20;
+        // Painel de fundo semi-transparente para melhor legibilidade
+        this.uiPanel = this.add.rectangle(startX, startY, panelWidth, panelHeight, 0x0a0a0f, 0.85)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(18);
         
-        this.healthBarBg = this.add.rectangle(startX, healthBarY + healthBarHeight/2, healthBarWidth, healthBarHeight, 0x000000, 0.7)
-            .setOrigin(0, 0.5)
-            .setScrollFactor(0);
+        // Bordas do painel com efeito neon duplo
+        this.uiPanelBorder = this.add.rectangle(startX, startY, panelWidth, panelHeight, 0x00d4ff, 0)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(18)
+            .setStrokeStyle(2, 0x00d4ff, 0.8);
             
-        this.healthBar = this.add.rectangle(startX, healthBarY + healthBarHeight/2, healthBarWidth, healthBarHeight, 0xff0000, 0.9)
-            .setOrigin(0, 0.5)
-            .setScrollFactor(0);
-            
-        this.healthText = this.add.text(startX, healthBarY + healthBarHeight/2 + 15, 'Vida: 100/100', { 
-            ...style, 
-            fill: '#ff5555',
-            fontSize: '16px'
-        });
+        // Borda interna sutil
+        this.uiPanelInnerBorder = this.add.rectangle(startX + 3, startY + 3, panelWidth - 6, panelHeight - 6, 0x00d4ff, 0)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(18)
+            .setStrokeStyle(1, 0x00d4ff, 0.3);
         
-        // Velocidade
-        this.speedText = this.add.text(startX, healthBarY + spacing * 1.5, 'Velocidade: 0', { 
-            ...style, 
-            fill: '#55aaff',
-            fontSize: '16px'
-        });
+        let currentY = startY + panelPadding;
+        const contentX = startX + panelPadding;
+        const barWidth = panelWidth - (panelPadding * 2);
         
-        // Combustível (barra e texto)
-        const fuelBarY = healthBarY + spacing * 1.5 + 30;
-        const fuelBarWidth = 180;
-        const fuelBarHeight = 16;
-        this.fuelBarBg = this.add.rectangle(startX, fuelBarY + fuelBarHeight/2, fuelBarWidth, fuelBarHeight, 0x000000, 0.7)
-            .setOrigin(0, 0.5)
-            .setScrollFactor(0);
-        this.fuelBar = this.add.rectangle(startX, fuelBarY + fuelBarHeight/2, fuelBarWidth, fuelBarHeight, 0x00aaff, 0.95)
-            .setOrigin(0, 0.5)
-            .setScrollFactor(0);
-        this.fuelText = this.add.text(startX + fuelBarWidth + 10, fuelBarY + fuelBarHeight/2, 'Fuel', { ...style, fontSize: '14px' })
+        // === CRYPTO ===
+        this.add.text(contentX, currentY, '💰 CRYPTO', titleStyle)
             .setScrollFactor(0)
             .setDepth(20);
+        currentY += 20;
         
-        // Aplica configurações comuns a todos os textos
-        [this.cryptoText, this.healthText, this.speedText].forEach(text => {
-            text.setScrollFactor(0);
-            text.setDepth(20);
-            text.setPadding(10, 5);
-        });
-        // Ensure fuel UI elements also have scroll factor/depth
-        if (this.fuelBarBg) this.fuelBarBg.setDepth(20).setScrollFactor(0);
-        if (this.fuelBar) this.fuelBar.setDepth(21).setScrollFactor(0);
-        if (this.fuelText) this.fuelText.setDepth(22).setScrollFactor(0);
+        this.cryptoText = this.add.text(contentX, currentY, '0.00', { 
+            ...valueStyle, 
+            fill: '#00ff88',
+            fontSize: '22px'
+        })
+            .setScrollFactor(0)
+            .setDepth(20);
+        currentY += 32;
+        
+        // === VIDA ===
+        this.add.text(contentX, currentY, '❤️ VIDA', titleStyle)
+            .setScrollFactor(0)
+            .setDepth(20);
+        currentY += 20;
+        
+        // Barra de vida
+        const healthBarHeight = 20;
+        
+        this.healthBarBg = this.add.rectangle(contentX, currentY, barWidth, healthBarHeight, 0x220000, 0.9)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(19)
+            .setStrokeStyle(1, 0x660000, 0.6);
+            
+        this.healthBar = this.add.rectangle(contentX + 1, currentY + 1, barWidth - 2, healthBarHeight - 2, 0xff0000, 1)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(20);
+            
+        this.healthText = this.add.text(contentX + barWidth/2, currentY + healthBarHeight/2, '100/100', { 
+            fontSize: '13px',
+            fill: '#ffffff',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        })
+            .setOrigin(0.5, 0.5)
+            .setScrollFactor(0)
+            .setDepth(21);
+        currentY += healthBarHeight + 16;
+        
+        // === COMBUSTÍVEL ===
+        this.add.text(contentX, currentY, '⚡ COMBUSTÍVEL', titleStyle)
+            .setScrollFactor(0)
+            .setDepth(20);
+        currentY += 20;
+        
+        const fuelBarHeight = 18;
+        
+        this.fuelBarBg = this.add.rectangle(contentX, currentY, barWidth, fuelBarHeight, 0x001a22, 0.9)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(19)
+            .setStrokeStyle(1, 0x004466, 0.6);
+            
+        this.fuelBar = this.add.rectangle(contentX + 1, currentY + 1, barWidth - 2, fuelBarHeight - 2, 0x00aaff, 1)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(20);
+            
+        this.fuelText = this.add.text(contentX + barWidth/2, currentY + fuelBarHeight/2, '100/100', { 
+            fontSize: '12px',
+            fill: '#ffffff',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        })
+            .setOrigin(0.5, 0.5)
+            .setScrollFactor(0)
+            .setDepth(21);
+        currentY += fuelBarHeight + 16;
+        
+        // === VELOCIDADE ===
+        this.speedText = this.add.text(contentX, currentY, '🚀 VEL: 0 km/h', { 
+            fontSize: '13px',
+            fill: '#55aaff',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        })
+            .setScrollFactor(0)
+            .setDepth(20);
     }
 
     // Função de zoom removida - agora usamos um zoom fixo
@@ -1033,7 +1368,7 @@ export default class GameScene extends Phaser.Scene {
                         oldBalance, 
                         this.cryptoBalance, 
                         500,
-                        (value) => `Crypto: ${value.toFixed(2)}`
+                        (value) => `${value.toFixed(2)}`
                     );
                 }
                 
@@ -1118,6 +1453,15 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+        // Debug: Log de performance a cada 5 segundos
+        if (!this.lastDebugTime || time - this.lastDebugTime > 5000) {
+            const meteorCount = this.meteorsGroup ? this.meteorsGroup.getLength() : 0;
+            const enemyCount = this.enemies ? this.enemies.length : 0;
+            const projectileCount = this.projectiles ? this.projectiles.getLength() : 0;
+            console.log(`[PERFORMANCE] Meteoros: ${meteorCount}, Inimigos: ${enemyCount}, Projéteis: ${projectileCount}`);
+            this.lastDebugTime = time;
+        }
+        
         // Renderiza os trails de linha (se houver)
         if (this.trailEffects) {
             this.trailEffects.renderLineTrails();
@@ -1159,6 +1503,26 @@ export default class GameScene extends Phaser.Scene {
                 if (projectile.active && projectile.speedX !== undefined) {
                     projectile.x += projectile.speedX;
                     projectile.y += projectile.speedY;
+                }
+            });
+        }
+        
+        // Atualiza rotação e movimento dos meteoros
+        if (this.meteorsGroup) {
+            this.meteorsGroup.getChildren().forEach(meteor => {
+                if (meteor.active && meteor.body) {
+                    // CORREÇÃO: Garante que a velocidade física está aplicada
+                    if (meteor.vx !== undefined && meteor.vy !== undefined) {
+                        // Reaplica velocidade caso tenha sido resetada
+                        if (Math.abs(meteor.body.velocity.x) < 10 && Math.abs(meteor.body.velocity.y) < 10) {
+                            meteor.setVelocity(meteor.vx, meteor.vy);
+                        }
+                    }
+                    
+                    // Aplica rotação gradual (tumbling) baseada no delta
+                    if (meteor.tumbleSpeed !== undefined) {
+                        meteor.rotation += (meteor.tumbleSpeed * delta) / 1000;
+                    }
                 }
             });
         }
@@ -1335,14 +1699,14 @@ export default class GameScene extends Phaser.Scene {
     
     updateUI() {
         // Atualiza o texto de criptomoedas (já animado no mineCrypto)
-        // this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
+        // this.cryptoText.setText(this.cryptoBalance.toFixed(2));
         
         // Atualiza a barra de vida com animação suave
         const healthPercent = Math.max(0, this.shipHealth / this.shipMaxHealth);
         if (this.healthBar.scaleX !== healthPercent) {
             this.uiAnimations.animateBar(this.healthBar, this.healthBar.scaleX, healthPercent, 250);
         }
-        this.healthText.setText(`Vida: ${Math.round(this.shipHealth)}/${this.shipMaxHealth}`);
+        this.healthText.setText(`${Math.round(this.shipHealth)}/${this.shipMaxHealth}`);
         
         // Efeito de glow pulsante quando vida está baixa
         if (healthPercent < 0.3 && !this.healthText._glowing) {
@@ -1356,14 +1720,14 @@ export default class GameScene extends Phaser.Scene {
         // Atualiza a velocidade
         const velocity = this.ship.body.velocity;
         const speed = Math.round(Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y));
-        this.speedText.setText(`Velocidade: ${speed}`);
+        this.speedText.setText(`🚀 VEL: ${speed} km/h`);
         
         // Atualiza o combustível com animação suave
         const fuelPercent = Math.max(0, this.shipFuel / this.shipMaxFuel);
         if (Math.abs(this.fuelBar.scaleX - fuelPercent) > 0.01) {
             this.uiAnimations.animateBar(this.fuelBar, this.fuelBar.scaleX, fuelPercent, 200, 'Linear');
         }
-        this.fuelText.setText(`Combustível: ${Math.round(this.shipFuel)}`);
+        this.fuelText.setText(`${Math.round(this.shipFuel)}/${this.shipMaxFuel}`);
         
         // Pulso na barra de combustível quando crítico
         if (fuelPercent < 0.2 && !this.fuelBar._pulsing) {
@@ -1389,6 +1753,11 @@ export default class GameScene extends Phaser.Scene {
         // Limpa timer de spawn de inimigos
         if (this.enemySpawnTimer) {
             this.enemySpawnTimer.remove();
+        }
+        
+        // Limpa timer de spawn de meteoros
+        if (this.meteorSpawnTimer) {
+            this.meteorSpawnTimer.remove();
         }
         
         // Limpa todos os efeitos e managers

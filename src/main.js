@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import MenuScene from './scenes/MenuScene';
 import GameScene from './scenes/GameScene';
+import ConfigScene from './scenes/ConfigScene';
 
 // Obtém as dimensões da tela
 const screenWidth = window.innerWidth;
@@ -18,7 +19,7 @@ const config = {
             debug: false
         }
     },
-    scene: [MenuScene, GameScene],
+    scene: [MenuScene, GameScene, ConfigScene],
     // Faz o jogo redimensionar quando a janela é redimensionada
     scale: {
         mode: Phaser.Scale.RESIZE,

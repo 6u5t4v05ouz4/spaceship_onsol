@@ -16,295 +16,19 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     create() {
-        // Adiciona o background (mesmo da gameplay)
-        this.createBackground();
-        // Layout responsivo: usa porcentagens da viewport para evitar sobreposição
+        // Minimal Play-only menu (main UI moved to index.html)
         const W = this.cameras.main.width;
         const H = this.cameras.main.height;
-        const scaleFactor = Phaser.Math.Clamp(W / 900, 0.8, 1.2);
+        this.createBackground();
+        const title = this.add.text(W/2, H*0.22, 'SPACE CRYPTO MINER', { fontFamily:'Arial', fontSize: '36px', color:'#00ffcc' }).setOrigin(0.5);
+        this.add.text(W/2, H*0.28, 'Clique em PLAY na página inicial para começar', { fontFamily:'Arial', fontSize: '16px', color:'#aef7ee' }).setOrigin(0.5);
 
-        // Título minimalista mantendo o tema e cores
-        const titleY = H * 0.08;
-        const titleText = this.add.text(W / 2, titleY, 'SPACE CRYPTO MINER', {
-            fontFamily: 'Arial',
-            fontSize: Math.round(36 * scaleFactor) + 'px',
-            color: '#00ffcc'
-        }).setOrigin(0.5).setDepth(5).setAlpha(0.95);
-
-        // Astronauta removido da tela inicial
-
-        // Subtítulo / efeito digital
-        this.add.text(W / 2, titleY + (36 * scaleFactor), 'CONQUISTE O ESPAÇO COM SUA CARTEIRA PHANTOM', {
-            fontFamily: 'Arial',
-            fontSize: Math.round(18 * scaleFactor) + 'px',
-            color: '#aef7ee',
-            stroke: '#002830',
-            strokeThickness: Math.max(1, Math.round(2 * scaleFactor)),
-            align: 'center'
-        }).setOrigin(0.5).setDepth(5).setAlpha(0.95);
-
-        // Seção de seleção de nave removida por solicitação
-
-        // Cria o texto "DIGITE SEU NOME:"
-        this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2 - 150,
-            'DIGITE SEU NOME:',
-            {
-                fontFamily: 'Arial',
-                fontSize: '32px',
-                color: '#ffffff',
-                stroke: '#000000',
-                strokeThickness: 4
-            }
-        ).setOrigin(0.5);
-
-        // Cria um retângulo para o fundo do input com estilo digital (posicionado responsivamente)
-        const inputY = H * 0.46;
-        const inputW = Math.round(W * 0.42);
-        const inputH = Math.round(56 * scaleFactor);
-        const inputFontSize = Math.round(18 * scaleFactor);
-
-        const inputBg = this.add.rectangle(W / 2, inputY, inputW, inputH, 0x041017, 0.88);
-        inputBg.setStrokeStyle(Math.max(1, Math.round(2 * scaleFactor)), 0x00ffcc);
-
-        // Placeholder e texto do nome do jogador
-        this.playerNameText = this.add.text(W / 2, inputY, 'DIGITE AQUI (EX: NOME123)', {
-            fontFamily: 'Arial',
-            fontSize: inputFontSize + 'px',
-            color: '#66fff0',
-            align: 'center',
-            fixedWidth: inputW - 40
-        }).setOrigin(0.5).setAlpha(0.75);
-
-        // Configura o input de texto
-        this.input.keyboard.on('keydown', event => {
-            if (event.keyCode === 8 && this.playerName.length > 0) {
-                // Backspace
-                this.playerName = this.playerName.slice(0, -1);
-            } else if (event.keyCode === 13) {
-                // Enter - só inicia se tiver nome
-                if (this.playerName.trim() !== '') {
-                    this.scene.start('GameScene', { playerName: this.playerName });
-                }
-            } else if (event.key.length === 1 && this.playerName.length < 15) {
-                // Letras e números
-                this.playerName += event.key;
-            }
-            // Atualiza o texto / placeholder
-            if (this.playerName.length === 0) {
-                this.playerNameText.setText('DIGITE AQUI (EX: NOME123)').setAlpha(0.7);
-            } else {
-                this.playerNameText.setText(this.playerName).setAlpha(1);
-            }
-        });
-
-    // Adiciona as opções de menu como texto (posicionadas no topo em horizontal)
-        this.menuTexts = [];
-        const topMenuY = Math.round(H * 0.16);
-        const topMenuGap = Math.round(Math.max(80, W * 0.08));
-        const startX = Math.round(W / 2 - topMenuGap);
-        for (let i = 0; i < this.menuOptions.length; i++) {
-            const option = this.menuOptions[i];
-            const x = startX + i * topMenuGap;
-            const text = this.add.text(x, topMenuY, option, {
-                fontFamily: 'Arial',
-                fontSize: Math.round(20 * scaleFactor) + 'px',
-                color: i === this.selectedOption ? '#00ffcc' : '#d9ffff',
-                stroke: '#001010',
-                strokeThickness: Math.max(2, Math.round(2 * scaleFactor))
-            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-            text.setDepth(6);
-
-            // hover effect
-            text.on('pointerover', () => text.setStyle({ color: '#88fff0' }));
-            text.on('pointerout', () => text.setStyle({ color: i === this.selectedOption ? '#00ffcc' : '#d9ffff' }));
-            text.on('pointerdown', () => this.selectOption(i));
-
-            this.menuTexts.push(text);
-        }
-
-        // underline para a opção selecionada
-        const underlineW = Math.round(80 * scaleFactor);
-        this.selectedUnderline = this.add.rectangle(W / 2, topMenuY + Math.round(26 * scaleFactor), underlineW, 4, 0x00ffcc).setOrigin(0.5).setDepth(6);
-        this.updateUnderlinePosition();
-
-        // Texto de instrução
-        this.instructionText = this.add.text(W / 2, H * 0.92, 'NOME OBRIGATÓRIO • USE SUA CARTEIRA PHANTOM PARA RECOMPENSAS', {
-            fontFamily: 'Arial',
-            fontSize: Math.round(14 * scaleFactor) + 'px',
-            color: '#88fff0'
-        }).setOrigin(0.5).setAlpha(0.9).setDepth(5);
-
-        // Botões de GUEST e PHANTOM (empilamento em mobile)
-    const isMobileLayout = H < 660 || W < 500;
-    const btnWidth = isMobileLayout ? Math.round(W * 0.7) : Math.round(W * 0.34);
-    const btnHeight = Math.round(56 * scaleFactor);
-    const centerX = W / 2;
-    const baseY = isMobileLayout ? H * 0.70 : H * 0.78;
-    const mobileGap = Math.round(14 * scaleFactor);
-
-        // Botão Guest
-        const guestBg = this.add.rectangle(centerX - Math.round(W * 0.22), baseY, btnWidth, btnHeight, 0x022628, 0.95)
-            .setStrokeStyle(2, 0x00ffcc)
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .setDepth(6);
-        const guestText = this.add.text(centerX - Math.round(W * 0.22), baseY, 'ENTRAR COMO GUEST', {
-            fontFamily: 'Arial',
-            fontSize: '20px',
-            color: '#ccfff6'
-        }).setOrigin(0.5).setDepth(7);
-
-        // hover/pulse
-        guestBg.on('pointerover', () => {
-            this.tweens.add({ targets: guestBg, scaleX: 1.03, scaleY: 1.03, duration: 120, ease: 'Power1' });
-        });
-        guestBg.on('pointerout', () => {
-            this.tweens.add({ targets: guestBg, scaleX: 1, scaleY: 1, duration: 120, ease: 'Power1' });
-        });
-
-        guestBg.on('pointerdown', () => {
-            // Não permite entrar sem nome
-            const name = this.playerName.trim();
-            if (name === '') {
-                this.showTemporaryMessage('DIGITE SEU NOME ANTES DE ENTRAR');
-                return;
-            }
-            this.scene.start('GameScene', { playerName: name });
-        });
-
-        // Ajusta posição se mobile
-        if (isMobileLayout) {
-            guestBg.setPosition(centerX, baseY - (btnHeight / 2) - (mobileGap / 2));
-            guestText.setPosition(centerX, baseY - (btnHeight / 2) - (mobileGap / 2));
-        }
-
-        // Botão Phantom
-        const phantomBg = this.add.rectangle(centerX + Math.round(W * 0.22), baseY, btnWidth, btnHeight, 0x022628, 0.95)
-            .setStrokeStyle(2, 0x00ffcc)
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .setDepth(6);
-        const phantomText = this.add.text(centerX + Math.round(W * 0.22), baseY, 'CONECTAR PHANTOM', {
-            fontFamily: 'Arial',
-            fontSize: '20px',
-            color: '#ccfff6'
-        }).setOrigin(0.5).setDepth(7);
-
-        phantomBg.on('pointerover', () => {
-            this.tweens.add({ targets: phantomBg, scaleX: 1.03, scaleY: 1.03, duration: 120, ease: 'Power1' });
-        });
-        phantomBg.on('pointerout', () => {
-            this.tweens.add({ targets: phantomBg, scaleX: 1, scaleY: 1, duration: 120, ease: 'Power1' });
-        });
-
-        phantomBg.on('pointerdown', async () => {
-            // Não permite conectar sem nome
-            const name = this.playerName.trim();
-            if (name === '') {
-                this.showTemporaryMessage('DIGITE SEU NOME ANTES DE CONECTAR A CARTEIRA');
-                return;
-            }
-
-            // Tenta conectar à carteira Phantom via window.solana
-            if (window && window.solana && window.solana.isPhantom) {
-                try {
-                    const resp = await window.solana.connect();
-                    const pubKey = resp.publicKey ? resp.publicKey.toString() : (window.solana.publicKey && window.solana.publicKey.toString());
-                    // Mantém o nome do jogador digitado, mas anexa informação da carteira
-                    this.scene.start('GameScene', { playerName: name, walletAddress: pubKey });
-                } catch (err) {
-                    console.error('Phantom connection failed', err);
-                    this.showTemporaryMessage('FALHA AO CONECTAR PHANTOM');
-                }
-            } else {
-                this.showTemporaryMessage('PHANTOM NÃO ENCONTRADO');
-            }
-        });
-
-        if (isMobileLayout) {
-            phantomBg.setPosition(centerX, baseY + (btnHeight / 2) + (mobileGap / 2));
-            phantomText.setPosition(centerX, baseY + (btnHeight / 2) + (mobileGap / 2));
-        }
-
-        // store references so mobile stacking logic can run later
-        this.guestButton = guestBg;
-        this.phantomButton = phantomBg;
-
-        // adiciona ícone Phantom no botão
-        const phantomIconX = phantomBg.x - Math.round(btnWidth / 2) + 28;
-        this.add.image(phantomIconX, phantomBg.y, 'phantom_logo').setDepth(7).setScale(Math.max(0.28, scaleFactor * 0.6));
-
-        // Efeito de fade in
-        this.cameras.main.fadeIn(1000, 0, 0, 0);
-
-        // Animação sutil das estrelas (twinkle)
-        this.time.add.event({
-            delay: 300,
-            loop: true,
-            callback: () => {
-                this.distantStars.getChildren().forEach((s, i) => {
-                    if (Phaser.Math.Between(0, 100) > 97) {
-                        this.tweens.add({ targets: s, alpha: 0.2, duration: 200, yoyo: true, ease: 'Sine.easeInOut' });
-                    }
-                });
-                this.brightStars.getChildren().forEach((s, i) => {
-                    if (Phaser.Math.Between(0, 100) > 85) {
-                        this.tweens.add({ targets: s, alpha: 0.1, duration: 150, yoyo: true, ease: 'Sine.easeInOut' });
-                    }
-                });
-            }
-        });
-
-        // Digital overlay lines
-        const linesCount = 6;
-        for (let i = 0; i < linesCount; i++) {
-            const x = Phaser.Math.Between(30, this.cameras.main.width - 30);
-            const line = this.add.rectangle(x, Phaser.Math.Between(120, this.cameras.main.height - 80), 2, Phaser.Math.Between(60, 220), 0x003f35, 0.18).setDepth(3);
-            this.tweens.add({ targets: line, alpha: 0.05, duration: 1500 + i * 120, yoyo: true, repeat: -1 });
-        }
-
-        // After creating guestButton and phantomButton, add mobile stacking logic
-        if (this.guestButton && this.phantomButton) {
-            // For mobile screens, stack buttons vertically
-            if (this.scale.width < 480) {
-                const centerX2 = this.cameras.main.centerX;
-                this.guestButton.setPosition(centerX2, this.guestButton.y);
-                this.phantomButton.setPosition(centerX2, this.guestButton.y + this.guestButton.displayHeight + 10);
-            }
-        }
-
-        // Listen to changes in the input field (se existir)
-        if (this.nameInput) {
-            // Ensure the DOM element has been created; for Phaser DOM element use node property
-            this.nameInput.node.addEventListener('input', (e) => {
-                this.playerNameText.setText(e.target.value);
-                this.playerName = e.target.value;
-            });
-        }
-        // Versão do jogo (minimal, canto inferior direito)
-        // Create visible version label in bottom-right. Create text first so we can size background to fit.
-        this.versionText = this.add.text(W - 12, H - 8, 'ALPHA 0.0.1', {
-            fontFamily: 'Arial',
-            fontSize: '14px',
-            color: '#aef7ee'
-        }).setOrigin(1, 1).setDepth(9999).setScrollFactor(0).setAlpha(1);
-        // compute bounds and draw subtle panel behind the text
-        const vb = this.versionText.getBounds();
-        const padX = 12; const padY = 6;
-        this.versionBg = this.add.rectangle(vb.x + vb.width/2, vb.y + vb.height/2, vb.width + padX, vb.height + padY, 0x001a18, 0.85)
-            .setOrigin(0.5).setDepth(9998).setScrollFactor(0).setStrokeStyle(1, 0x00ffcc, 0.6);
-        console.log('MenuScene: version UI created at', vb);
-        // Keep version positioned after resize
-        this.scale.on('resize', (gameSize) => {
-            const newW = this.cameras.main.width;
-            const newH = this.cameras.main.height;
-            this.versionText.setPosition(newW - 12, newH - 8);
-            const nb = this.versionText.getBounds();
-            this.versionBg.setPosition(nb.x + nb.width/2, nb.y + nb.height/2);
-            this.versionBg.width = nb.width + padX;
-            this.versionBg.height = nb.height + padY;
+        // Play button (starts the game using window.__GAME_CONFIG__ or localStorage)
+        const playBtn = this.add.rectangle(W/2, H/2, 260, 84, 0x00ffcc).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        const playText = this.add.text(W/2, H/2, 'PLAY', { fontFamily:'Arial', fontSize: '28px', color:'#001a18', fontStyle:'bold' }).setOrigin(0.5);
+        playBtn.on('pointerdown', () => {
+            const cfg = window.__GAME_CONFIG__ || { playerName: localStorage.getItem('playerName') || 'Piloto', walletAddress: null, nftImage: null };
+            this.scene.start('GameScene', cfg);
         });
     }
     
@@ -414,19 +138,16 @@ export default class MenuScene extends Phaser.Scene {
                 }
             ).setOrigin(0.5);
         } else if (index === 2) { // CONFIG
-            // Futuramente implementar configurações
-            this.add.text(
-                this.cameras.main.width / 2,
-                this.cameras.main.height / 2 + 250,
-                'CONFIGURAÇÕES EM BREVE!',
-                {
-                    fontFamily: 'Arial',
-                    fontSize: '24px',
-                    color: '#00ff00',
-                    stroke: '#000000',
-                    strokeThickness: 4
-                }
-            ).setOrigin(0.5);
+            // Open configuration scene and pass current playerName and wallet if available
+            const payload = { playerName: this.playerName };
+            // If a wallet was connected via the phantom button earlier, try to pass it
+            if (window && window.solana && window.solana.isPhantom) {
+                try {
+                    const pubKey = window.solana.publicKey ? window.solana.publicKey.toString() : null;
+                    if (pubKey) payload.walletAddress = pubKey;
+                } catch (e) { /* ignore */ }
+            }
+            this.scene.start('ConfigScene', payload);
         }
     }
 

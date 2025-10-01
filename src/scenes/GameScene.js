@@ -1,4 +1,9 @@
 import Phaser from 'phaser';
+import JuiceManager from '../managers/JuiceManager.js';
+import AudioManager from '../managers/AudioManager.js';
+import ParticleEffects from '../effects/ParticleEffects.js';
+import UIAnimations from '../effects/UIAnimations.js';
+import TrailEffects from '../effects/TrailEffects.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -30,6 +35,14 @@ export default class GameScene extends Phaser.Scene {
         this.fuelDepleted = false; // flag quando tanque vazio
         // Culling distance (only render/enable objects within this radius of the ship)
         this.cullRadius = 1200; // pixels
+        
+        // Game Juice Managers
+        this.juiceManager = null;
+        this.audioManager = null;
+        this.particleEffects = null;
+        this.uiAnimations = null;
+        this.trailEffects = null;
+        this.thrustEmitterId = null; // ID do emitter de propulsão
     }
 
     preload() {
@@ -75,11 +88,23 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
-    create(data) {
+    async create(data) {
+        // Inicializa os managers de Game Juice
+        this.juiceManager = new JuiceManager(this);
+        this.audioManager = new AudioManager(this);
+        this.particleEffects = new ParticleEffects(this);
+        this.uiAnimations = new UIAnimations(this);
+        this.trailEffects = new TrailEffects(this);
+        
+        // Fade in suave ao iniciar
+        this.juiceManager.fadeIn(800);
+        
         // Recebe o nome do jogador da cena anterior, se existir
         if (data && data.playerName) {
             this.playerName = data.playerName;
         }
+        // If walletAddress is provided (from MenuScene), try to fetch NFT image and replace ship sprite
+        this.connectedWallet = data && data.walletAddress ? data.walletAddress : null;
         // Obtém as dimensões da tela
         const screenWidth = this.game.config.width;
         const screenHeight = this.game.config.height;
@@ -164,9 +189,51 @@ export default class GameScene extends Phaser.Scene {
         // Adiciona a nave na tela e inicia a animação de idle
         this.ship = this.physics.add.sprite(0, 0, 'ship_idle');
         this.ship.play('ship_idle');
+
+        // If a wallet is connected, try to load NFT image and replace ship texture
+        if (this.connectedWallet) {
+            try {
+                // dynamic import to avoid bundling unless used
+                const { findFirstNftImageForOwner } = await import('../solana_nft.js');
+                const imageUrl = await findFirstNftImageForOwner(this.connectedWallet, { network: 'devnet' });
+                if (imageUrl) {
+                    console.log('Found NFT image for wallet', this.connectedWallet, imageUrl);
+                    // load image into Phaser and replace ship texture
+                    this.load.image('nft_ship', imageUrl);
+                    this.load.once('complete', () => {
+                        try {
+                            // create a temporary sprite to measure size
+                            const tex = this.textures.get('nft_ship');
+                            // replace the ship texture key
+                            if (tex && tex.source && tex.source[0]) {
+                                // Replace current ship texture
+                                this.ship.setTexture('nft_ship');
+                                // adjust size if very large
+                                const maxScale = 0.6;
+                                const w = this.ship.displayWidth;
+                                const h = this.ship.displayHeight;
+                                if (Math.max(w, h) > 256) {
+                                    this.ship.setScale(maxScale);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Failed to apply NFT texture', e);
+                        }
+                    });
+                    this.load.start();
+                } else {
+                    console.log('No NFT image found for wallet', this.connectedWallet);
+                }
+            } catch (e) {
+                console.error('Error while loading NFT image for wallet', this.connectedWallet, e);
+            }
+        }
         // Ajusta corpo de colisão da nave (circle) para melhorar detecção
         this.ship.body.setCircle(Math.max(this.ship.width, this.ship.height) / 2 * 0.6);
         this.ship.body.setOffset(this.ship.width * 0.5 - (Math.max(this.ship.width, this.ship.height) / 2 * 0.6), this.ship.height * 0.5 - (Math.max(this.ship.width, this.ship.height) / 2 * 0.6));
+        
+        // Cria efeito de propulsão com partículas
+        this.thrustEmitterId = this.particleEffects.createThrustEffect(this.ship);
         
         // Adiciona o nome do jogador abaixo da nave
         this.playerNameText = this.add.text(this.ship.x, this.ship.y + 40, this.playerName, {
@@ -532,18 +599,40 @@ export default class GameScene extends Phaser.Scene {
     }
 
     hitEnemy(projectile, enemy) {
+        // Efeitos de impacto (faíscas)
+        const angle = Phaser.Math.Angle.Between(projectile.x, projectile.y, enemy.x, enemy.y);
+        this.particleEffects.createImpactSparks(projectile.x, projectile.y, Phaser.Math.RadToDeg(angle) + 180);
+        
+        // Flash no inimigo
+        this.juiceManager.damageFlash(enemy, 100);
+        
+        // Screen shake pequeno
+        this.juiceManager.screenShake(80, 3);
+        
+        // Som de impacto
+        this.audioManager.playImpact(0.6);
+        
         // Lógica de dano ao inimigo
         projectile.destroy(); // Destrói o projétil
         enemy.health -= 50; // Reduz a vida do inimigo
     
-        // Atualiza a barra de vida do inimigo
+        // Atualiza a barra de vida do inimigo com animação
         const healthPercentage = Math.max(0, enemy.health / enemy.maxHealth);
-        enemy.healthBar.scaleX = healthPercentage;
+        this.uiAnimations.animateBar(enemy.healthBar, enemy.healthBar.scaleX, healthPercentage, 200);
     
         // Se a vida do inimigo chegar a zero, destrói o inimigo
         if (enemy.health <= 0) {
+            // Efeito de impacto grande (shake + flash + slowmo)
+            this.juiceManager.impactEffect('large');
+            
+            // Explosão visual com animação
             this.createExplosion(enemy.x, enemy.y);
-            this.sound.play('explosion', { volume: 0.5 });
+            
+            // Partículas de explosão
+            this.particleEffects.createExplosion(enemy.x, enemy.y, 'medium');
+            
+            // Som de explosão com variação
+            this.audioManager.playExplosion('medium');
     
             // Limpa o timer de movimento antes de destruir o inimigo
             if (enemy._movementTimer) {
@@ -565,13 +654,24 @@ export default class GameScene extends Phaser.Scene {
     }
 
     shipHitByEnemy(ship, enemy) {
+        // Efeito visual de dano no jogador
+        this.juiceManager.damageFlash(ship, 150);
+        this.juiceManager.screenShake(200, 8);
+        this.juiceManager.flash(150, 0xff0000, 0.4);
+        
+        // Mostra dano flutuante
+        this.uiAnimations.showDamage(ship.x, ship.y - 30, 25);
+        
         // Reduz a vida da nave do jogador
         this.shipHealth -= 25;
         this.updateUI(); // CORREÇÃO: Chamada para a função correta
     
         // Cria uma explosão no ponto de colisão
         this.createExplosion(ship.x, ship.y);
-        this.sound.play('explosion', { volume: 0.5 });
+        this.particleEffects.createExplosion(ship.x, ship.y, 'medium');
+        
+        // Som de explosão
+        this.audioManager.playExplosion('large');
     
         // Limpa o timer de movimento antes de destruir o inimigo
         if (enemy._movementTimer) {
@@ -597,20 +697,38 @@ export default class GameScene extends Phaser.Scene {
     }
 
     hitMeteor(projectile, meteor) {
+        // Efeitos de impacto
+        const angle = Phaser.Math.Angle.Between(projectile.x, projectile.y, meteor.x, meteor.y);
+        this.particleEffects.createImpactSparks(projectile.x, projectile.y, Phaser.Math.RadToDeg(angle) + 180);
+        this.juiceManager.screenShake(60, 2);
+        
         projectile.destroy();
         meteor.health -= 15;
+        
         if (meteor.health <= 0) {
             this.createExplosion(meteor.x, meteor.y);
-            this.sound.play('explosion', { volume: 0.3 });
+            this.particleEffects.createExplosion(meteor.x, meteor.y, 'small');
+            this.audioManager.playExplosion('small');
+            this.juiceManager.impactEffect('small');
             meteor.destroy();
+        } else {
+            this.audioManager.playImpact(0.4);
         }
     }
 
     shipHitByMeteor(ship, meteor) {
+        // Efeitos de dano
+        this.juiceManager.damageFlash(ship, 120);
+        this.juiceManager.screenShake(150, 5);
+        this.juiceManager.flash(120, 0xff6600, 0.3);
+        this.uiAnimations.showDamage(ship.x, ship.y - 30, 10);
+        
         this.shipHealth -= 10;
         this.updateUI();
+        
         this.createExplosion(meteor.x, meteor.y);
-        this.sound.play('explosion', { volume: 0.3 });
+        this.particleEffects.createExplosion(meteor.x, meteor.y, 'small');
+        this.audioManager.playExplosion('small');
         meteor.destroy();
 
         if (this.shipHealth <= 0) {
@@ -629,9 +747,28 @@ export default class GameScene extends Phaser.Scene {
 
     gameOver() {
         console.log('Game Over');
-        // Para todos os sons e reinicia a cena
-        this.sound.stopAll();
-        this.scene.restart({ playerName: this.playerName });
+        
+        // Efeito dramático: slow motion + zoom + explosão final
+        this.juiceManager.slowMotion(1000, 0.2);
+        
+        // Explosão grande na nave
+        this.particleEffects.createExplosion(this.ship.x, this.ship.y, 'large');
+        this.audioManager.playExplosion('large');
+        
+        // Zoom dramático
+        this.tweens.add({
+            targets: this.cameras.main,
+            zoom: 0.5,
+            duration: 1000,
+            ease: 'Cubic.easeIn'
+        });
+        
+        // Fade out
+        this.juiceManager.fadeOut(1500, () => {
+            // Para todos os sons e reinicia a cena
+            this.sound.stopAll();
+            this.scene.restart({ playerName: this.playerName });
+        });
     }
 
     createCrosshair() {
@@ -728,6 +865,7 @@ export default class GameScene extends Phaser.Scene {
     mineCrypto() {
         if (this.ship && this.miningPlanets.length > 0) {
             let totalRate = 0;
+            let isMining = false;
             
             // Verifica a distância da nave aos planetas mineráveis
             for (let planet of this.miningPlanets) {
@@ -735,29 +873,59 @@ export default class GameScene extends Phaser.Scene {
                 
                 // Se a nave estiver perto o suficiente, adiciona a taxa de mineração
                 if (distance < 200) {
+                    isMining = true;
                     // Quanto mais perto, maior a taxa de mineração
                     const proximityBonus = Math.max(0, (200 - distance) / 200);
-                    totalRate += planet.miningRate * (1 + proximityBonus);
+                    const rate = planet.miningRate * (1 + proximityBonus);
+                    totalRate += rate;
                     
-                    // Efeito visual de mineração
-                    this.add.circle(planet.x, planet.y, 5, 0xffff00)
-                        .setDepth(5)
-                        .setScale(0.5)
-                        .setAlpha(0.7);
+                    // Efeito de partículas de mineração
+                    this.particleEffects.createMiningEffect(planet.x, planet.y, this.ship.x, this.ship.y);
+                    
+                    // Pulso no planeta quando está minerando
+                    if (!planet.isPulsing) {
+                        planet.isPulsing = true;
+                        this.uiAnimations.pulse(planet, 1.05, 1000, -1);
+                    }
+                } else {
+                    // Remove pulso se estava minerando
+                    if (planet.isPulsing) {
+                        planet.isPulsing = false;
+                        this.tweens.killTweensOf(planet);
+                        planet.setScale(planet.scale);
+                    }
                 }
             }
             
-            // Adiciona criptomoedas ao saldo
-            this.cryptoBalance += totalRate;
-            
-            // Atualiza a interface
-            if (this.cryptoText) {
-                this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
+            // Se está minerando, mostra ganho
+            if (totalRate > 0) {
+                const oldBalance = this.cryptoBalance;
+                this.cryptoBalance += totalRate;
+                
+                // Atualiza a interface com animação
+                if (this.cryptoText) {
+                    this.uiAnimations.animateCounter(
+                        this.cryptoText, 
+                        oldBalance, 
+                        this.cryptoBalance, 
+                        500,
+                        (value) => `Crypto: ${value.toFixed(2)}`
+                    );
+                }
+                
+                // Mostra texto flutuante ocasionalmente (a cada 3 segundos de mineração)
+                if (!this.lastMiningTextTime || Date.now() - this.lastMiningTextTime > 3000) {
+                    this.uiAnimations.showCryptoGain(this.ship.x, this.ship.y - 50, totalRate);
+                    this.lastMiningTextTime = Date.now();
+                }
             }
         }
     }
 
     fireProjectile() {
+        // Recuo leve da nave (juice!)
+        this.juiceManager.screenShake(40, 1);
+        
         // Cria um novo projétil (minibullet) na posição da nave
         // Calcula primeiro o ângulo de disparo para garantir que o sprite fique alinhado à direção
         const angle = this.ship.rotation - Math.PI/2;
@@ -805,18 +973,32 @@ export default class GameScene extends Phaser.Scene {
         }
 
         projectile.play('minibullet_anim');
-        // Toca som do projétil ao disparar
-        try { this.sound.play('bullet', { volume: 0.9 }); } catch (e) { console.warn('Falha ao tocar som de bullet', e); }
+        
+        // Adiciona trilha de partículas ao projétil
+        const trailId = this.particleEffects.createProjectileTrail(projectile);
+        projectile._trailId = trailId; // Armazena para limpar depois
+        
+        // Som do disparo com variação de pitch
+        this.audioManager.playShoot();
         
         // Remove o projétil após 3 segundos
         this.time.delayedCall(3000, () => {
             if (projectile && projectile.active) {
+                // Remove a trilha antes de destruir
+                if (projectile._trailId) {
+                    this.particleEffects.removeEmitter(projectile._trailId);
+                }
                 projectile.destroy();
             }
         });
     }
 
     update(time, delta) {
+        // Renderiza os trails de linha (se houver)
+        if (this.trailEffects) {
+            this.trailEffects.renderLineTrails();
+        }
+        
         // Cull entities each frame to limit rendering/physics to nearby objects
         this.cullEntities();
         // Debug: spawn de explosão com tecla E
@@ -901,11 +1083,21 @@ export default class GameScene extends Phaser.Scene {
                     this.ship.play('ship_thrust', true);
                     this.isThrusting = true;
                     
+                    // Ativa efeito de propulsão com partículas
+                    if (this.thrustEmitterId) {
+                        this.particleEffects.setThrustEmitting(this.thrustEmitterId, true);
+                    }
+                    
                     // Toca o som do foguete se não estiver tocando
                     if (!this.isRocketPlaying) {
                         this.rocketSound.play();
                         this.isRocketPlaying = true;
                     }
+                }
+                
+                // Atualiza a posição do efeito de propulsão
+                if (this.thrustEmitterId) {
+                    this.particleEffects.updateThrustEffect(this.thrustEmitterId);
                 }
                 // Aplica força na direção em que a nave está apontando
                 const angle = this.ship.rotation - Math.PI / 2;
@@ -933,6 +1125,11 @@ export default class GameScene extends Phaser.Scene {
                 if (this.isThrusting) {
                     this.ship.play('ship_idle', true);
                     this.isThrusting = false;
+                    
+                    // Desativa efeito de propulsão
+                    if (this.thrustEmitterId) {
+                        this.particleEffects.setThrustEmitting(this.thrustEmitterId, false);
+                    }
                     
                     // Para o som do foguete
                     if (this.isRocketPlaying) {
@@ -1013,23 +1210,45 @@ export default class GameScene extends Phaser.Scene {
     }
     
     updateUI() {
-        // Atualiza o texto de criptomoedas
-        this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
+        // Atualiza o texto de criptomoedas (já animado no mineCrypto)
+        // this.cryptoText.setText(`Crypto: ${this.cryptoBalance.toFixed(2)}`);
         
-        // Atualiza a barra de vida
+        // Atualiza a barra de vida com animação suave
         const healthPercent = Math.max(0, this.shipHealth / this.shipMaxHealth);
-        this.healthBar.setScale(healthPercent, 1);
+        if (this.healthBar.scaleX !== healthPercent) {
+            this.uiAnimations.animateBar(this.healthBar, this.healthBar.scaleX, healthPercent, 250);
+        }
         this.healthText.setText(`Vida: ${Math.round(this.shipHealth)}/${this.shipMaxHealth}`);
+        
+        // Efeito de glow pulsante quando vida está baixa
+        if (healthPercent < 0.3 && !this.healthText._glowing) {
+            this.healthText._glowing = true;
+            this.uiAnimations.glowPulse(this.healthText, '#ff0000');
+        } else if (healthPercent >= 0.3 && this.healthText._glowing) {
+            this.healthText._glowing = false;
+            this.uiAnimations.removeGlow(this.healthText);
+        }
         
         // Atualiza a velocidade
         const velocity = this.ship.body.velocity;
         const speed = Math.round(Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y));
         this.speedText.setText(`Velocidade: ${speed}`);
         
-        // Atualiza o combustível
+        // Atualiza o combustível com animação suave
         const fuelPercent = Math.max(0, this.shipFuel / this.shipMaxFuel);
-        this.fuelBar.setScale(fuelPercent, 1);
+        if (Math.abs(this.fuelBar.scaleX - fuelPercent) > 0.01) {
+            this.uiAnimations.animateBar(this.fuelBar, this.fuelBar.scaleX, fuelPercent, 200, 'Linear');
+        }
         this.fuelText.setText(`Combustível: ${Math.round(this.shipFuel)}`);
+        
+        // Pulso na barra de combustível quando crítico
+        if (fuelPercent < 0.2 && !this.fuelBar._pulsing) {
+            this.fuelBar._pulsing = true;
+            this.fuelBar.setTint(0xff6600);
+        } else if (fuelPercent >= 0.2 && this.fuelBar._pulsing) {
+            this.fuelBar._pulsing = false;
+            this.fuelBar.clearTint();
+        }
         
         // Muda a cor da velocidade com base na velocidade
         const speedPercent = Math.min(1, speed / this.shipMaxSpeed);
@@ -1037,5 +1256,24 @@ export default class GameScene extends Phaser.Scene {
         const g = Math.round(170 - 170 * speedPercent);
         const b = 255;
         this.speedText.setColor(`rgb(${r},${g},${b})`);
+    }
+    
+    /**
+     * Cleanup ao destruir a cena - libera recursos dos managers
+     */
+    shutdown() {
+        // Limpa todos os efeitos e managers
+        if (this.particleEffects) {
+            this.particleEffects.cleanup();
+        }
+        if (this.trailEffects) {
+            this.trailEffects.cleanup();
+        }
+        if (this.uiAnimations) {
+            this.uiAnimations.cleanup();
+        }
+        if (this.audioManager) {
+            this.audioManager.destroy();
+        }
     }
 }

@@ -319,9 +319,9 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createMeteors() {
-        // Spawn periódico de meteoros vindos de bordas do mundo
+        // Spawn periódico de meteoros vindos de bordas do mundo - MAIS FREQUENTE
         this.time.addEvent({
-            delay: 1200,
+            delay: 800, // Reduzido de 1200 para 800ms
             callback: () => this.spawnMeteor(),
             callbackScope: this,
             loop: true
@@ -338,7 +338,7 @@ export default class GameScene extends Phaser.Scene {
             const centerX = cam.scrollX + halfW;
             const centerY = cam.scrollY + halfH;
             const side = Phaser.Math.Between(0, 3); // 0:left 1:right 2:top 3:bottom
-            const offset = 80;
+            const offset = 120;
             if (side === 0) { x = centerX - halfW - offset; y = Phaser.Math.Between(centerY - halfH, centerY + halfH); }
             else if (side === 1) { x = centerX + halfW + offset; y = Phaser.Math.Between(centerY - halfH, centerY + halfH); }
             else if (side === 2) { x = Phaser.Math.Between(centerX - halfW, centerX + halfW); y = centerY - halfH - offset; }
@@ -354,11 +354,12 @@ export default class GameScene extends Phaser.Scene {
         }
 
         const meteor = this.physics.add.sprite(x, y, 'meteoro', 'meteoro 0.aseprite');
-        meteor.setScale(0.6);
+        meteor.setScale(Phaser.Math.FloatBetween(0.5, 0.8)); // Variação no tamanho
         meteor.setDepth(1);
         meteor.setOrigin(0.5);
         meteor.body.setAllowGravity(false);
         meteor.setCollideWorldBounds(false);
+        
         // Ensure body exists and set a circular body for meteor
         if (meteor.body) {
             const r = Math.max(meteor.displayWidth, meteor.displayHeight) * 0.45;
@@ -367,25 +368,57 @@ export default class GameScene extends Phaser.Scene {
         }
         meteor.health = 30;
 
-        // Direção aproximada para o centro do mundo com variação
-        const targetX = Phaser.Math.Between(-800, 800);
-        const targetY = Phaser.Math.Between(-800, 800);
+        // Direção mais inteligente - pode ir em direção ao jogador ou área central
+        let targetX, targetY;
+        
+        if (this.ship && Phaser.Math.Between(0, 100) < 40) {
+            // 40% de chance de ir em direção ao jogador
+            targetX = this.ship.x + Phaser.Math.Between(-200, 200);
+            targetY = this.ship.y + Phaser.Math.Between(-200, 200);
+        } else {
+            // Senão, vai para área central com variação
+            targetX = Phaser.Math.Between(-600, 600);
+            targetY = Phaser.Math.Between(-600, 600);
+        }
+        
         const angle = Phaser.Math.Angle.Between(meteor.x, meteor.y, targetX, targetY);
-        const speed = Phaser.Math.Between(60, 180);
-        meteor.rotation = angle;
-        // store velocity (pixels per second) for both physics and manual updates
+        const speed = Phaser.Math.Between(80, 220);
+        
+        // CORREÇÃO: Rotação correta baseada na direção do movimento
+        // Ajusta a rotação para que a "frente" do meteoro aponte na direção do movimento
+        meteor.rotation = angle + Math.PI / 2; // Ajuste baseado na orientação do sprite
+        
+        // Armazena velocidade para movimento manual e física
         meteor.vx = Math.cos(angle) * speed;
         meteor.vy = Math.sin(angle) * speed;
-        // apply to physics body initially
+        meteor.moveAngle = angle; // Armazena o ângulo de movimento
+        
+        // Aplica velocidade inicial
         meteor.setVelocity(meteor.vx, meteor.vy);
 
-        // Play frames animation if exists (no self-spin)
+        // Adiciona rotação lenta no próprio eixo (tumbling)
+        meteor.angularVelocity = Phaser.Math.FloatBetween(-50, 50); // graus por segundo
+        meteor.setAngularVelocity(meteor.angularVelocity);
+
+        // Play frames animation if exists
         if (this.anims.exists('meteoro_anim')) {
             meteor.play('meteoro_anim');
         }
 
+        // Adiciona trail effect ao meteoro
+        if (this.trailEffects) {
+            meteor.trailId = this.trailEffects.createLineTrail(
+                `meteor_${Date.now()}_${Math.random()}`, 
+                15, // maxPoints
+                0xff6600, // cor laranja
+                0.4, // alpha
+                2 // width
+            );
+        }
+
         this.meteorsGroup.add(meteor);
-        console.log('Spawned meteor at', x, y, 'velocity', meteor.body.velocity);
+        console.log('Spawned meteor at', x, y, 'moving towards', targetX, targetY);
+        
         if (this.meteors && Array.isArray(this.meteors)) {
             this.meteors.push(meteor);
         } else {
@@ -393,7 +426,15 @@ export default class GameScene extends Phaser.Scene {
         }
 
         // Destroy after a while to avoid memory leak
-        this.time.delayedCall(20000, () => { if (meteor && meteor.active) meteor.destroy(); });
+        this.time.delayedCall(25000, () => { 
+            if (meteor && meteor.active) {
+                // Remove trail before destroying
+                if (meteor.trailId && this.trailEffects) {
+                    this.trailEffects.removeTrail(meteor.trailId);
+                }
+                meteor.destroy(); 
+            }
+        });
     }
     
     // Disable/enable visibility and physics of entities that are far from the player ship to save render/physics work
@@ -418,6 +459,11 @@ export default class GameScene extends Phaser.Scene {
                 }
                 // Keep sprite active flag consistent
                 m.active = inside;
+                
+                // Update trail if meteor is active and has trail
+                if (inside && m.trailId && this.trailEffects) {
+                    this.trailEffects.updateLineTrail(m.trailId, m.x, m.y);
+                }
             });
         }
 
@@ -519,69 +565,109 @@ export default class GameScene extends Phaser.Scene {
         // Ensure physics group exists for enemies so collisions work
         if (!this.enemiesGroup) this.enemiesGroup = this.physics.add.group();
 
-        // Cria inimigos
-        for (let i = 0; i < 5; i++) {
-            const x = Phaser.Math.Between(-1500, 1500);
-            const y = Phaser.Math.Between(-1500, 1500);
-            
-            // Cria a nave inimiga usando o atlas
-            const enemy = this.physics.add.sprite(x, y, 'enemy');
-            enemy.setScale(0.5);
-            enemy.setDepth(1);
-            
-            // Inicia a animação do inimigo
-            enemy.play('enemy_thrust');
-            
-            // Propriedades do inimigo
-            enemy.health = 100; // Vida do inimigo é 100
-            enemy.maxHealth = 100;
-            enemy.speed = Phaser.Math.FloatBetween(30, 100);
-            
-            // Cria a barra de vida do inimigo
-            const healthBarWidth = 40;
-            const healthBarHeight = 5;
-            
-            enemy.healthBarBg = this.add.rectangle(
-                enemy.x, 
-                enemy.y + 30, 
-                healthBarWidth, 
-                healthBarHeight, 
-                0x000000
-            ).setOrigin(0.5).setDepth(2);
-            
-            enemy.healthBar = this.add.rectangle(
-                enemy.x, 
-                enemy.y + 30, 
-                healthBarWidth, 
-                healthBarHeight, 
-                0xff0000
-            ).setOrigin(0.5).setDepth(3);
-            
-            // Adiciona movimento aleatório
-            // guardamos o evento para poder removê-lo quando o inimigo for destruído
-            const movementEvent = this.time.addEvent({
-                delay: Phaser.Math.Between(2000, 5000),
-                callback: () => {
-                    // proteção: o inimigo pode ter sido destruído/invalidado
-                    if (!enemy || !enemy.active || !enemy.body || typeof enemy.setVelocity !== 'function') {
-                        return;
-                    }
-                    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-                    enemy.setVelocity(
-                        Math.cos(angle) * enemy.speed,
-                        Math.sin(angle) * enemy.speed
-                    );
-                },
-                callbackScope: this,
-                loop: true
-            });
-            // armazena referência para limpar depois
-            enemy._movementTimer = movementEvent;
-            
-            this.enemies.push(enemy);
-            // Add to physics group for collisions
-            this.enemiesGroup.add(enemy);
+        // Cria inimigos iniciais - MAIS INIMIGOS
+        for (let i = 0; i < 12; i++) {
+            this.spawnSingleEnemy();
         }
+        
+        // Sistema de spawn contínuo de inimigos
+        this.enemySpawnTimer = this.time.addEvent({
+            delay: 8000, // Spawn a cada 8 segundos
+            callback: () => {
+                // Só spawna se não tiver muitos inimigos (máximo 15)
+                if (this.enemies.length < 15) {
+                    this.spawnSingleEnemy();
+                }
+            },
+            callbackScope: this,
+            loop: true
+        });
+    }
+    
+    spawnSingleEnemy() {
+        // Spawn longe do jogador para não aparecer do nada
+        let x, y;
+        if (this.ship) {
+            const distance = 800; // Distância mínima do jogador
+            const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+            x = this.ship.x + Math.cos(angle) * distance;
+            y = this.ship.y + Math.sin(angle) * distance;
+        } else {
+            x = Phaser.Math.Between(-1500, 1500);
+            y = Phaser.Math.Between(-1500, 1500);
+        }
+        
+        // Cria a nave inimiga usando o atlas
+        const enemy = this.physics.add.sprite(x, y, 'enemy');
+        enemy.setScale(Phaser.Math.FloatBetween(0.4, 0.6)); // Variação no tamanho
+        enemy.setDepth(1);
+        
+        // Inicia a animação do inimigo
+        enemy.play('enemy_thrust');
+        
+        // Propriedades do inimigo - MAIS RESISTENTE com variação
+        const baseHealth = Phaser.Math.Between(150, 250);
+        enemy.health = baseHealth;
+        enemy.maxHealth = baseHealth;
+        enemy.speed = Phaser.Math.FloatBetween(40, 120);
+        
+        // Cria a barra de vida do inimigo
+        const healthBarWidth = 40;
+        const healthBarHeight = 5;
+        
+        enemy.healthBarBg = this.add.rectangle(
+            enemy.x, 
+            enemy.y + 30, 
+            healthBarWidth, 
+            healthBarHeight, 
+            0x000000
+        ).setOrigin(0.5).setDepth(2);
+        
+        enemy.healthBar = this.add.rectangle(
+            enemy.x, 
+            enemy.y + 30, 
+            healthBarWidth, 
+            healthBarHeight, 
+            0x00ff00 // Começa verde
+        ).setOrigin(0.5).setDepth(3);
+        
+        // Movimento mais inteligente - às vezes persegue o jogador
+        const movementEvent = this.time.addEvent({
+            delay: Phaser.Math.Between(1500, 4000),
+            callback: () => {
+                // proteção: o inimigo pode ter sido destruído/invalidado
+                if (!enemy || !enemy.active || !enemy.body || typeof enemy.setVelocity !== 'function') {
+                    return;
+                }
+                
+                let angle;
+                if (this.ship && Phaser.Math.Between(0, 100) < 30) {
+                    // 30% de chance de ir em direção ao jogador
+                    angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.ship.x, this.ship.y);
+                    // Adiciona um pouco de imprecisão
+                    angle += Phaser.Math.FloatBetween(-0.5, 0.5);
+                } else {
+                    // Movimento aleatório
+                    angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+                }
+                
+                enemy.setVelocity(
+                    Math.cos(angle) * enemy.speed,
+                    Math.sin(angle) * enemy.speed
+                );
+            },
+            callbackScope: this,
+            loop: true
+        });
+        
+        // armazena referência para limpar depois
+        enemy._movementTimer = movementEvent;
+        
+        this.enemies.push(enemy);
+        // Add to physics group for collisions
+        this.enemiesGroup.add(enemy);
+        
+        console.log(`Spawned enemy at (${x}, ${y}). Total enemies: ${this.enemies.length}`);
     }
     
     setupCollisions() {
@@ -599,6 +685,9 @@ export default class GameScene extends Phaser.Scene {
     }
 
     hitEnemy(projectile, enemy) {
+        // Calcula dano baseado no tipo de projétil
+        const damage = 35; // Dano reduzido para que inimigos durem mais
+        
         // Efeitos de impacto (faíscas)
         const angle = Phaser.Math.Angle.Between(projectile.x, projectile.y, enemy.x, enemy.y);
         this.particleEffects.createImpactSparks(projectile.x, projectile.y, Phaser.Math.RadToDeg(angle) + 180);
@@ -612,18 +701,53 @@ export default class GameScene extends Phaser.Scene {
         // Som de impacto
         this.audioManager.playImpact(0.6);
         
+        // NOVO: Mostra número de dano flutuante
+        this.uiAnimations.createFloatingText(
+            enemy.x + Phaser.Math.Between(-20, 20), 
+            enemy.y - 20, 
+            `-${damage}`, 
+            {
+                color: '#ff4444',
+                fontSize: '18px',
+                duration: 1000,
+                distance: 40,
+                fadeDelay: 300
+            }
+        );
+        
         // Lógica de dano ao inimigo
         projectile.destroy(); // Destrói o projétil
-        enemy.health -= 50; // Reduz a vida do inimigo
+        enemy.health -= damage; // Aplica dano
     
         // Atualiza a barra de vida do inimigo com animação
         const healthPercentage = Math.max(0, enemy.health / enemy.maxHealth);
         this.uiAnimations.animateBar(enemy.healthBar, enemy.healthBar.scaleX, healthPercentage, 200);
+        
+        // Muda cor da barra baseada na vida
+        if (healthPercentage < 0.3) {
+            enemy.healthBar.setFillStyle(0xff0000); // Vermelho quando crítico
+        } else if (healthPercentage < 0.6) {
+            enemy.healthBar.setFillStyle(0xff6600); // Laranja quando baixo
+        }
     
         // Se a vida do inimigo chegar a zero, destrói o inimigo
         if (enemy.health <= 0) {
             // Efeito de impacto grande (shake + flash + slowmo)
             this.juiceManager.impactEffect('large');
+            
+            // NOVO: Texto de "DESTRUÍDO"
+            this.uiAnimations.createFloatingText(
+                enemy.x, 
+                enemy.y - 30, 
+                'DESTRUÍDO!', 
+                {
+                    color: '#00ff00',
+                    fontSize: '24px',
+                    duration: 1500,
+                    distance: 60,
+                    fadeDelay: 500
+                }
+            );
             
             // Explosão visual com animação
             this.createExplosion(enemy.x, enemy.y);
@@ -1262,6 +1386,11 @@ export default class GameScene extends Phaser.Scene {
      * Cleanup ao destruir a cena - libera recursos dos managers
      */
     shutdown() {
+        // Limpa timer de spawn de inimigos
+        if (this.enemySpawnTimer) {
+            this.enemySpawnTimer.remove();
+        }
+        
         // Limpa todos os efeitos e managers
         if (this.particleEffects) {
             this.particleEffects.cleanup();

@@ -174,18 +174,16 @@ export default class GameScene extends Phaser.Scene {
             repeat: 0
         });
         
-        // Create meteor animation if atlas available
-        if (!this.anims.exists('meteoro_anim') && this.textures.exists('meteoro')) {
-            this.anims.create({
-                key: 'meteoro_anim',
-                frames: [
-                    { key: 'meteoro', frame: 'meteoro 0.aseprite' },
-                    { key: 'meteoro', frame: 'meteoro 1.aseprite' }
-                ],
-                frameRate: 6,
-                repeat: -1
-            });
-        }
+        // Cria animação do meteoro com 2 frames
+        this.anims.create({
+            key: 'meteoro_anim',
+            frames: [
+                { key: 'meteoro', frame: 'meteoro 0.aseprite' },
+                { key: 'meteoro', frame: 'meteoro 1.aseprite' }
+            ],
+            frameRate: 8,
+            repeat: -1
+        });
         
         // Adiciona a nave na tela e inicia a animação de idle
         this.ship = this.physics.add.sprite(0, 0, 'ship_idle');
@@ -320,12 +318,12 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createMeteors() {
-        // Spawn periódico de meteoros vindos de bordas do mundo
+        // Spawn periódico de meteoros vindos de bordas do mundo - REDUZIDO
         this.meteorSpawnTimer = this.time.addEvent({
-            delay: 1200, // Spawn a cada 1.2 segundos (mais controlado)
+            delay: 3000, // Spawn a cada 3 segundos (muito mais espaçado)
             callback: () => {
                 // Limita o número máximo de meteoros ativos para evitar sobrecarga
-                const maxMeteors = 20;
+                const maxMeteors = 8; // Reduzido de 20 para 8
                 const currentMeteors = this.meteorsGroup ? this.meteorsGroup.getLength() : 0;
                 
                 if (currentMeteors < maxMeteors) {
@@ -393,27 +391,24 @@ export default class GameScene extends Phaser.Scene {
         }
         
         const angle = Phaser.Math.Angle.Between(meteor.x, meteor.y, targetX, targetY);
-        const speed = Phaser.Math.Between(120, 280); // CORREÇÃO: Aumenta velocidade para movimento mais visível
+        const speed = Phaser.Math.Between(120, 280);
         
         // Armazena velocidade para movimento manual e física
         meteor.vx = Math.cos(angle) * speed;
         meteor.vy = Math.sin(angle) * speed;
-        meteor.moveAngle = angle; // Armazena o ângulo de movimento
+        meteor.moveAngle = angle;
         
-        // CORREÇÃO: Aplica velocidade constante via física (não será afetada por arrasto)
+        // Aplica velocidade constante via física
         meteor.setVelocity(meteor.vx, meteor.vy);
         
-        // CORREÇÃO: Rotação inicial alinhada com movimento
-        meteor.initialRotation = angle + Math.PI / 2;
-        meteor.rotation = meteor.initialRotation;
+        // CORREÇÃO: Usa o mesmo método das naves inimigas para rotação
+        // Calcula rotação baseada na direção do movimento
+        // meteor.rotation = angle - Math.PI / 2;
+        meteor.rotation = angle;
 
-        // Adiciona rotação lenta no próprio eixo (tumbling) - REDUZIDA
-        meteor.tumbleSpeed = Phaser.Math.FloatBetween(-30, 30); // graus por segundo (reduzido)
 
-        // Play frames animation if exists
-        if (this.anims.exists('meteoro_anim')) {
-            meteor.play('meteoro_anim');
-        }
+        // Inicia a animação do meteoro
+        meteor.play('meteoro_anim');
 
         // Adiciona trail effect ao meteoro
         if (this.trailEffects) {
@@ -580,17 +575,17 @@ export default class GameScene extends Phaser.Scene {
         // Ensure physics group exists for enemies so collisions work
         if (!this.enemiesGroup) this.enemiesGroup = this.physics.add.group();
 
-        // Cria inimigos iniciais - MAIS INIMIGOS
-        for (let i = 0; i < 12; i++) {
+        // Cria inimigos iniciais - REDUZIDO
+        for (let i = 0; i < 4; i++) { // Reduzido de 12 para 4
             this.spawnSingleEnemy();
         }
         
-        // Sistema de spawn contínuo de inimigos
+        // Sistema de spawn contínuo de inimigos - MUITO MAIS ESPAÇADO
         this.enemySpawnTimer = this.time.addEvent({
-            delay: 8000, // Spawn a cada 8 segundos
+            delay: 15000, // Spawn a cada 15 segundos (quase 2x mais espaçado)
             callback: () => {
-                // Só spawna se não tiver muitos inimigos (máximo 15)
-                if (this.enemies.length < 15) {
+                // Só spawna se não tiver muitos inimigos (máximo reduzido)
+                if (this.enemies.length < 6) { // Reduzido de 15 para 6
                     this.spawnSingleEnemy();
                 }
             },
@@ -1195,8 +1190,8 @@ export default class GameScene extends Phaser.Scene {
         const panelWidth = 280;
         const panelPadding = 18;
         
-        // Calcula altura dinâmica do painel
-        const panelHeight = 200;
+        // Calcula altura dinâmica do painel (aumentado para caber todos os elementos)
+        const panelHeight = 220;
         
         // Painel de fundo semi-transparente para melhor legibilidade
         this.uiPanel = this.add.rectangle(startX, startY, panelWidth, panelHeight, 0x0a0a0f, 0.85)
@@ -1507,7 +1502,7 @@ export default class GameScene extends Phaser.Scene {
             });
         }
         
-        // Atualiza rotação e movimento dos meteoros
+        // Atualiza movimento dos meteoros
         if (this.meteorsGroup) {
             this.meteorsGroup.getChildren().forEach(meteor => {
                 if (meteor.active && meteor.body) {
@@ -1519,9 +1514,14 @@ export default class GameScene extends Phaser.Scene {
                         }
                     }
                     
-                    // Aplica rotação gradual (tumbling) baseada no delta
-                    if (meteor.tumbleSpeed !== undefined) {
-                        meteor.rotation += (meteor.tumbleSpeed * delta) / 1000;
+                    // CORREÇÃO: Usa o mesmo método das naves inimigas para rotação
+                    if (meteor.body && (meteor.body.velocity.x !== 0 || meteor.body.velocity.y !== 0)) {
+                        meteor.rotation = Phaser.Math.Angle.Between(
+                            meteor.x - meteor.body.velocity.x, 
+                            meteor.y - meteor.body.velocity.y,
+                            meteor.x, 
+                            meteor.y
+                        ) + Math.PI / 2;
                     }
                 }
             });

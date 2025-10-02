@@ -19,7 +19,7 @@ export default class GameScene extends Phaser.Scene {
         this.miningRate = 0; // Taxa de mineração atual
         this.miningPlanets = []; // Planetas que podem ser minerados
         this.enemies = []; // Naves inimigas
-        this.playerName = 'Piloto'; // Nome padrão do jogador
+        this.playerName = 'Pilot'; // Default player name
         this.playerNameText = null; // Referência para o texto do nome
         
         // Propriedades da nave
@@ -745,11 +745,11 @@ export default class GameScene extends Phaser.Scene {
             // Efeito de impacto grande (shake + flash + slowmo)
             this.juiceManager.impactEffect('large');
             
-            // NOVO: Texto de "DESTRUÍDO"
+            // NEW: "DESTROYED" text
             this.uiAnimations.createFloatingText(
                 enemy.x, 
                 enemy.y - 30, 
-                'DESTRUÍDO!', 
+                'DESTROYED!', 
                 {
                     color: '#00ff00',
                     fontSize: '24px',
@@ -976,7 +976,7 @@ export default class GameScene extends Phaser.Scene {
             0
         ).setScrollFactor(0).setDepth(201).setStrokeStyle(2, 0xff0000, 0.6);
         
-        // Título "GAME OVER" - MUITO MAIOR
+        // "GAME OVER" title - VERY LARGE
         const gameOverText = this.add.text(centerX, centerY - 180, 'GAME OVER', {
             fontFamily: 'Arial',
             fontSize: '80px',
@@ -999,21 +999,21 @@ export default class GameScene extends Phaser.Scene {
         // Estatísticas do jogador
         const statsY = centerY - 60;
         
-        this.add.text(centerX, statsY, '━━━━━━━━━ ESTATÍSTICAS ━━━━━━━━━', {
+        this.add.text(centerX, statsY, '━━━━━━━━━ STATISTICS ━━━━━━━━━', {
             fontFamily: 'Arial',
             fontSize: '26px',
             color: '#00d4ff',
             fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
         
-        this.add.text(centerX, statsY + 60, `💰 Crypto Minerado: ${this.cryptoBalance.toFixed(2)}`, {
+        this.add.text(centerX, statsY + 60, `💰 Crypto Mined: ${this.cryptoBalance.toFixed(2)}`, {
             fontFamily: 'Arial',
             fontSize: '32px',
             color: '#00ff88',
             fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
         
-        this.add.text(centerX, statsY + 110, `👤 Piloto: ${this.playerName}`, {
+        this.add.text(centerX, statsY + 110, `👤 Pilot: ${this.playerName}`, {
             fontFamily: 'Arial',
             fontSize: '26px',
             color: '#ffffff'
@@ -1030,7 +1030,7 @@ export default class GameScene extends Phaser.Scene {
         ).setScrollFactor(0).setDepth(202).setInteractive({ useHandCursor: true })
         .setStrokeStyle(4, 0x00ff00, 1);
         
-        const restartText = this.add.text(centerX, centerY + 150, '🔄 JOGAR NOVAMENTE', {
+        const restartText = this.add.text(centerX, centerY + 150, '🔄 PLAY AGAIN', {
             fontFamily: 'Arial',
             fontSize: '30px',
             color: '#00ff00',
@@ -1048,7 +1048,7 @@ export default class GameScene extends Phaser.Scene {
         ).setScrollFactor(0).setDepth(202).setInteractive({ useHandCursor: true })
         .setStrokeStyle(3, 0x00d4ff, 0.8);
         
-        const menuText = this.add.text(centerX, centerY + 245, '🏠 VOLTAR AO MENU', {
+        const menuText = this.add.text(centerX, centerY + 245, '🏠 BACK TO MENU', {
             fontFamily: 'Arial',
             fontSize: '26px',
             color: '#00d4ff',
@@ -1233,7 +1233,7 @@ export default class GameScene extends Phaser.Scene {
         currentY += 32;
         
         // === VIDA ===
-        this.add.text(contentX, currentY, '❤️ VIDA', titleStyle)
+        this.add.text(contentX, currentY, '❤️ HEALTH', titleStyle)
             .setScrollFactor(0)
             .setDepth(20);
         currentY += 20;
@@ -1264,7 +1264,7 @@ export default class GameScene extends Phaser.Scene {
         currentY += healthBarHeight + 16;
         
         // === COMBUSTÍVEL ===
-        this.add.text(contentX, currentY, '⚡ COMBUSTÍVEL', titleStyle)
+        this.add.text(contentX, currentY, '⚡ FUEL', titleStyle)
             .setScrollFactor(0)
             .setDepth(20);
         currentY += 20;
@@ -1294,7 +1294,7 @@ export default class GameScene extends Phaser.Scene {
         currentY += fuelBarHeight + 16;
         
         // === VELOCIDADE ===
-        this.speedText = this.add.text(contentX, currentY, '🚀 VEL: 0 km/h', { 
+        this.speedText = this.add.text(contentX, currentY, '🚀 SPEED: 0 km/h', { 
             fontSize: '13px',
             fill: '#55aaff',
             fontFamily: 'Arial, sans-serif',
@@ -1720,7 +1720,7 @@ export default class GameScene extends Phaser.Scene {
         // Atualiza a velocidade
         const velocity = this.ship.body.velocity;
         const speed = Math.round(Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y));
-        this.speedText.setText(`🚀 VEL: ${speed} km/h`);
+        this.speedText.setText(`🚀 SPEED: ${speed} km/h`);
         
         // Atualiza o combustível com animação suave
         const fuelPercent = Math.max(0, this.shipFuel / this.shipMaxFuel);

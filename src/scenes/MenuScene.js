@@ -21,13 +21,13 @@ export default class MenuScene extends Phaser.Scene {
         const H = this.cameras.main.height;
         this.createBackground();
         const title = this.add.text(W/2, H*0.22, 'SPACE CRYPTO MINER', { fontFamily:'Arial', fontSize: '36px', color:'#00ffcc' }).setOrigin(0.5);
-        this.add.text(W/2, H*0.28, 'Clique em PLAY na página inicial para começar', { fontFamily:'Arial', fontSize: '16px', color:'#aef7ee' }).setOrigin(0.5);
+        this.add.text(W/2, H*0.28, 'Click PLAY on the home page to start', { fontFamily:'Arial', fontSize: '16px', color:'#aef7ee' }).setOrigin(0.5);
 
         // Play button (starts the game using window.__GAME_CONFIG__ or localStorage)
         const playBtn = this.add.rectangle(W/2, H/2, 260, 84, 0x00ffcc).setOrigin(0.5).setInteractive({ useHandCursor: true });
         const playText = this.add.text(W/2, H/2, 'PLAY', { fontFamily:'Arial', fontSize: '28px', color:'#001a18', fontStyle:'bold' }).setOrigin(0.5);
         playBtn.on('pointerdown', () => {
-            const cfg = window.__GAME_CONFIG__ || { playerName: localStorage.getItem('playerName') || 'Piloto', walletAddress: null, nftImage: null };
+            const cfg = window.__GAME_CONFIG__ || { playerName: localStorage.getItem('playerName') || 'Pilot', walletAddress: null, nftImage: null };
             this.scene.start('GameScene', cfg);
         });
     }
@@ -128,7 +128,7 @@ export default class MenuScene extends Phaser.Scene {
             this.add.text(
                 this.cameras.main.width / 2,
                 this.cameras.main.height / 2 + 250,
-                'MODO PVP EM BREVE!',
+                'PVP MODE COMING SOON!',
                 {
                     fontFamily: 'Arial',
                     fontSize: '24px',

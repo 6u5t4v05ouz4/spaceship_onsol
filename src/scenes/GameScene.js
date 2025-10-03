@@ -1732,10 +1732,10 @@ export default class GameScene extends Phaser.Scene {
         // Pulso na barra de combustível quando crítico
         if (fuelPercent < 0.2 && !this.fuelBar._pulsing) {
             this.fuelBar._pulsing = true;
-            this.fuelBar.setTint(0xff6600);
+            this.fuelBar.setFillStyle(0xff6600);
         } else if (fuelPercent >= 0.2 && this.fuelBar._pulsing) {
             this.fuelBar._pulsing = false;
-            this.fuelBar.clearTint();
+            this.fuelBar.setFillStyle(0x00aaff);
         }
         
         // Muda a cor da velocidade com base na velocidade

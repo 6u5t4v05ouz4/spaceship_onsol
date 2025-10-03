@@ -25,9 +25,9 @@
   "devDependencies": {
     "@vercel/node": "^2.15.10",
     "@vitejs/plugin-basic-ssl": "^2.1.0",
-    "vite": "^7.1.5"
+    "vite": "^7.1.9"
   },
-   "overrides": {
+  "overrides": {
     "esbuild": "0.25.9",
     "path-to-regexp": "6.3.0"
   }

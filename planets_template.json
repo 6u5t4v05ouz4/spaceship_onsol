@@ -1,0 +1,89 @@
+{
+  "frames": {
+    "planeta_01": {
+      "frame": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    },
+    "planeta_02": {
+      "frame": { "x": 200, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    },
+    "planeta_03": {
+      "frame": { "x": 400, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    },
+    "planeta_04": {
+      "frame": { "x": 600, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    },
+    "planeta_05": {
+      "frame": { "x": 800, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    },
+    "planeta_06": {
+      "frame": { "x": 1000, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    },
+    "planeta_07": {
+      "frame": { "x": 1200, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    },
+    "planeta_08": {
+      "frame": { "x": 1400, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    },
+    "planeta_09": {
+      "frame": { "x": 1600, "y": 0, "w": 200, "h": 200 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "sourceSize": { "w": 200, "h": 200 },
+      "duration": 100
+    }
+  },
+  "meta": {
+    "app": "https://www.aseprite.org/",
+    "version": "1.3.12-x64",
+    "image": "planets.png",
+    "format": "RGBA8888",
+    "size": { "w": 1800, "h": 200 },
+    "scale": "1",
+    "frameTags": [],
+    "layers": [
+      { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+    ],
+    "slices": []
+  }
+}

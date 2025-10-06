@@ -683,7 +683,7 @@
         /* Layout responsivo */
         .layout {
             display: grid;
-            grid-template-columns: 380px 1fr;
+            grid-template-columns: 420px 1fr;
             gap: 30px;
             margin-top: 30px;
         }
@@ -775,16 +775,174 @@
             transform: scale(1.05);
         }
         
+        /* Ship preview section */
+        .ship-preview {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(145deg, rgba(26, 26, 46, 0.4), rgba(22, 33, 62, 0.4));
+            border-radius: 16px;
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            text-align: center;
+            transition: all 0.3s ease;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .ship-preview:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+        }
+        
+        .ship-label {
+            font-size: 12px;
+            color: var(--accent);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        .ship-image {
+            width: 128px;
+            height: 128px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .ship-preview:hover .ship-image {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+        
+        .ship-name {
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.3;
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+        
+        /* Ship tooltip */
+        .ship-tooltip {
+            position: fixed;
+            background: linear-gradient(145deg, rgba(10, 10, 15, 0.95), rgba(26, 26, 46, 0.95));
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 280px;
+            max-width: 320px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .ship-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .ship-tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .tooltip-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 12px;
+            text-align: center;
+            font-family: var(--font-primary);
+        }
+        
+        .tooltip-attributes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .tooltip-attr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            background: rgba(0, 212, 255, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+        }
+        
+        .tooltip-attr-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .tooltip-attr-value {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .tooltip-rarity {
+            text-align: center;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        
+        .rarity-comum { background: rgba(204, 204, 204, 0.2); color: #CCCCCC; }
+        .rarity-incomum { background: rgba(0, 255, 0, 0.2); color: #00FF00; }
+        .rarity-raro { background: rgba(0, 128, 255, 0.2); color: #0080FF; }
+        .rarity-epico { background: rgba(160, 32, 240, 0.2); color: #A020F0; }
+        .rarity-lendario { background: rgba(255, 215, 0, 0.2); color: #FFD700; }
+        
+        /* Ensure tooltip is not clipped by parent containers */
+        .card, .profile, .ship-preview {
+            overflow: visible !important;
+        }
+        
+        /* Ensure tooltip appears above everything */
+        .ship-tooltip {
+            position: fixed !important;
+            z-index: 99999 !important;
+        }
+        
         /* Fields melhorados */
         .field {
-            margin-top: 20px;
+            margin-top: 16px;
         }
         
         .field label {
             display: block;
             font-size: 12px;
             color: var(--accent);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 600;
@@ -792,7 +950,7 @@
         
         .field input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border-radius: 12px;
             border: 1px solid rgba(0, 212, 255, 0.2);
             background: rgba(26, 26, 46, 0.5);
@@ -817,14 +975,14 @@
         .modes {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
         
         .mode {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
+            padding: 14px 18px;
             border-radius: 12px;
             background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(78, 205, 196, 0.05));
             border: 1px solid rgba(0, 212, 255, 0.1);
@@ -851,12 +1009,12 @@
         
         /* Leaderboard */
         .leaderboard {
-            margin-top: 20px;
+            margin-top: 18px;
             background: linear-gradient(135deg, rgba(0, 212, 255, 0.02), rgba(78, 205, 196, 0.02));
         }
         
         .leaderboard h4 {
-            margin: 0 0 16px 0;
+            margin: 0 0 14px 0;
             color: var(--accent);
             font-family: var(--font-primary);
             font-weight: 700;
@@ -864,11 +1022,11 @@
         
         /* Footer */
         footer {
-            margin-top: 40px;
+            margin-top: 36px;
             text-align: center;
             color: var(--muted);
             font-size: 12px;
-            padding: 20px 0;
+            padding: 18px 0;
             border-top: 1px solid rgba(0, 212, 255, 0.1);
         }
         
@@ -1031,6 +1189,18 @@
                 <aside class="card profile">
                     <div class="avatar" id="nftAvatar">
                         <img id="avatarImg" src="/assets/icones/astronauta.png" alt="avatar">
+                    </div>
+                    <div class="ship-preview" id="shipPreview">
+                        <div class="ship-label">🚀 Ship</div>
+                        <img id="shipImg" src="/assets/images/idle.png" alt="ship" class="ship-image">
+                        <div id="shipName" class="ship-name">Nave Padrão</div>
+                        <div id="shipTooltip" class="ship-tooltip">
+                            <div class="tooltip-title" id="tooltipTitle">Nave Padrão</div>
+                            <div class="tooltip-attributes" id="tooltipAttributes">
+                                <!-- Attributes will be populated by JavaScript -->
+                            </div>
+                            <div class="tooltip-rarity" id="tooltipRarity">COMUM</div>
+                        </div>
                     </div>
                     <div class="field">
                         <label>Player name</label>
@@ -1596,17 +1766,65 @@
                 walletAddrEl.textContent = pub.substring(0, 8) + '...' + pub.substring(pub.length - 8);
                 walletStatus.className = 'status-indicator connected';
                 
-                // try to find NFT image (devnet by default)
+                // try to find NFT image and metadata (devnet by default)
                 nftStatusEl.textContent = 'Searching NFT...';
-                const imageUrl = await findFirstNftImageForOwner(pub, { network: 'devnet' });
+                const { findFirstNftImageForOwner, findFirstNftMetadataForOwner } = await import('./src/solana_nft.js');
+                const [imageUrl, nftMetadata] = await Promise.all([
+                    findFirstNftImageForOwner(pub, { network: 'devnet' }),
+                    findFirstNftMetadataForOwner(pub, { network: 'devnet' })
+                ]);
                 
                 if (imageUrl) {
                     nftStatusEl.textContent = '✅ NFT found';
                     nftStatusEl.style.color = 'var(--success)';
                     avatarImg.src = imageUrl;
+                    
+                    // Update ship image and name
+                    const shipImg = document.getElementById('shipImg');
+                    const shipName = document.getElementById('shipName');
+                    
+                    if (shipImg) {
+                        shipImg.src = imageUrl;
+                    }
+                    
+                    if (shipName && nftMetadata && nftMetadata.name) {
+                        shipName.textContent = nftMetadata.name;
+                        // Apply rarity color if available
+                        if (nftMetadata.attributes) {
+                            const rarity = nftMetadata.attributes.find(attr => 
+                                attr.trait_type === 'Raridade' || attr.trait_type === 'raridade'
+                            );
+                            if (rarity) {
+                                const rarityColors = {
+                                    'Comum': '#CCCCCC',
+                                    'Incomum': '#00FF00',
+                                    'Raro': '#0080FF',
+                                    'Épico': '#A020F0',
+                                    'Lendário': '#FFD700'
+                                };
+                                shipName.style.color = rarityColors[rarity.value] || '#CCCCCC';
+                            }
+                        }
+                    }
+                    
+                    // Update tooltip with NFT data
+                    updateShipTooltip(nftMetadata);
                 } else {
                     nftStatusEl.textContent = '❌ No NFT found';
                     nftStatusEl.style.color = 'var(--muted)';
+                    
+                    // Reset ship to default
+                    const shipImg = document.getElementById('shipImg');
+                    const shipName = document.getElementById('shipName');
+                    
+                    if (shipImg) {
+                        shipImg.src = '/assets/images/idle.png';
+                    }
+                    
+                    if (shipName) {
+                        shipName.textContent = 'Nave Padrão';
+                        shipName.style.color = '#CCCCCC';
+                    }
                 }
                 
                 window.__GAME_CONFIG__ = { 
@@ -1626,6 +1844,131 @@
             }
         }
 
+        // Ship tooltip functionality
+        let currentShipData = null;
+        
+        function updateShipTooltip(shipData) {
+            currentShipData = shipData;
+            const tooltipTitle = document.getElementById('tooltipTitle');
+            const tooltipAttributes = document.getElementById('tooltipAttributes');
+            const tooltipRarity = document.getElementById('tooltipRarity');
+            
+            if (!shipData) {
+                // Default ship data
+                tooltipTitle.textContent = 'Nave Padrão';
+                tooltipAttributes.innerHTML = `
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Velocidade</span>
+                        <span class="tooltip-attr-value">100</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Carga</span>
+                        <span class="tooltip-attr-value">50 kg</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Combustível</span>
+                        <span class="tooltip-attr-value">100</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Oxigênio</span>
+                        <span class="tooltip-attr-value">100</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Escudo</span>
+                        <span class="tooltip-attr-value">100</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Tipo</span>
+                        <span class="tooltip-attr-value">Padrão</span>
+                    </div>
+                `;
+                tooltipRarity.textContent = 'COMUM';
+                tooltipRarity.className = 'tooltip-rarity rarity-comum';
+            } else {
+                // NFT ship data
+                tooltipTitle.textContent = shipData.name || 'NFT Ship';
+                
+                const attributes = shipData.attributes || [];
+                const attrMap = {};
+                attributes.forEach(attr => {
+                    attrMap[attr.trait_type.toLowerCase()] = attr.value;
+                });
+                
+                tooltipAttributes.innerHTML = `
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Velocidade</span>
+                        <span class="tooltip-attr-value">${attrMap.velocidade || 'N/A'}</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Carga</span>
+                        <span class="tooltip-attr-value">${attrMap.carga || 'N/A'} kg</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Combustível</span>
+                        <span class="tooltip-attr-value">${attrMap.combustível || 'N/A'}</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Oxigênio</span>
+                        <span class="tooltip-attr-value">${attrMap.oxigênio || 'N/A'}</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Escudo</span>
+                        <span class="tooltip-attr-value">${attrMap.escudo || 'N/A'}</span>
+                    </div>
+                    <div class="tooltip-attr">
+                        <span class="tooltip-attr-label">Modelo</span>
+                        <span class="tooltip-attr-value">${attrMap.modelo || 'N/A'}</span>
+                    </div>
+                `;
+                
+                const rarity = attrMap.raridade || 'Comum';
+                tooltipRarity.textContent = rarity.toUpperCase();
+                tooltipRarity.className = `tooltip-rarity rarity-${rarity.toLowerCase()}`;
+            }
+        }
+        
+        function setupShipTooltip() {
+            const shipPreview = document.getElementById('shipPreview');
+            const shipTooltip = document.getElementById('shipTooltip');
+            
+            if (!shipPreview || !shipTooltip) return;
+            
+            shipPreview.addEventListener('mouseenter', (e) => {
+                const rect = shipPreview.getBoundingClientRect();
+                const tooltipWidth = 300; // Approximate tooltip width
+                const tooltipHeight = 200; // Approximate tooltip height
+                
+                // Calculate position - always show above the ship
+                let left = rect.left + rect.width / 2;
+                let top = rect.top - tooltipHeight - 10; // Always above
+                
+                // Adjust if tooltip would go off screen horizontally
+                if (left + tooltipWidth / 2 > window.innerWidth) {
+                    left = window.innerWidth - tooltipWidth / 2 - 10;
+                }
+                if (left - tooltipWidth / 2 < 0) {
+                    left = tooltipWidth / 2 + 10;
+                }
+                
+                // If tooltip would go above screen, show it below (fallback)
+                if (top < 10) {
+                    top = rect.bottom + 10;
+                }
+                
+                shipTooltip.style.left = left + 'px';
+                shipTooltip.style.top = top + 'px';
+                shipTooltip.style.transform = 'translateX(-50%)';
+                shipTooltip.classList.add('show');
+            });
+            
+            shipPreview.addEventListener('mouseleave', () => {
+                shipTooltip.classList.remove('show');
+            });
+            
+            // Initialize with default ship data
+            updateShipTooltip(null);
+        }
+        
         connectBtn.addEventListener('click', connectPhantom);
         
         disconnectBtn.addEventListener('click', async () => {
@@ -1637,6 +1980,23 @@
             nftStatusEl.textContent = 'No NFT detected';
             nftStatusEl.style.color = 'var(--text-secondary)';
             avatarImg.src = '/assets/icones/astronauta.png';
+            
+            // Reset ship to default
+            const shipImg = document.getElementById('shipImg');
+            const shipName = document.getElementById('shipName');
+            
+            if (shipImg) {
+                shipImg.src = '/assets/images/idle.png';
+            }
+            
+            if (shipName) {
+                shipName.textContent = 'Nave Padrão';
+                shipName.style.color = '#CCCCCC';
+            }
+            
+            // Reset tooltip to default
+            updateShipTooltip(null);
+            
             window.__GAME_CONFIG__ = null;
             connectBtn.innerHTML = '<span class="status-indicator disconnected"></span>Connect Phantom';
             walletStatus.className = 'status-indicator disconnected';
@@ -1699,6 +2059,9 @@
 
         // Initialize particles
         createFloatingParticles();
+        
+        // Setup ship tooltip
+        setupShipTooltip();
 
         // Navegação por abas
         function initTabNavigation() {

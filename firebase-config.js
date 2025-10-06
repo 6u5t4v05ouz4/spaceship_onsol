@@ -2,12 +2,12 @@
 // Replace these values with your actual Firebase project configuration
 
 export const firebaseConfig = {
-    apiKey: "your-api-key-here",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "your-app-id-here"
+    apiKey: "AIzaSyAvR4dl0O70J0FvSOPMKOEx_9a3Vz6AFpA",
+    authDomain: "spaceshiponsol.firebaseapp.com",
+    projectId: "spaceshiponsol",
+    storageBucket: "spaceshiponsol.firebasestorage.app",
+    messagingSenderId: "279903883069",
+    appId: "1:913540551509:web:85376666c452b11c644328"
 };
 
 // Instructions to get Firebase config:

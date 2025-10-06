@@ -13,6 +13,9 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root{
             --bg-primary: #0a0a0f;
@@ -1168,6 +1171,141 @@
                 font-size: 11px;
             }
         }
+        
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .login-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .login-container {
+            background: var(--panel);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .login-overlay.show .login-container {
+            transform: scale(1);
+        }
+        
+        .login-header h2 {
+            color: var(--text-primary);
+            font-family: 'Orbitron', monospace;
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        .login-header p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .login-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .login-btn:hover::before {
+            left: 100%;
+        }
+        
+        .google-btn {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+        }
+        
+        .google-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+        }
+        
+        .solana-btn {
+            background: linear-gradient(135deg, #9945ff, #14f195);
+            color: white;
+        }
+        
+        .solana-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(153, 69, 255, 0.3);
+        }
+        
+        .btn-icon {
+            font-size: 20px;
+        }
+        
+        .login-footer p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .login-header h2 {
+                font-size: 20px;
+            }
+            
+            .login-btn {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1201,10 +1339,6 @@
             </div>
             
             <div class="top-actions">
-                <button id="connectPhantom" class="btn">
-                    <span class="status-indicator disconnected" id="walletStatus"></span>
-                    Connect Phantom
-                </button>
                 <button id="loginBtn" class="btn play-btn">
                     <span class="status-indicator disconnected" id="loginStatus"></span>
                     LOGIN
@@ -1234,36 +1368,6 @@
                             </div>
                             <div class="stats-rarity" id="statsRarity">COMUM</div>
                         </div>
-                    </div>
-                    <div class="field">
-                        <label>Player name</label>
-                        <input id="playerName" placeholder="Type your name (ex: Pilot123)">
-                    </div>
-                    <div class="field">
-                        <label>Wallet</label>
-                        <div id="walletAddr" class="small">No wallet connected</div>
-                    </div>
-                    <div class="field">
-                        <label>NFT Status</label>
-                        <div id="nftStatus" class="small">No NFT detected</div>
-                    </div>
-                    <div class="field">
-                        <label>Login Status</label>
-                        <div id="loginStatusText" class="small">Not logged in</div>
-                    </div>
-                    <div class="field" id="googleInfoField" style="display:none;">
-                        <label>Google Account</label>
-                        <div id="googleInfo" class="small">
-                            <div id="googleName" class="google-name"></div>
-                            <div id="googleEmail" class="google-email"></div>
-                        </div>
-                    </div>
-                    <div style="margin-top:20px;display:flex;gap:12px;">
-                        <button id="saveBtn" class="btn">💾 Save</button>
-                        <button id="disconnectBtn" class="btn ghost">🔌 Disconnect</button>
-                    </div>
-                    <div style="margin-top:12px;display:flex;gap:12px;">
-                        <button id="logoutBtn" class="btn ghost" style="display:none;">🚪 Logout</button>
                     </div>
                 </aside>
 
@@ -1719,14 +1823,76 @@
             </div>
         </div>
 
-        <!-- Config tab content (placeholder) -->
+        <!-- Config tab content -->
         <div class="tab-content" id="config-content">
-            <div class="card">
-                <h3 style="margin:0 0 20px 0;color:var(--accent);font-family:var(--font-primary);">⚙️ Settings</h3>
-                <p class="small" style="text-align:center;padding:40px;color:var(--muted);">
-                    <div style="font-size:48px;margin-bottom:10px;">🔧</div>
-                    Settings in development...
-                </p>
+            <div class="layout">
+                <aside class="card profile">
+                    <div class="avatar" id="nftAvatar">
+                        <img id="avatarImg" src="/assets/icones/astronauta.png" alt="avatar">
+                    </div>
+                    <div class="ship-preview" id="shipPreview">
+                        <div class="ship-label">🚀 Ship</div>
+                        <img id="shipImg" src="/assets/images/idle.png" alt="ship" class="ship-image">
+                        <div id="shipName" class="ship-name">Nave Padrão</div>
+                        <div class="ship-stats" id="shipStats">
+                            <div class="stats-title" id="statsTitle">Nave Padrão</div>
+                            <div class="stats-attributes" id="statsAttributes">
+                                <!-- Attributes will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                
+                <main class="card">
+                    <h2>⚙️ Configuration</h2>
+                    <div class="field">
+                        <label>SpaceShipOnSol</label>
+                        <div class="small">Space Crypto Miner</div>
+                    </div>
+                    <div class="field">
+                        <label>Player name</label>
+                        <input id="playerName" placeholder="Type your name (ex: Pilot123)">
+                    </div>
+                    <div class="field">
+                        <label>Wallet</label>
+                        <div id="walletAddr" class="small">No wallet connected</div>
+                    </div>
+                    <div class="field">
+                        <label>NFT Status</label>
+                        <div id="nftStatus" class="small">No NFT detected</div>
+                    </div>
+                    <div class="field">
+                        <label>Login Status</label>
+                        <div id="loginStatusText" class="small">Not logged in</div>
+                    </div>
+                    <div class="field" id="googleInfoField" style="display:none;">
+                        <label>Google Account</label>
+                        <div id="googleInfo" class="small">
+                            <div id="googleName" class="google-name"></div>
+                            <div id="googleEmail" class="google-email"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Wallet Connection Section -->
+                    <div class="field" id="walletSection">
+                        <label>Web3 Wallet</label>
+                        <div id="walletStatus" class="small">Not connected</div>
+                        <button id="connectWalletBtn" class="btn" style="margin-top:8px;">👻 Connect Phantom Wallet</button>
+                    </div>
+                    
+                    <!-- Google Connection Section -->
+                    <div class="field" id="googleSection">
+                        <label>Google Account</label>
+                        <div id="googleStatus" class="small">Not connected</div>
+                        <button id="connectGoogleBtn" class="btn" style="margin-top:8px;">🔍 Connect Google Account</button>
+                    </div>
+                    
+                    <div style="margin-top:20px;display:flex;gap:12px;">
+                        <button id="saveBtn" class="btn">💾 Save</button>
+                        <button id="disconnectWalletBtn" class="btn ghost" style="display:none;">🔌 Disconnect Wallet</button>
+                        <button id="disconnectGoogleBtn" class="btn ghost" style="display:none;">🚪 Logout Google</button>
+                    </div>
+                </main>
             </div>
         </div>
 
@@ -1739,8 +1905,130 @@
         <div id="game-container"></div>
     </div>
 
-    <script type="module">
-        import { findFirstNftImageForOwner } from '/src/solana_nft.js';
+    <script>
+        // Immediate test - this should run first
+        console.log('🚀 SCRIPT STARTED - JavaScript is working!');
+        
+        // Test if we can find tabs immediately
+        try {
+            const tabs = document.querySelectorAll('.nav-tab');
+            console.log('Immediate tab check - Found:', tabs.length);
+        } catch (error) {
+            console.error('Error in immediate tab check:', error);
+        }
+        
+        // Create simple test function immediately
+        window.simpleTabTest = function() {
+            console.log('🧪 Simple tab test...');
+            const tabs = document.querySelectorAll('.nav-tab');
+            console.log('Found tabs:', tabs.length);
+            return tabs.length;
+        };
+        console.log('✅ simpleTabTest function created!');
+        
+        // Initialize tabs immediately and also when DOM is ready
+        function initTabsNow() {
+            console.log('🚀 Initializing tabs NOW...');
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            console.log('Found tabs:', tabs.length);
+            console.log('Found contents:', contents.length);
+            
+            function switchTab(tabName) {
+                console.log('Switching to tab:', tabName);
+                
+                // Remove active from all tabs and contents
+                tabs.forEach(tab => tab.classList.remove('active'));
+                contents.forEach(content => content.classList.remove('active'));
+                
+                // Add active to selected tab and content
+                const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+                const activeContent = document.getElementById(`${tabName}-content`);
+                
+                console.log('Active tab found:', !!activeTab);
+                console.log('Active content found:', !!activeContent);
+                console.log('Content element:', activeContent);
+                
+                if (activeTab) {
+                    activeTab.classList.add('active');
+                    console.log('Added active class to tab');
+                } else {
+                    console.error('Tab not found:', tabName);
+                }
+                
+                if (activeContent) {
+                    activeContent.classList.add('active');
+                    console.log('Added active class to content');
+                } else {
+                    console.error('Content not found:', `${tabName}-content`);
+                }
+                
+                console.log('Switched to:', tabName);
+            }
+            
+            // Add click listeners
+            tabs.forEach(tab => {
+                const tabName = tab.getAttribute('data-tab');
+                console.log('Adding listener to tab:', tabName);
+                
+                tab.addEventListener('click', (e) => {
+                    console.log('Tab clicked:', tabName);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    switchTab(tabName);
+                });
+            });
+            
+            // Set initial tab
+            switchTab('profile');
+            
+            // Make functions available globally
+            window.switchTab = switchTab;
+            window.testTabClick = function(name) {
+                console.log('Testing click on:', name);
+                switchTab(name);
+            };
+            
+            // Debug function to check all content elements
+            window.debugContent = function() {
+                console.log('🔍 Debugging content elements...');
+                const allContents = document.querySelectorAll('.tab-content');
+                console.log('All tab-content elements:', allContents.length);
+                
+                allContents.forEach((content, index) => {
+                    console.log(`Content ${index}:`, {
+                        id: content.id,
+                        classes: content.className,
+                        isActive: content.classList.contains('active'),
+                        visible: content.style.display !== 'none'
+                    });
+                });
+                
+                // Check specific content IDs
+                ['profile-content', 'roadmap-content', 'config-content'].forEach(id => {
+                    const element = document.getElementById(id);
+                    console.log(`${id}:`, {
+                        exists: !!element,
+                        classes: element ? element.className : 'N/A',
+                        isActive: element ? element.classList.contains('active') : 'N/A'
+                    });
+                });
+            };
+            
+            console.log('✅ Tabs initialized successfully!');
+        }
+        
+        // Run immediately
+        initTabsNow();
+        
+        // Also run when DOM is ready (in case elements weren't ready)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM ready, reinitializing tabs...');
+                setTimeout(initTabsNow, 100);
+            });
+        }
 
         // Criar partículas flutuantes
         function createFloatingParticles() {
@@ -1779,34 +2067,52 @@
             }
         }
 
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAvR4dl0O70J0FvSOPMKOEx_9a3Vz6AFpA",
-            authDomain: "spaceshiponsol.firebaseapp.com",
-            projectId: "spaceshiponsol",
-            storageBucket: "spaceshiponsol.firebasestorage.app",
-            messagingSenderId: "279903883069",
-            appId: "1:279903883069:web:3e069680399746002e7f54",
-            measurementId: "G-942B12QN54"
+        // Supabase configuration
+        const supabaseConfig = {
+            url: "https://cjrbhqlwfjebnjoyfjnc.supabase.co",
+            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        // Initialize Supabase
+        console.log('Initializing Supabase...');
+        console.log('Supabase available:', !!window.supabase);
+        console.log('Supabase config:', supabaseConfig);
+        
+        let supabase = null;
+        if (window.supabase) {
+            try {
+                supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+                console.log('Supabase initialized successfully');
+                console.log('Supabase client:', supabase);
+            } catch (error) {
+                console.error('Error initializing Supabase:', error);
+            }
+        } else {
+            console.log('Supabase not available, continuing without auth');
+        }
 
         // Basic UI wiring
-        const connectBtn = document.getElementById('connectPhantom');
         const loginBtn = document.getElementById('loginBtn');
         const playerNameInput = document.getElementById('playerName');
         const walletAddrEl = document.getElementById('walletAddr');
         const nftStatusEl = document.getElementById('nftStatus');
         const avatarImg = document.getElementById('avatarImg');
         const saveBtn = document.getElementById('saveBtn');
-        const disconnectBtn = document.getElementById('disconnectBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
         const playBtn = document.getElementById('playBtn');
-        const walletStatus = document.getElementById('walletStatus');
         const loginStatus = document.getElementById('loginStatus');
+        
+        // New dual login elements
+        const connectWalletBtn = document.getElementById('connectWalletBtn');
+        const connectGoogleBtn = document.getElementById('connectGoogleBtn');
+        const disconnectWalletBtn = document.getElementById('disconnectWalletBtn');
+        const disconnectGoogleBtn = document.getElementById('disconnectGoogleBtn');
+        const walletStatus = document.getElementById('walletStatus');
+        const googleStatus = document.getElementById('googleStatus');
+        
+        // Login state tracking
+        let isGoogleLoggedIn = false;
+        let isWalletConnected = false;
+        let walletAddress = null;
         const loginStatusText = document.getElementById('loginStatusText');
         const googleInfoField = document.getElementById('googleInfoField');
         const googleName = document.getElementById('googleName');
@@ -1818,40 +2124,55 @@
             if (saved) playerNameInput.value = saved; 
         } catch(e){}
 
-        // Firebase Auth functions
+        // Supabase Auth functions
         let currentUser = null;
 
-        // Google Auth Provider
-        const googleProvider = new firebase.auth.GoogleAuthProvider();
-        googleProvider.addScope('email');
-        googleProvider.addScope('profile');
-
-        // Login with Google
+        // Login with Google using Supabase
         async function loginWithGoogle() {
             try {
-                loginBtn.textContent = 'Logging in...';
-                loginBtn.disabled = true;
+                console.log('Starting Google login...');
                 
-                const result = await auth.signInWithPopup(googleProvider);
-                currentUser = result.user;
+                // Update button text if it exists
+                if (loginBtn) {
+                    loginBtn.textContent = 'Logging in...';
+                    loginBtn.disabled = true;
+                }
                 
-                console.log('Login successful:', currentUser);
-                updateLoginUI(true);
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin
+                    }
+                });
+                
+                if (error) {
+                    console.error('Login error:', error);
+                    alert('Erro no login: ' + error.message);
+                    updateLoginUI(false);
+                } else {
+                    console.log('Login initiated:', data);
+                }
                 
             } catch (error) {
                 console.error('Login error:', error);
                 alert('Erro no login: ' + error.message);
                 updateLoginUI(false);
             } finally {
-                loginBtn.textContent = 'LOGIN';
-                loginBtn.disabled = false;
+                if (loginBtn) {
+                    loginBtn.textContent = 'LOGIN';
+                    loginBtn.disabled = false;
+                }
             }
         }
 
         // Logout
         async function logout() {
             try {
-                await auth.signOut();
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    console.error('Logout error:', error);
+                    return;
+                }
                 currentUser = null;
                 updateLoginUI(false);
                 console.log('Logout successful');
@@ -1901,11 +2222,353 @@
             }
         }
 
-        // Auth state listener
-        auth.onAuthStateChanged((user) => {
-            currentUser = user;
-            updateLoginUI(!!user);
-        });
+        // Supabase auth state listener
+        if (supabase && supabase.auth) {
+            supabase.auth.onAuthStateChange((event, session) => {
+                console.log('Auth state changed:', event, session);
+                currentUser = session?.user || null;
+                isGoogleLoggedIn = !!currentUser;
+                
+                // Update Google account info
+                if (currentUser) {
+                    if (googleName) googleName.textContent = currentUser.user_metadata?.full_name || 'Google User';
+                    if (googleEmail) googleEmail.textContent = currentUser.email || 'No email';
+                }
+                
+                updateDualLoginUI();
+            });
+        } else {
+            console.log('Supabase auth not available, skipping auth listener');
+        }
+
+        // Login overlay functions
+        function showLoginOverlay() {
+            const overlay = document.getElementById('login-overlay');
+            if (overlay) {
+                overlay.classList.add('show');
+                console.log('Login overlay shown');
+            }
+        }
+        
+        function hideLoginOverlay() {
+            const overlay = document.getElementById('login-overlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+                console.log('Login overlay hidden');
+            }
+        }
+        
+        // Login with Solana (Phantom Wallet)
+        async function loginWithSolana() {
+            try {
+                console.log('Starting Solana login...');
+                await connectPhantomWithSupabase();
+                // After connecting wallet, we can consider user "logged in"
+                hideLoginOverlay();
+                updateDualLoginUI();
+                console.log('Solana login completed successfully');
+            } catch (error) {
+                console.error('Solana login error:', error);
+                alert('Erro ao conectar carteira: ' + error.message);
+            }
+        }
+        
+        // Connect wallet from config
+        async function connectWalletFromConfig() {
+            try {
+                connectWalletBtn.textContent = 'Connecting...';
+                connectWalletBtn.disabled = true;
+                
+                await connectPhantomWithSupabase();
+                updateDualLoginUI();
+                
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                alert('Erro ao conectar carteira: ' + error.message);
+            } finally {
+                connectWalletBtn.textContent = '👻 Connect Phantom Wallet';
+                connectWalletBtn.disabled = false;
+            }
+        }
+        
+        // Connect Phantom with Supabase Web3 Auth
+        async function connectPhantomWithSupabase() {
+            console.log('Checking Phantom availability...');
+            if (!(window && window.solana && window.solana.isPhantom)) { 
+                console.log('Phantom not available');
+                alert('Instale Phantom ou abra o site num navegador com a extensão Phantom'); 
+                return; 
+            }
+            
+            try {
+                console.log('Connecting to Phantom...');
+                // First connect to the wallet
+                const resp = await window.solana.connect();
+                const pub = resp.publicKey ? resp.publicKey.toString() : (window.solana.publicKey && window.solana.publicKey.toString());
+                
+                console.log('Connected to Phantom:', pub);
+                
+                // Now authenticate with Supabase using Web3
+                if (supabase && supabase.auth) {
+                    console.log('Authenticating with Supabase Web3...');
+                    const { data, error } = await supabase.auth.signInWithWeb3({
+                        chain: 'solana',
+                        statement: 'I accept the Space Crypto Miner Terms of Service at https://spacecryptominer.com/tos'
+                    });
+                    
+                    if (error) {
+                        console.error('Supabase Web3 auth error:', error);
+                        alert('Erro na autenticação: ' + error.message);
+                        return;
+                    }
+                    
+                    console.log('Supabase Web3 auth successful:', data);
+                } else {
+                    console.log('Supabase not available, using local wallet connection');
+                }
+                
+                // Update dual login state
+                walletAddress = pub;
+                isWalletConnected = true;
+                
+                // Update UI
+                if (walletAddrEl) {
+                    walletAddrEl.textContent = pub.substring(0, 8) + '...' + pub.substring(pub.length - 8);
+                }
+                
+                // try to find NFT image and metadata (devnet by default)
+                if (nftStatusEl) {
+                    nftStatusEl.textContent = 'Searching NFT...';
+                    const { findFirstNftImageForOwner, findFirstNftMetadataForOwner } = await import('./src/solana_nft.js');
+                    const [imageUrl, nftMetadata] = await Promise.all([
+                        findFirstNftImageForOwner(pub, { network: 'devnet' }),
+                        findFirstNftMetadataForOwner(pub, { network: 'devnet' })
+                    ]);
+                    
+                    if (imageUrl) {
+                        nftStatusEl.textContent = '✅ NFT found';
+                        nftStatusEl.style.color = 'var(--success)';
+                        if (avatarImg) avatarImg.src = imageUrl;
+                        
+                        // Update ship image and name
+                        const shipImg = document.getElementById('shipImg');
+                        const shipName = document.getElementById('shipName');
+                        
+                        if (shipImg) {
+                            shipImg.src = imageUrl;
+                            // Remove all rarity classes first
+                            shipImg.classList.remove('rarity-comum', 'rarity-incomum', 'rarity-raro', 'rarity-epico', 'rarity-lendario');
+                        }
+                        
+                        if (shipName && nftMetadata && nftMetadata.name) {
+                            shipName.textContent = nftMetadata.name;
+                            // Apply rarity color if available
+                            if (nftMetadata.attributes) {
+                                const rarity = nftMetadata.attributes.find(attr => 
+                                    attr.trait_type === 'Raridade' || attr.trait_type === 'raridade'
+                                );
+                                if (rarity) {
+                                    const rarityValue = rarity.value.toLowerCase();
+                                    shipName.style.color = getRarityColor(rarityValue);
+                                    
+                                    // Apply rarity class to ship image
+                                    if (shipImg) {
+                                        shipImg.classList.add(`rarity-${rarityValue}`);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Update stats with NFT data
+                        updateShipStats(nftMetadata);
+                    } else {
+                        nftStatusEl.textContent = '❌ No NFT found';
+                        nftStatusEl.style.color = 'var(--muted)';
+                        
+                        // Reset ship to default
+                        const shipImg = document.getElementById('shipImg');
+                        const shipName = document.getElementById('shipName');
+                        
+                        if (shipImg) {
+                            shipImg.src = '/assets/images/idle.png';
+                            shipImg.classList.remove('rarity-comum', 'rarity-incomum', 'rarity-raro', 'rarity-epico', 'rarity-lendario');
+                            shipImg.classList.add('rarity-comum');
+                        }
+                        
+                        if (shipName) {
+                            shipName.textContent = 'Nave Padrão';
+                            shipName.style.color = '#CCCCCC';
+                        }
+                        
+                        // Reset stats to default
+                        updateShipStats(null);
+                    }
+                }
+                
+                window.__GAME_CONFIG__ = { 
+                    playerName: playerNameInput.value || 'Pilot', 
+                    walletAddress: pub, 
+                    nftImage: imageUrl || null 
+                };
+                
+            } catch(e) {
+                console.error('connect error', e); 
+                alert('Failed to connect Phantom');
+                throw e;
+            }
+        }
+        
+        // Connect Google from config
+        async function connectGoogleFromConfig() {
+            try {
+                connectGoogleBtn.textContent = 'Connecting...';
+                connectGoogleBtn.disabled = true;
+                
+                await loginWithGoogle();
+                updateDualLoginUI();
+                
+            } catch (error) {
+                console.error('Google connection error:', error);
+                alert('Erro ao conectar Google: ' + error.message);
+            } finally {
+                connectGoogleBtn.textContent = '🔍 Connect Google Account';
+                connectGoogleBtn.disabled = false;
+            }
+        }
+        
+        // Disconnect wallet
+        async function disconnectWallet() {
+            try {
+                if (window && window.solana && window.solana.isPhantom) {
+                    await window.solana.disconnect();
+                }
+                isWalletConnected = false;
+                walletAddress = null;
+                
+                // Clear wallet UI
+                if (walletAddrEl) {
+                    walletAddrEl.textContent = 'No wallet connected';
+                }
+                if (nftStatusEl) {
+                    nftStatusEl.textContent = 'No NFT detected';
+                    nftStatusEl.style.color = 'var(--muted)';
+                }
+                
+                // Reset avatar and ship to default
+                if (avatarImg) {
+                    avatarImg.src = '/assets/icones/astronauta.png';
+                }
+                
+                const shipImg = document.getElementById('shipImg');
+                const shipName = document.getElementById('shipName');
+                
+                if (shipImg) {
+                    shipImg.src = '/assets/images/idle.png';
+                    shipImg.classList.remove('rarity-comum', 'rarity-incomum', 'rarity-raro', 'rarity-epico', 'rarity-lendario');
+                    shipImg.classList.add('rarity-comum');
+                }
+                
+                if (shipName) {
+                    shipName.textContent = 'Nave Padrão';
+                    shipName.style.color = '#CCCCCC';
+                }
+                
+                // Reset ship stats
+                updateShipStats(null);
+                
+                updateDualLoginUI();
+                console.log('Wallet disconnected');
+            } catch (error) {
+                console.error('Wallet disconnect error:', error);
+            }
+        }
+        
+        // Disconnect Google
+        async function disconnectGoogle() {
+            try {
+                if (supabase && supabase.auth) {
+                    await supabase.auth.signOut();
+                }
+                isGoogleLoggedIn = false;
+                currentUser = null;
+                
+                // Clear Google UI
+                if (googleName) googleName.textContent = '';
+                if (googleEmail) googleEmail.textContent = '';
+                
+                updateDualLoginUI();
+                console.log('Google disconnected');
+            } catch (error) {
+                console.error('Google disconnect error:', error);
+            }
+        }
+        
+        // Update dual login UI
+        function updateDualLoginUI() {
+            // Update wallet status
+            if (isWalletConnected && walletAddress) {
+                walletStatus.textContent = `Connected: ${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
+                walletStatus.style.color = 'var(--success)';
+                connectWalletBtn.style.display = 'none';
+                disconnectWalletBtn.style.display = 'inline-block';
+            } else {
+                walletStatus.textContent = 'Not connected';
+                walletStatus.style.color = 'var(--muted)';
+                connectWalletBtn.style.display = 'inline-block';
+                disconnectWalletBtn.style.display = 'none';
+            }
+            
+            // Update Google status
+            if (isGoogleLoggedIn && currentUser) {
+                googleStatus.textContent = `Connected: ${currentUser.email}`;
+                googleStatus.style.color = 'var(--success)';
+                connectGoogleBtn.style.display = 'none';
+                disconnectGoogleBtn.style.display = 'inline-block';
+            } else {
+                googleStatus.textContent = 'Not connected';
+                googleStatus.style.color = 'var(--muted)';
+                connectGoogleBtn.style.display = 'inline-block';
+                disconnectGoogleBtn.style.display = 'none';
+            }
+            
+            // Check if user is completely disconnected
+            const hasAnyLogin = isGoogleLoggedIn || isWalletConnected;
+            
+            if (hasAnyLogin) {
+                // User is logged in with at least one method
+                loginStatusText.textContent = '✅ Logged in';
+                loginStatusText.style.color = 'var(--success)';
+                loginBtn.style.display = 'none';
+                playBtn.style.display = 'inline-block';
+                
+                // Hide login overlay
+                hideLoginOverlay();
+                
+                // Show main content
+                const mainContent = document.querySelector('.wrap');
+                if (mainContent) {
+                    mainContent.style.display = 'block';
+                }
+                
+            } else {
+                // User is completely disconnected
+                loginStatusText.textContent = 'Not logged in';
+                loginStatusText.style.color = 'var(--muted)';
+                loginBtn.style.display = 'inline-block';
+                playBtn.style.display = 'none';
+                
+                // Show login overlay
+                showLoginOverlay();
+                
+                // Hide main content
+                const mainContent = document.querySelector('.wrap');
+                if (mainContent) {
+                    mainContent.style.display = 'none';
+                }
+                
+                console.log('User completely disconnected, showing login overlay');
+            }
+        }
 
         async function connectPhantom() {
             if (!(window && window.solana && window.solana.isPhantom)) { 
@@ -1914,15 +2577,17 @@
             }
             
             try {
-                connectBtn.textContent = 'Conectando...';
-                connectBtn.disabled = true;
-                
                 const resp = await window.solana.connect();
                 const pub = resp.publicKey ? resp.publicKey.toString() : (window.solana.publicKey && window.solana.publicKey.toString());
                 
+                // Update dual login state
+                walletAddress = pub;
+                isWalletConnected = true;
+                
                 // Update UI
-                walletAddrEl.textContent = pub.substring(0, 8) + '...' + pub.substring(pub.length - 8);
-                walletStatus.className = 'status-indicator connected';
+                if (walletAddrEl) {
+                    walletAddrEl.textContent = pub.substring(0, 8) + '...' + pub.substring(pub.length - 8);
+                }
                 
                 // try to find NFT image and metadata (devnet by default)
                 nftStatusEl.textContent = 'Searching NFT...';
@@ -2107,11 +2772,131 @@
             console.log('updateShipStats completed successfully');
         }
         
-        connectBtn.addEventListener('click', connectPhantom);
+        // Initialize dual login UI
+        updateDualLoginUI();
+        
+        // Check initial login states
+        function checkInitialLoginStates() {
+            // Check if wallet is already connected
+            if (window.solana && window.solana.isPhantom && window.solana.publicKey) {
+                walletAddress = window.solana.publicKey.toString();
+                isWalletConnected = true;
+            }
+            
+            // Check if Google is already logged in (will be handled by Supabase listener)
+            updateDualLoginUI();
+            
+            // If no login method is active, show overlay immediately
+            if (!isGoogleLoggedIn && !isWalletConnected) {
+                console.log('No login methods active, showing overlay');
+                showLoginOverlay();
+            }
+        }
+        
+        // Run initial check
+        checkInitialLoginStates();
+        
+        // Initialize ship stats
+        console.log('Initializing ship stats...');
+        updateShipStats(null);
+        
+        // Apply default rarity class to ship image
+        const shipImg = document.getElementById('shipImg');
+        if (shipImg) {
+            shipImg.classList.add('rarity-comum');
+            console.log('Applied default rarity class to ship image');
+        } else {
+            console.error('Ship image element not found!');
+        }
         
         // Login and logout event listeners
         loginBtn.addEventListener('click', loginWithGoogle);
-        logoutBtn.addEventListener('click', logout);
+        
+        // Dual login event listeners
+        if (connectWalletBtn) {
+            connectWalletBtn.addEventListener('click', connectWalletFromConfig);
+        }
+        if (connectGoogleBtn) {
+            connectGoogleBtn.addEventListener('click', connectGoogleFromConfig);
+        }
+        if (disconnectWalletBtn) {
+            disconnectWalletBtn.addEventListener('click', disconnectWallet);
+        }
+        if (disconnectGoogleBtn) {
+            disconnectGoogleBtn.addEventListener('click', disconnectGoogle);
+        }
+        
+        // Wait for DOM to be fully loaded before registering overlay button events
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded, registering overlay button events...');
+            
+            // Try to register events immediately
+            registerOverlayButtonEvents();
+            
+            // Also try after a short delay in case elements are added dynamically
+            setTimeout(registerOverlayButtonEvents, 100);
+            setTimeout(registerOverlayButtonEvents, 500);
+        });
+        
+        function registerOverlayButtonEvents() {
+            console.log('Attempting to register overlay button events...');
+            
+            // Login overlay event listeners
+            const loginGoogleBtn = document.getElementById('loginGoogleBtn');
+            const loginSolanaBtn = document.getElementById('loginSolanaBtn');
+            
+            console.log('Login overlay buttons:', { loginGoogleBtn, loginSolanaBtn });
+            console.log('Button elements found:', {
+                google: !!loginGoogleBtn,
+                solana: !!loginSolanaBtn
+            });
+            
+            if (loginGoogleBtn) {
+                console.log('Registering Google login button event listener');
+                // Remove any existing listeners first
+                loginGoogleBtn.removeEventListener('click', handleGoogleClick);
+                loginGoogleBtn.addEventListener('click', handleGoogleClick);
+            } else {
+                console.error('Google login button not found!');
+            }
+            
+            if (loginSolanaBtn) {
+                console.log('Registering Solana login button event listener');
+                // Remove any existing listeners first
+                loginSolanaBtn.removeEventListener('click', handleSolanaClick);
+                loginSolanaBtn.addEventListener('click', handleSolanaClick);
+            } else {
+                console.error('Solana login button not found!');
+            }
+        }
+        
+        function handleGoogleClick(e) {
+            console.log('Google button clicked!');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (typeof loginWithGoogle === 'function') {
+                console.log('Calling loginWithGoogle function...');
+                loginWithGoogle();
+            } else {
+                console.error('loginWithGoogle function not found!');
+                alert('Erro: Função de login Google não encontrada');
+            }
+        }
+        
+        function handleSolanaClick(e) {
+            console.log('Solana button clicked!');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (typeof loginWithSolana === 'function') {
+                console.log('Calling loginWithSolana function...');
+                loginWithSolana();
+            } else {
+                console.error('loginWithSolana function not found!');
+                alert('Erro: Função de login Solana não encontrada');
+            }
+        }
         
         // Play button event listener
         playBtn.addEventListener('click', () => {
@@ -2257,6 +3042,46 @@
             console.log('Testing ship stats update...');
             updateShipStats(null);
         };
+        
+        // Debug function to check ship elements
+        window.debugShipElements = function() {
+            console.log('🔍 Debugging ship elements...');
+            const statsTitle = document.getElementById('statsTitle');
+            const statsAttributes = document.getElementById('statsAttributes');
+            const statsRarity = document.getElementById('statsRarity');
+            const shipImg = document.getElementById('shipImg');
+            const shipName = document.getElementById('shipName');
+            
+            console.log('Ship elements found:', {
+                statsTitle: !!statsTitle,
+                statsAttributes: !!statsAttributes,
+                statsRarity: !!statsRarity,
+                shipImg: !!shipImg,
+                shipName: !!shipName
+            });
+            
+            if (statsTitle) console.log('statsTitle text:', statsTitle.textContent);
+            if (statsAttributes) console.log('statsAttributes HTML:', statsAttributes.innerHTML);
+            if (statsRarity) console.log('statsRarity text:', statsRarity.textContent);
+            
+            return {
+                statsTitle: !!statsTitle,
+                statsAttributes: !!statsAttributes,
+                statsRarity: !!statsRarity,
+                shipImg: !!shipImg,
+                shipName: !!shipName
+            };
+        };
+        
+        // Function to force complete logout (for testing)
+        window.forceCompleteLogout = function() {
+            console.log('🔄 Forcing complete logout...');
+            isGoogleLoggedIn = false;
+            isWalletConnected = false;
+            currentUser = null;
+            walletAddress = null;
+            updateDualLoginUI();
+        };
             
             // Debug: Check if stats elements exist
             const statsTitle = document.getElementById('statsTitle');
@@ -2272,11 +3097,28 @@
 
         // Navegação por abas
         function initTabNavigation() {
+            console.log('🚀 Initializing tab navigation...');
+            console.log('Document ready state:', document.readyState);
+            
             const tabs = document.querySelectorAll('.nav-tab');
             const tabContents = document.querySelectorAll('.tab-content');
             const currentTab = 'profile'; // Tab padrão
+            
+            console.log('Found tabs:', tabs.length);
+            console.log('Found contents:', tabContents.length);
+            
+            // Debug: log each tab element
+            tabs.forEach((tab, index) => {
+                console.log(`Tab ${index}:`, {
+                    element: tab,
+                    dataTab: tab.getAttribute('data-tab'),
+                    classes: tab.className,
+                    text: tab.textContent.trim()
+                });
+            });
 
             function switchTab(tabName) {
+                console.log('Switching to tab:', tabName);
                 // Remove active class de todas as abas
                 tabs.forEach(tab => {
                     tab.classList.remove('active');
@@ -2304,7 +3146,11 @@
 
             // Adiciona event listeners
             tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
+                console.log('Adding click listener to tab:', tab.getAttribute('data-tab'));
+                tab.addEventListener('click', (e) => {
+                    console.log('Tab clicked!', e.target, tab.getAttribute('data-tab'));
+                    e.preventDefault();
+                    e.stopPropagation();
                     const tabName = tab.getAttribute('data-tab');
                     switchTab(tabName);
                 });
@@ -2314,11 +3160,138 @@
             switchTab(currentTab);
         }
 
-        // Inicializa navegação por abas
-        initTabNavigation();
+        // Inicializa navegação por abas quando DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM loaded, initializing tabs...');
+                setTimeout(initTabNavigation, 100); // Small delay to ensure everything is ready
+            });
+        } else {
+            console.log('DOM already loaded, initializing tabs...');
+            setTimeout(initTabNavigation, 100);
+        }
+        
+        // Função de teste para debug
+        window.testTabs = function() {
+            console.log('🧪 Testing tabs...');
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+            console.log('Tabs found:', tabs.length);
+            console.log('Contents found:', contents.length);
+            return { tabs: tabs.length, contents: contents.length };
+        };
+        
+        // Função de teste para mostrar overlay de login
+        window.showLoginOverlayTest = function() {
+            console.log('🧪 Testing login overlay...');
+            showLoginOverlay();
+        };
+        
+        // Função de teste para navegação de abas
+        window.testTabNavigation = function() {
+            console.log('🧪 Testing tab navigation...');
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            console.log('Found tabs:', tabs.length);
+            console.log('Found contents:', contents.length);
+            
+            tabs.forEach((tab, index) => {
+                const tabName = tab.getAttribute('data-tab');
+                const contentId = tabName + '-content';
+                const content = document.getElementById(contentId);
+                
+                console.log(`Tab ${index + 1}:`, {
+                    name: tabName,
+                    hasContent: !!content,
+                    isActive: tab.classList.contains('active'),
+                    contentActive: content ? content.classList.contains('active') : false
+                });
+            });
+            
+            return { tabs: tabs.length, contents: contents.length };
+        };
+        
+        // Função para testar clique manual nas abas
+        window.testTabClick = function(tabName) {
+            console.log(`🧪 Testing click on tab: ${tabName}`);
+            const tab = document.querySelector(`.nav-tab[data-tab="${tabName}"]`);
+            if (tab) {
+                console.log('Found tab, clicking...');
+                tab.click();
+            } else {
+                console.error(`Tab not found: ${tabName}`);
+            }
+        };
+        
+        // Função para reinicializar as abas
+        window.reinitTabs = function() {
+            console.log('🔄 Reinitializing tabs...');
+            initTabNavigation();
+        };
 
         // Expose quick helper for debugging
         window.__connectPhantom = connectPhantom;
+        
+        // Simple test function that doesn't depend on other functions
+        try {
+            window.simpleTabTest = function() {
+                console.log('🧪 Simple tab test...');
+                const tabs = document.querySelectorAll('.nav-tab');
+                console.log('Found tabs:', tabs.length);
+                
+                tabs.forEach((tab, index) => {
+                    console.log(`Tab ${index}:`, {
+                        element: tab,
+                        dataTab: tab.getAttribute('data-tab'),
+                        text: tab.textContent.trim()
+                    });
+                });
+                
+                return tabs.length;
+            };
+            console.log('✅ simpleTabTest function created successfully');
+        } catch (error) {
+            console.error('❌ Error creating simpleTabTest:', error);
+        }
+        
+        // Immediate test to check if script is running
+        console.log('🚀 Script is running - checking tabs immediately...');
+        try {
+            const tabs = document.querySelectorAll('.nav-tab');
+            console.log('Immediate check - Found tabs:', tabs.length);
+            if (tabs.length === 0) {
+                console.log('⚠️ No tabs found - DOM might not be ready');
+            }
+        } catch (error) {
+            console.error('❌ Error in immediate check:', error);
+        }
     </script>
+    
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-container">
+            <div class="login-header">
+                <h2>🚀 SPACE CRYPTO MINER</h2>
+                <p>Faça login para continuar sua jornada espacial</p>
+            </div>
+            
+            <div class="login-options">
+                <button id="loginGoogleBtn" class="login-btn google-btn">
+                    <span class="btn-icon">🔍</span>
+                    Login com Google
+                </button>
+                
+                <button id="loginSolanaBtn" class="login-btn solana-btn">
+                    <span class="btn-icon">👻</span>
+                    Conectar Phantom Wallet
+                </button>
+            </div>
+            
+            <div class="login-footer">
+                <p>Escolha uma opção para começar</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

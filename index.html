@@ -9,6 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
         :root{
             --bg-primary: #0a0a0f;
@@ -813,6 +817,42 @@
             background: rgba(0, 0, 0, 0.3);
             padding: 8px;
             transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .ship-image::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(204, 204, 204, 0.1), transparent);
+            animation: rotate 4s linear infinite;
+            border-radius: 12px;
+            z-index: -1;
+        }
+        
+        /* Rarity-based background colors */
+        .ship-image.rarity-comum::before {
+            background: conic-gradient(from 0deg, transparent, rgba(204, 204, 204, 0.15), transparent);
+        }
+        
+        .ship-image.rarity-incomum::before {
+            background: conic-gradient(from 0deg, transparent, rgba(0, 255, 0, 0.15), transparent);
+        }
+        
+        .ship-image.rarity-raro::before {
+            background: conic-gradient(from 0deg, transparent, rgba(0, 128, 255, 0.15), transparent);
+        }
+        
+        .ship-image.rarity-epico::before {
+            background: conic-gradient(from 0deg, transparent, rgba(160, 32, 240, 0.15), transparent);
+        }
+        
+        .ship-image.rarity-lendario::before {
+            background: conic-gradient(from 0deg, transparent, rgba(255, 215, 0, 0.15), transparent);
         }
         
         .ship-preview:hover .ship-image {
@@ -898,6 +938,25 @@
         /* Ensure stats container fits properly */
         .ship-preview {
             overflow: visible !important;
+        }
+        
+        /* Debug: Make sure stats container is visible */
+        .ship-stats {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Google account info styling */
+        .google-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .google-email {
+            color: var(--text-secondary);
+            font-size: 11px;
         }
         
         /* Fields melhorados */
@@ -1146,7 +1205,14 @@
                     <span class="status-indicator disconnected" id="walletStatus"></span>
                     Connect Phantom
                 </button>
-                <button id="openPlay" class="btn play-btn">PLAY</button>
+                <button id="loginBtn" class="btn play-btn">
+                    <span class="status-indicator disconnected" id="loginStatus"></span>
+                    LOGIN
+                </button>
+                <button id="playBtn" class="btn play-btn" style="display:none;">
+                    <span class="status-indicator connected"></span>
+                    PLAY
+                </button>
             </div>
         </header>
 
@@ -1181,9 +1247,23 @@
                         <label>NFT Status</label>
                         <div id="nftStatus" class="small">No NFT detected</div>
                     </div>
+                    <div class="field">
+                        <label>Login Status</label>
+                        <div id="loginStatusText" class="small">Not logged in</div>
+                    </div>
+                    <div class="field" id="googleInfoField" style="display:none;">
+                        <label>Google Account</label>
+                        <div id="googleInfo" class="small">
+                            <div id="googleName" class="google-name"></div>
+                            <div id="googleEmail" class="google-email"></div>
+                        </div>
+                    </div>
                     <div style="margin-top:20px;display:flex;gap:12px;">
                         <button id="saveBtn" class="btn">💾 Save</button>
                         <button id="disconnectBtn" class="btn ghost">🔌 Disconnect</button>
+                    </div>
+                    <div style="margin-top:12px;display:flex;gap:12px;">
+                        <button id="logoutBtn" class="btn ghost" style="display:none;">🚪 Logout</button>
                     </div>
                 </aside>
 
@@ -1699,22 +1779,133 @@
             }
         }
 
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvR4dl0O70J0FvSOPMKOEx_9a3Vz6AFpA",
+            authDomain: "spaceshiponsol.firebaseapp.com",
+            projectId: "spaceshiponsol",
+            storageBucket: "spaceshiponsol.firebasestorage.app",
+            messagingSenderId: "279903883069",
+            appId: "1:279903883069:web:3e069680399746002e7f54",
+            measurementId: "G-942B12QN54"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
         // Basic UI wiring
         const connectBtn = document.getElementById('connectPhantom');
-        const openPlay = document.getElementById('openPlay');
+        const loginBtn = document.getElementById('loginBtn');
         const playerNameInput = document.getElementById('playerName');
         const walletAddrEl = document.getElementById('walletAddr');
         const nftStatusEl = document.getElementById('nftStatus');
         const avatarImg = document.getElementById('avatarImg');
         const saveBtn = document.getElementById('saveBtn');
         const disconnectBtn = document.getElementById('disconnectBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const playBtn = document.getElementById('playBtn');
         const walletStatus = document.getElementById('walletStatus');
+        const loginStatus = document.getElementById('loginStatus');
+        const loginStatusText = document.getElementById('loginStatusText');
+        const googleInfoField = document.getElementById('googleInfoField');
+        const googleName = document.getElementById('googleName');
+        const googleEmail = document.getElementById('googleEmail');
 
         // Load saved name
         try { 
             const saved = localStorage.getItem('playerName'); 
             if (saved) playerNameInput.value = saved; 
         } catch(e){}
+
+        // Firebase Auth functions
+        let currentUser = null;
+
+        // Google Auth Provider
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+
+        // Login with Google
+        async function loginWithGoogle() {
+            try {
+                loginBtn.textContent = 'Logging in...';
+                loginBtn.disabled = true;
+                
+                const result = await auth.signInWithPopup(googleProvider);
+                currentUser = result.user;
+                
+                console.log('Login successful:', currentUser);
+                updateLoginUI(true);
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Erro no login: ' + error.message);
+                updateLoginUI(false);
+            } finally {
+                loginBtn.textContent = 'LOGIN';
+                loginBtn.disabled = false;
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await auth.signOut();
+                currentUser = null;
+                updateLoginUI(false);
+                console.log('Logout successful');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Update login UI
+        function updateLoginUI(isLoggedIn) {
+            if (isLoggedIn && currentUser) {
+                // Hide login button and show play button
+                loginBtn.style.display = 'none';
+                playBtn.style.display = 'block';
+                
+                // Update login status text
+                loginStatusText.textContent = '✅ Logged in with Google';
+                loginStatusText.style.color = 'var(--success)';
+                
+                // Show logout button
+                logoutBtn.style.display = 'block';
+                
+                // Show Google account info
+                googleInfoField.style.display = 'block';
+                googleName.textContent = currentUser.displayName || 'Google User';
+                googleEmail.textContent = currentUser.email || '';
+                
+                // Update player name if empty
+                if (!playerNameInput.value.trim()) {
+                    playerNameInput.value = currentUser.displayName || 'Pilot';
+                }
+                
+            } else {
+                // Show login button and hide play button
+                loginBtn.style.display = 'block';
+                playBtn.style.display = 'none';
+                
+                // Update login status text
+                loginStatusText.textContent = '❌ Not logged in';
+                loginStatusText.style.color = 'var(--muted)';
+                
+                // Hide logout button
+                logoutBtn.style.display = 'none';
+                
+                // Hide Google account info
+                googleInfoField.style.display = 'none';
+            }
+        }
+
+        // Auth state listener
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            updateLoginUI(!!user);
+        });
 
         async function connectPhantom() {
             if (!(window && window.solana && window.solana.isPhantom)) { 
@@ -1752,6 +1943,8 @@
                     
                     if (shipImg) {
                         shipImg.src = imageUrl;
+                        // Remove all rarity classes first
+                        shipImg.classList.remove('rarity-comum', 'rarity-incomum', 'rarity-raro', 'rarity-epico', 'rarity-lendario');
                     }
                     
                     if (shipName && nftMetadata && nftMetadata.name) {
@@ -1770,6 +1963,12 @@
                                     'Lendário': '#FFD700'
                                 };
                                 shipName.style.color = rarityColors[rarity.value] || '#CCCCCC';
+                                
+                                // Apply rarity class to ship image
+                                if (shipImg) {
+                                    const rarityClass = `rarity-${rarity.value.toLowerCase()}`;
+                                    shipImg.classList.add(rarityClass);
+                                }
                             }
                         }
                     }
@@ -1815,15 +2014,23 @@
         let currentShipData = null;
         
         function updateShipStats(shipData) {
+            console.log('updateShipStats called with:', shipData);
             currentShipData = shipData;
             const statsTitle = document.getElementById('statsTitle');
             const statsAttributes = document.getElementById('statsAttributes');
             const statsRarity = document.getElementById('statsRarity');
             
+            console.log('Stats elements found:', {
+                statsTitle: !!statsTitle,
+                statsAttributes: !!statsAttributes,
+                statsRarity: !!statsRarity
+            });
+            
             if (!shipData) {
+                console.log('Updating with default ship data');
                 // Default ship data
-                statsTitle.textContent = 'Nave Padrão';
-                statsAttributes.innerHTML = `
+                if (statsTitle) statsTitle.textContent = 'Nave Padrão';
+                if (statsAttributes) statsAttributes.innerHTML = `
                     <div class="stats-attr">
                         <span class="stats-attr-label">Velocidade</span>
                         <span class="stats-attr-value">100</span>
@@ -1849,11 +2056,13 @@
                         <span class="stats-attr-value">Padrão</span>
                     </div>
                 `;
-                statsRarity.textContent = 'COMUM';
-                statsRarity.className = 'stats-rarity rarity-comum';
+                if (statsRarity) {
+                    statsRarity.textContent = 'COMUM';
+                    statsRarity.className = 'stats-rarity rarity-comum';
+                }
             } else {
                 // NFT ship data
-                statsTitle.textContent = shipData.name || 'NFT Ship';
+                if (statsTitle) statsTitle.textContent = shipData.name || 'NFT Ship';
                 
                 const attributes = shipData.attributes || [];
                 const attrMap = {};
@@ -1861,7 +2070,7 @@
                     attrMap[attr.trait_type.toLowerCase()] = attr.value;
                 });
                 
-                statsAttributes.innerHTML = `
+                if (statsAttributes) statsAttributes.innerHTML = `
                     <div class="stats-attr">
                         <span class="stats-attr-label">Velocidade</span>
                         <span class="stats-attr-value">${attrMap.velocidade || 'N/A'}</span>
@@ -1889,12 +2098,48 @@
                 `;
                 
                 const rarity = attrMap.raridade || 'Comum';
-                statsRarity.textContent = rarity.toUpperCase();
-                statsRarity.className = `stats-rarity rarity-${rarity.toLowerCase()}`;
+                if (statsRarity) {
+                    statsRarity.textContent = rarity.toUpperCase();
+                    statsRarity.className = `stats-rarity rarity-${rarity.toLowerCase()}`;
+                }
             }
+            
+            console.log('updateShipStats completed successfully');
         }
         
         connectBtn.addEventListener('click', connectPhantom);
+        
+        // Login and logout event listeners
+        loginBtn.addEventListener('click', loginWithGoogle);
+        logoutBtn.addEventListener('click', logout);
+        
+        // Play button event listener
+        playBtn.addEventListener('click', () => {
+            // Start the game
+            const gameConfig = window.__GAME_CONFIG__ || { 
+                playerName: playerNameInput.value || 'Pilot', 
+                walletAddress: null, 
+                nftImage: null 
+            };
+            
+            // Show game container
+            const gameLaunch = document.getElementById('game-launch');
+            if (gameLaunch) {
+                gameLaunch.style.display = 'block';
+            }
+            
+            // Start Phaser game
+            if (window.game) {
+                window.game.destroy(true);
+            }
+            
+            // Import and start game
+            import('./src/main.js').then(() => {
+                console.log('Game started successfully');
+            }).catch(error => {
+                console.error('Error starting game:', error);
+            });
+        });
         
         disconnectBtn.addEventListener('click', async () => {
             if (window && window.solana && window.solana.isPhantom) { 
@@ -1912,6 +2157,9 @@
             
             if (shipImg) {
                 shipImg.src = '/assets/images/idle.png';
+                // Remove all rarity classes and add common
+                shipImg.classList.remove('rarity-comum', 'rarity-incomum', 'rarity-raro', 'rarity-epico', 'rarity-lendario');
+                shipImg.classList.add('rarity-comum');
             }
             
             if (shipName) {
@@ -1985,8 +2233,42 @@
         // Initialize particles
         createFloatingParticles();
         
-        // Initialize ship stats
-        updateShipStats(null);
+        // Wait for DOM to be fully loaded before initializing
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded, initializing ship stats...');
+            
+            // Initialize ship stats and apply default rarity
+            updateShipStats(null);
+            
+            // Apply default rarity class to ship image
+            const shipImg = document.getElementById('shipImg');
+            if (shipImg) {
+                shipImg.classList.add('rarity-comum');
+                console.log('Applied default rarity class to ship image');
+            } else {
+                console.error('Ship image element not found!');
+            }
+            
+        // Initialize login UI
+        updateLoginUI(false);
+        
+        // Test function to force update ship stats
+        window.testShipStats = function() {
+            console.log('Testing ship stats update...');
+            updateShipStats(null);
+        };
+            
+            // Debug: Check if stats elements exist
+            const statsTitle = document.getElementById('statsTitle');
+            const statsAttributes = document.getElementById('statsAttributes');
+            const statsRarity = document.getElementById('statsRarity');
+            
+            console.log('Stats elements check:', {
+                statsTitle: !!statsTitle,
+                statsAttributes: !!statsAttributes,
+                statsRarity: !!statsRarity
+            });
+        });
 
         // Navegação por abas
         function initTabNavigation() {

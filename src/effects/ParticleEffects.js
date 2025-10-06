@@ -59,11 +59,11 @@ export default class ParticleEffects {
     createThrustEffect(ship) {
         const emitter = this.scene.add.particles(0, 0, 'particle_basic', {
             speed: { min: 50, max: 150 },
-            scale: { start: 0.6, end: 0 },
-            alpha: { start: 1, end: 0 },
-            lifespan: 400,
-            frequency: 30,
-            tint: [0xff6600, 0xff9900, 0xffcc00, 0x00ccff],
+            scale: { start: 0.4, end: 0 },
+            alpha: { start: 0.8, end: 0 },
+            lifespan: 300,
+            frequency: 60, // Reduzido de 30 para 60 (menos partículas)
+            tint: [0xff6600, 0xff9900, 0x00ccff],
             blendMode: 'ADD',
             follow: ship,
             followOffset: { x: 0, y: 0 }, // Será atualizado dinamicamente
@@ -120,22 +120,22 @@ export default class ParticleEffects {
     createExplosion(x, y, type = 'medium') {
         const configs = {
             small: {
-                particleCount: 15,
+                particleCount: 5, // Reduzido de 15 para 5
                 speed: { min: 50, max: 150 },
                 scale: { start: 0.4, end: 0 },
-                lifespan: 400
+                lifespan: 300 // Reduzido de 400 para 300
             },
             medium: {
-                particleCount: 30,
+                particleCount: 10, // Reduzido de 30 para 10
                 speed: { min: 100, max: 250 },
-                scale: { start: 0.8, end: 0 },
-                lifespan: 600
+                scale: { start: 0.6, end: 0 }, // Reduzido de 0.8 para 0.6
+                lifespan: 400 // Reduzido de 600 para 400
             },
             large: {
-                particleCount: 50,
+                particleCount: 15, // Reduzido de 50 para 15
                 speed: { min: 150, max: 350 },
-                scale: { start: 1.2, end: 0 },
-                lifespan: 800
+                scale: { start: 0.8, end: 0 }, // Reduzido de 1.2 para 0.8
+                lifespan: 500 // Reduzido de 800 para 500
             }
         };
         
@@ -239,11 +239,11 @@ export default class ParticleEffects {
     createProjectileTrail(projectile) {
         const emitter = this.scene.add.particles(0, 0, 'particle_basic', {
             speed: 10,
-            scale: { start: 0.3, end: 0 },
-            alpha: { start: 0.6, end: 0 },
-            lifespan: 200,
-            frequency: 20,
-            tint: [0x00ccff, 0x0099ff],
+            scale: { start: 0.2, end: 0 },
+            alpha: { start: 0.4, end: 0 },
+            lifespan: 150, // Reduzido de 200 para 150
+            frequency: 40, // Reduzido de 20 para 40 (menos partículas)
+            tint: [0x00ccff],
             blendMode: 'ADD',
             follow: projectile,
             emitting: true

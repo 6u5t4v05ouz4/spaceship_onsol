@@ -24,7 +24,7 @@ export default class TrailEffects {
      * @param {number} alpha - Transparência
      * @param {number} width - Largura da linha
      */
-    createLineTrail(id, maxPoints = 20, color = 0x00ccff, alpha = 0.6, width = 2) {
+    createLineTrail(id, maxPoints = 8, color = 0x00ccff, alpha = 0.6, width = 2) {
         this.trails.set(id, {
             type: 'line',
             points: [],

@@ -47,6 +47,10 @@ export default class GameScene extends Phaser.Scene {
         // Culling distance (only render/enable objects within this radius of the ship)
         this.cullRadius = 1200; // pixels
         
+        // Memory management
+        this.lastCleanup = 0;
+        this.cleanupInterval = 30000; // Cleanup every 30 seconds
+        
         // Game Juice Managers
         this.juiceManager = null;
         this.audioManager = null;
@@ -350,12 +354,12 @@ export default class GameScene extends Phaser.Scene {
     }
 
     createMeteors() {
-        // Spawn periódico de meteoros vindos de bordas do mundo - REDUZIDO
+        // Spawn periódico de meteoros vindos de bordas do mundo - MUITO REDUZIDO
         this.meteorSpawnTimer = this.time.addEvent({
-            delay: 3000, // Spawn a cada 3 segundos (muito mais espaçado)
+            delay: 8000, // Spawn a cada 8 segundos (muito mais espaçado)
             callback: () => {
                 // Limita o número máximo de meteoros ativos para evitar sobrecarga
-                const maxMeteors = 8; // Reduzido de 20 para 8
+                const maxMeteors = 3; // Reduzido de 8 para 3
                 const currentMeteors = this.meteorsGroup ? this.meteorsGroup.getLength() : 0;
                 
                 if (currentMeteors < maxMeteors) {
@@ -550,9 +554,9 @@ export default class GameScene extends Phaser.Scene {
             0x000000
         ).setOrigin(0).setDepth(-10);
         
-        // Cria estrelas distantes (camada 1 - parallax lento)
+        // Cria estrelas distantes (camada 1 - parallax lento) - OTIMIZADO
         this.distantStars = this.add.group();
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 30; i++) { // Reduzido de 100 para 30
             const x = Phaser.Math.Between(-2000, 2000);
             const y = Phaser.Math.Between(-2000, 2000);
             const star = this.add.rectangle(x, y, 1, 1, 0xffffff);
@@ -560,9 +564,9 @@ export default class GameScene extends Phaser.Scene {
             this.distantStars.add(star);
         }
         
-        // Cria estrelas brilhantes (camada 2 - parallax mais rápido)
+        // Cria estrelas brilhantes (camada 2 - parallax mais rápido) - OTIMIZADO
         this.brightStars = this.add.group();
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 8; i++) { // Reduzido de 20 para 8
             const x = Phaser.Math.Between(-2000, 2000);
             const y = Phaser.Math.Between(-2000, 2000);
             const star = this.add.rectangle(x, y, 2, 2, 0xffffff);
@@ -578,7 +582,7 @@ export default class GameScene extends Phaser.Scene {
         console.log('DEBUG: planets atlas exists?', this.textures.exists('planets'));
         console.log('DEBUG: planets frameNames:', frameNames);
 
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 8; i++) { // Reduzido de 15 para 8
             const x = Phaser.Math.Between(-1500, 1500);
             const y = Phaser.Math.Between(-1500, 1500);
 
@@ -607,17 +611,17 @@ export default class GameScene extends Phaser.Scene {
         // Ensure physics group exists for enemies so collisions work
         if (!this.enemiesGroup) this.enemiesGroup = this.physics.add.group();
 
-        // Cria inimigos iniciais - REDUZIDO
-        for (let i = 0; i < 4; i++) { // Reduzido de 12 para 4
+        // Cria inimigos iniciais - MUITO REDUZIDO
+        for (let i = 0; i < 2; i++) { // Reduzido de 4 para 2
             this.spawnSingleEnemy();
         }
         
         // Sistema de spawn contínuo de inimigos - MUITO MAIS ESPAÇADO
         this.enemySpawnTimer = this.time.addEvent({
-            delay: 15000, // Spawn a cada 15 segundos (quase 2x mais espaçado)
+            delay: 25000, // Spawn a cada 25 segundos (muito mais espaçado)
             callback: () => {
-                // Só spawna se não tiver muitos inimigos (máximo reduzido)
-                if (this.enemies.length < 6) { // Reduzido de 15 para 6
+                // Só spawna se não tiver muitos inimigos (máximo muito reduzido)
+                if (this.enemies.length < 3) { // Reduzido de 6 para 3
                     this.spawnSingleEnemy();
                 }
             },
@@ -1527,7 +1531,7 @@ export default class GameScene extends Phaser.Scene {
 
         projectile.play('minibullet_anim');
         
-        // Adiciona trilha de partículas ao projétil
+        // Adiciona trilha de partículas ao projétil (otimizado)
         const trailId = this.particleEffects.createProjectileTrail(projectile);
         projectile._trailId = trailId; // Armazena para limpar depois
         
@@ -1547,6 +1551,12 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+        // Memory cleanup
+        if (time - this.lastCleanup > this.cleanupInterval) {
+            this.performMemoryCleanup();
+            this.lastCleanup = time;
+        }
+        
         // Debug: Log de performance a cada 5 segundos
         if (!this.lastDebugTime || time - this.lastDebugTime > 5000) {
             const meteorCount = this.meteorsGroup ? this.meteorsGroup.getLength() : 0;
@@ -2065,5 +2075,62 @@ export default class GameScene extends Phaser.Scene {
             'Lendário': '#FFD700'
         };
         return colors[rarity] || '#FFFFFF';
+    }
+    
+    /**
+     * Limpeza automática de memória
+     */
+    performMemoryCleanup() {
+        console.log('[MEMORY] Performing cleanup...');
+        
+        // Limpa projéteis antigos
+        if (this.projectiles) {
+            this.projectiles.getChildren().forEach(projectile => {
+                if (projectile.active && projectile.lifespan) {
+                    projectile.lifespan -= 1000;
+                    if (projectile.lifespan <= 0) {
+                        projectile.destroy();
+                    }
+                }
+            });
+        }
+        
+        // Limpa meteoros muito distantes
+        if (this.meteorsGroup) {
+            this.meteorsGroup.getChildren().forEach(meteor => {
+                if (meteor.active && this.ship) {
+                    const distance = Phaser.Math.Distance.Between(
+                        this.ship.x, this.ship.y, 
+                        meteor.x, meteor.y
+                    );
+                    if (distance > this.cullRadius * 3) {
+                        meteor.destroy();
+                    }
+                }
+            });
+        }
+        
+        // Limpa inimigos muito distantes
+        if (this.enemies) {
+            this.enemies.forEach((enemy, index) => {
+                if (enemy.active && this.ship) {
+                    const distance = Phaser.Math.Distance.Between(
+                        this.ship.x, this.ship.y, 
+                        enemy.x, enemy.y
+                    );
+                    if (distance > this.cullRadius * 3) {
+                        enemy.destroy();
+                        this.enemies.splice(index, 1);
+                    }
+                }
+            });
+        }
+        
+        // Força garbage collection se disponível
+        if (window.gc) {
+            window.gc();
+        }
+        
+        console.log('[MEMORY] Cleanup completed');
     }
 }

@@ -405,25 +405,72 @@
             text-align: center;
         }
 
-        .timeline {
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.8;
-            color: var(--text-secondary);
-            background: rgba(0, 0, 0, 0.3);
-            padding: 25px;
+        .timeline-visual {
+            display: grid;
+            gap: 20px;
+        }
+
+        .timeline-phase {
+            background: rgba(26, 26, 46, 0.3);
             border-radius: 12px;
+            padding: 20px;
             border: 1px solid rgba(0, 212, 255, 0.1);
-            overflow-x: auto;
+            transition: all 0.3s ease;
         }
 
-        .timeline .phase-name {
+        .timeline-phase:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .timeline-phase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .timeline-phase-title {
+            font-family: var(--font-primary);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .timeline-phase-duration {
+            background: rgba(0, 212, 255, 0.1);
             color: var(--accent);
-            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(0, 212, 255, 0.2);
         }
 
-        .timeline .weeks {
+        .timeline-phase-tasks {
+            display: grid;
+            gap: 8px;
+        }
+
+        .timeline-task {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 0;
+        }
+
+        .timeline-task-weeks {
+            font-weight: 600;
             color: var(--success);
+            font-size: 0.9rem;
+            min-width: 100px;
+        }
+
+        .timeline-task-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
         }
 
         /* Métricas e recursos */
@@ -479,8 +526,24 @@
                 font-size: 1.3rem;
             }
 
-            .timeline {
-                font-size: 0.8rem;
+            .timeline-phase-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .timeline-phase-title {
+                font-size: 1rem;
+            }
+
+            .timeline-task {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .timeline-task-weeks {
+                min-width: auto;
             }
 
             .metrics-grid {
@@ -1053,26 +1116,90 @@
                 <!-- Timeline Overview -->
                 <div class="timeline-container">
                     <h2 class="timeline-title">📅 Development Timeline</h2>
-                    <div class="timeline">
-<span class="phase-name">PHASE 1 - MVP CORE</span> (8-10 weeks)
-├── <span class="weeks">Weeks 1-2:</span> Setup + NFT Collection (110)
-├── <span class="weeks">Weeks 3-4:</span> Core PvE Gameplay
-└── <span class="weeks">Weeks 5-10:</span> Integration + Testing
+                    <div class="timeline-visual">
+                        <div class="timeline-phase">
+                            <div class="timeline-phase-header">
+                                <div class="timeline-phase-title">🚀 PHASE 1 - MVP CORE</div>
+                                <div class="timeline-phase-duration">8-10 weeks</div>
+                            </div>
+                            <div class="timeline-phase-tasks">
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 1-2:</div>
+                                    <div class="timeline-task-desc">Setup + NFT Collection (110)</div>
+                                </div>
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 3-4:</div>
+                                    <div class="timeline-task-desc">Core PvE Gameplay</div>
+                                </div>
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 5-10:</div>
+                                    <div class="timeline-task-desc">Integration + Testing</div>
+                                </div>
+                            </div>
+                        </div>
 
-<span class="phase-name">PHASE 2 - PvP AND ECONOMY</span> (6-8 weeks)
-├── <span class="weeks">Weeks 11-12:</span> PvP System
-├── <span class="weeks">Weeks 13-14:</span> Token Economy
-└── <span class="weeks">Weeks 15-18:</span> Crew System
+                        <div class="timeline-phase">
+                            <div class="timeline-phase-header">
+                                <div class="timeline-phase-title">⚔️ PHASE 2 - PvP AND ECONOMY</div>
+                                <div class="timeline-phase-duration">6-8 weeks</div>
+                            </div>
+                            <div class="timeline-phase-tasks">
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 11-12:</div>
+                                    <div class="timeline-task-desc">PvP System</div>
+                                </div>
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 13-14:</div>
+                                    <div class="timeline-task-desc">Token Economy</div>
+                                </div>
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 15-18:</div>
+                                    <div class="timeline-task-desc">Crew System</div>
+                                </div>
+                            </div>
+                        </div>
 
-<span class="phase-name">PHASE 3 - EXPANSION</span> (8-10 weeks)
-├── <span class="weeks">Weeks 19-20:</span> New Content
-├── <span class="weeks">Weeks 21-22:</span> Social Features
-└── <span class="weeks">Weeks 23-28:</span> Mainnet Preparation
+                        <div class="timeline-phase">
+                            <div class="timeline-phase-header">
+                                <div class="timeline-phase-title">🌟 PHASE 3 - EXPANSION</div>
+                                <div class="timeline-phase-duration">8-10 weeks</div>
+                            </div>
+                            <div class="timeline-phase-tasks">
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 19-20:</div>
+                                    <div class="timeline-task-desc">New Content</div>
+                                </div>
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 21-22:</div>
+                                    <div class="timeline-task-desc">Social Features</div>
+                                </div>
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 23-28:</div>
+                                    <div class="timeline-task-desc">Mainnet Preparation</div>
+                                </div>
+                            </div>
+                        </div>
 
-<span class="phase-name">PHASE 4 - MAINNET</span> (6-8 weeks)
-├── <span class="weeks">Weeks 29-30:</span> Mainnet Deploy
-├── <span class="weeks">Weeks 31-32:</span> Official Launch
-└── <span class="weeks">Weeks 33-36:</span> Post-Launch
+                        <div class="timeline-phase">
+                            <div class="timeline-phase-header">
+                                <div class="timeline-phase-title">🎯 PHASE 4 - MAINNET</div>
+                                <div class="timeline-phase-duration">6-8 weeks</div>
+                            </div>
+                            <div class="timeline-phase-tasks">
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 29-30:</div>
+                                    <div class="timeline-task-desc">Mainnet Deploy</div>
+                                </div>
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 31-32:</div>
+                                    <div class="timeline-task-desc">Official Launch</div>
+                                </div>
+                                <div class="timeline-task">
+                                    <div class="timeline-task-weeks">Weeks 33-36:</div>
+                                    <div class="timeline-task-desc">Post-Launch</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

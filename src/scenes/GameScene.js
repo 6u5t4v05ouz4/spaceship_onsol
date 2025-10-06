@@ -22,7 +22,7 @@ export default class GameScene extends Phaser.Scene {
         this.playerName = 'Pilot'; // Default player name
         this.playerNameText = null; // Referência para o texto do nome
         
-        // Propriedades da nave
+        // Propriedades da nave (serão carregadas do JSON)
         this.shipMaxHealth = 100;
         this.shipHealth = 100;
         this.shipSpeed = 0.1; // Velocidade base da nave
@@ -34,6 +34,16 @@ export default class GameScene extends Phaser.Scene {
         this.fuelConsumptionRate = 20; // unidades por segundo enquanto acelera
         this.fuelRechargeRate = 10; // unidades por segundo quando não está acelerando
         this.fuelDepleted = false; // flag quando tanque vazio
+        
+        // Novos atributos da nave
+        this.shipMaxOxygen = 100;
+        this.shipOxygen = 100;
+        this.shipCargoCapacity = 50;
+        this.currentCargo = 0;
+        this.oxygenConsumptionRate = 1;
+        
+        // Referência para metadata da nave
+        this.shipMetadata = null;
         // Culling distance (only render/enable objects within this radius of the ship)
         this.cullRadius = 1200; // pixels
         
@@ -49,6 +59,9 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         // Define o caminho base para os assets
         this.load.setPath('');
+        
+        // Carrega o JSON da nave padrão
+        this.load.json('defaultShipMetadata', 'src/assets/default_ship_metadata.json');
         
         // Carrega os assets com caminhos absolutos
         this.load.atlas('ship', '/assets/images/01.png', '/assets/images/01.json');
@@ -106,6 +119,9 @@ export default class GameScene extends Phaser.Scene {
         }
         // If walletAddress is provided (from MenuScene), try to fetch NFT image and replace ship sprite
         this.connectedWallet = data && data.walletAddress ? data.walletAddress : null;
+        
+        // Carrega as características da nave padrão do JSON (fallback)
+        this.loadDefaultShipCharacteristics();
         // Obtém as dimensões da tela
         const screenWidth = this.game.config.width;
         const screenHeight = this.game.config.height;
@@ -193,10 +209,22 @@ export default class GameScene extends Phaser.Scene {
         if (this.connectedWallet) {
             try {
                 // dynamic import to avoid bundling unless used
-                const { findFirstNftImageForOwner } = await import('../solana_nft.js');
-                const imageUrl = await findFirstNftImageForOwner(this.connectedWallet, { network: 'devnet' });
+                const { findFirstNftImageForOwner, findFirstNftMetadataForOwner } = await import('../solana_nft.js');
+                
+                // Busca tanto a imagem quanto os metadados do NFT
+                const [imageUrl, nftMetadata] = await Promise.all([
+                    findFirstNftImageForOwner(this.connectedWallet, { network: 'devnet' }),
+                    findFirstNftMetadataForOwner(this.connectedWallet, { network: 'devnet' })
+                ]);
+                
                 if (imageUrl) {
                     console.log('Found NFT image for wallet', this.connectedWallet, imageUrl);
+                    
+                    // Aplica as características do NFT se disponível
+                    if (nftMetadata && nftMetadata.attributes) {
+                        this.applyNFTCharacteristics(nftMetadata);
+                    }
+                    
                     // load image into Phaser and replace ship texture
                     this.load.image('nft_ship', imageUrl);
                     this.load.once('complete', () => {
@@ -222,10 +250,14 @@ export default class GameScene extends Phaser.Scene {
                     this.load.start();
                 } else {
                     console.log('No NFT image found for wallet', this.connectedWallet);
+                    console.log('Using default ship characteristics from JSON');
                 }
             } catch (e) {
                 console.error('Error while loading NFT image for wallet', this.connectedWallet, e);
+                console.log('Using default ship characteristics from JSON');
             }
+        } else {
+            console.log('No wallet connected, using default ship characteristics from JSON');
         }
         // Ajusta corpo de colisão da nave (circle) para melhorar detecção
         this.ship.body.setCircle(Math.max(this.ship.width, this.ship.height) / 2 * 0.6);
@@ -885,8 +917,8 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
-    gameOver() {
-        console.log('Game Over');
+    gameOver(reason = '') {
+        console.log('Game Over', reason ? `- ${reason}` : '');
         
         // Previne múltiplas chamadas
         if (this.isGameOver) return;
@@ -921,11 +953,11 @@ export default class GameScene extends Phaser.Scene {
         
         // Aguarda os efeitos e então mostra a tela de Game Over
         this.time.delayedCall(1500, () => {
-            this.showGameOverScreen();
+            this.showGameOverScreen(reason);
         });
     }
     
-    showGameOverScreen() {
+    showGameOverScreen(reason = '') {
         // Para todos os sons
         this.sound.stopAll();
         
@@ -985,6 +1017,16 @@ export default class GameScene extends Phaser.Scene {
             stroke: '#000000',
             strokeThickness: 6
         }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
+        
+        // Razão do game over (se disponível)
+        if (reason) {
+            this.add.text(centerX, centerY - 120, reason, {
+                fontFamily: 'Arial',
+                fontSize: '24px',
+                color: '#ffaa00',
+                fontStyle: 'bold'
+            }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
+        }
         
         // Efeito de pulso no título
         this.tweens.add({
@@ -1187,11 +1229,11 @@ export default class GameScene extends Phaser.Scene {
         // Container principal da UI no canto superior esquerdo
         const startX = 16;
         const startY = 16;
-        const panelWidth = 280;
+        const panelWidth = 320; // Aumentado para acomodar mais informações
         const panelPadding = 18;
         
         // Calcula altura dinâmica do painel (aumentado para caber todos os elementos)
-        const panelHeight = 220;
+        const panelHeight = 320; // Aumentado para oxigênio e carga
         
         // Painel de fundo semi-transparente para melhor legibilidade
         this.uiPanel = this.add.rectangle(startX, startY, panelWidth, panelHeight, 0x0a0a0f, 0.85)
@@ -1293,10 +1335,67 @@ export default class GameScene extends Phaser.Scene {
             .setDepth(21);
         currentY += fuelBarHeight + 16;
         
+        // === OXIGÊNIO ===
+        this.add.text(contentX, currentY, '🫁 OXYGEN', titleStyle)
+            .setScrollFactor(0)
+            .setDepth(20);
+        currentY += 20;
+        
+        const oxygenBarHeight = 18;
+        
+        this.oxygenBarBg = this.add.rectangle(contentX, currentY, barWidth, oxygenBarHeight, 0x001122, 0.9)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(19)
+            .setStrokeStyle(1, 0x004466, 0.6);
+            
+        this.oxygenBar = this.add.rectangle(contentX + 1, currentY + 1, barWidth - 2, oxygenBarHeight - 2, 0x00ccff, 1)
+            .setOrigin(0, 0)
+            .setScrollFactor(0)
+            .setDepth(20);
+            
+        this.oxygenText = this.add.text(contentX + barWidth/2, currentY + oxygenBarHeight/2, '100/100', { 
+            fontSize: '12px',
+            fill: '#ffffff',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        })
+            .setOrigin(0.5, 0.5)
+            .setScrollFactor(0)
+            .setDepth(21);
+        currentY += oxygenBarHeight + 16;
+        
+        // === CARGA ===
+        this.add.text(contentX, currentY, '📦 CARGO', titleStyle)
+            .setScrollFactor(0)
+            .setDepth(20);
+        currentY += 20;
+        
+        this.cargoText = this.add.text(contentX, currentY, '0/50 kg', { 
+            fontSize: '16px',
+            fill: '#ffaa00',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        })
+            .setScrollFactor(0)
+            .setDepth(20);
+        currentY += 25;
+        
         // === VELOCIDADE ===
         this.speedText = this.add.text(contentX, currentY, '🚀 SPEED: 0 km/h', { 
             fontSize: '13px',
             fill: '#55aaff',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        })
+            .setScrollFactor(0)
+            .setDepth(20);
+        currentY += 20;
+        
+        // === RARIDADE (se disponível) ===
+        this.rarityText = this.add.text(contentX, currentY, '', { 
+            fontSize: '12px',
+            fill: '#cccccc',
             fontFamily: 'Arial, sans-serif',
             fontStyle: 'bold'
         })
@@ -1660,8 +1759,27 @@ export default class GameScene extends Phaser.Scene {
             // Atualiza os inimigos
             this.updateEnemies();
             
+            // Atualiza o oxigênio (consome ao longo do tempo)
+            this.updateOxygen(delta);
+            
             // Atualiza a UI
             this.updateUI();
+        }
+    }
+    
+    /**
+     * Atualiza o sistema de oxigênio
+     */
+    updateOxygen(delta) {
+        if (this.isGameOver) return;
+        
+        // Consome oxigênio ao longo do tempo
+        const deltaSec = delta / 1000;
+        this.shipOxygen = Math.max(0, this.shipOxygen - (this.oxygenConsumptionRate * deltaSec));
+        
+        // Game over se oxigênio acabar
+        if (this.shipOxygen <= 0) {
+            this.gameOver('Oxigênio esgotado!');
         }
     }
     
@@ -1717,11 +1835,6 @@ export default class GameScene extends Phaser.Scene {
             this.uiAnimations.removeGlow(this.healthText);
         }
         
-        // Atualiza a velocidade
-        const velocity = this.ship.body.velocity;
-        const speed = Math.round(Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y));
-        this.speedText.setText(`🚀 SPEED: ${speed} km/h`);
-        
         // Atualiza o combustível com animação suave
         const fuelPercent = Math.max(0, this.shipFuel / this.shipMaxFuel);
         if (Math.abs(this.fuelBar.scaleX - fuelPercent) > 0.01) {
@@ -1738,12 +1851,57 @@ export default class GameScene extends Phaser.Scene {
             this.fuelBar.setFillStyle(0x00aaff);
         }
         
+        // Atualiza a barra de oxigênio
+        if (this.oxygenBar && this.oxygenText) {
+            const oxygenPercent = Math.max(0, this.shipOxygen / this.shipMaxOxygen);
+            if (Math.abs(this.oxygenBar.scaleX - oxygenPercent) > 0.01) {
+                this.uiAnimations.animateBar(this.oxygenBar, this.oxygenBar.scaleX, oxygenPercent, 200, 'Linear');
+            }
+            this.oxygenText.setText(`${Math.round(this.shipOxygen)}/${this.shipMaxOxygen}`);
+            
+            // Muda cor da barra de oxigênio baseada no nível
+            if (oxygenPercent < 0.25) {
+                this.oxygenBar.setFillStyle(0xff0000); // Vermelho quando crítico
+            } else if (oxygenPercent < 0.5) {
+                this.oxygenBar.setFillStyle(0xffaa00); // Laranja quando baixo
+            } else {
+                this.oxygenBar.setFillStyle(0x00ccff); // Azul normal
+            }
+        }
+        
+        // Atualiza a carga
+        if (this.cargoText) {
+            this.cargoText.setText(`${this.currentCargo}/${this.shipCargoCapacity} kg`);
+            
+            // Muda cor baseada na capacidade
+            const cargoPercent = this.currentCargo / this.shipCargoCapacity;
+            if (cargoPercent >= 0.9) {
+                this.cargoText.setColor('#ff4444'); // Vermelho quando quase cheio
+            } else if (cargoPercent >= 0.7) {
+                this.cargoText.setColor('#ffaa00'); // Laranja quando 70% cheio
+            } else {
+                this.cargoText.setColor('#ffaa00'); // Laranja normal
+            }
+        }
+        
+        // Atualiza a velocidade
+        const velocity = this.ship.body.velocity;
+        const speed = Math.round(Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y));
+        this.speedText.setText(`🚀 SPEED: ${speed}/${this.shipMaxSpeed} km/h`);
+        
         // Muda a cor da velocidade com base na velocidade
         const speedPercent = Math.min(1, speed / this.shipMaxSpeed);
         const r = Math.round(85 + 170 * speedPercent);
         const g = Math.round(170 - 170 * speedPercent);
         const b = 255;
         this.speedText.setColor(`rgb(${r},${g},${b})`);
+        
+        // Atualiza a raridade se disponível
+        if (this.rarityText && this.shipMetadata) {
+            const raridade = this.getAttributeValue(this.shipMetadata.attributes, 'Raridade') || 'Comum';
+            this.rarityText.setText(`⭐ ${raridade.toUpperCase()}`);
+            this.rarityText.setColor(this.getRarityColor(raridade));
+        }
     }
     
     /**
@@ -1773,5 +1931,139 @@ export default class GameScene extends Phaser.Scene {
         if (this.audioManager) {
             this.audioManager.destroy();
         }
+    }
+    
+    /**
+     * Carrega as características da nave padrão do JSON
+     */
+    loadDefaultShipCharacteristics() {
+        try {
+            // Carrega o JSON da nave padrão
+            const defaultShipData = this.cache.json.get('defaultShipMetadata');
+            
+            if (defaultShipData && defaultShipData.gameplay_stats) {
+                const stats = defaultShipData.gameplay_stats;
+                
+                // Aplica as características do JSON
+                this.shipMaxSpeed = stats.max_speed || 100;
+                this.shipCargoCapacity = stats.cargo_capacity || 50;
+                this.shipMaxFuel = stats.max_fuel || 100;
+                this.shipMaxOxygen = stats.max_oxygen || 100;
+                this.shipMaxHealth = stats.max_health || 100;
+                this.shipAcceleration = stats.acceleration || 800;
+                this.fuelConsumptionRate = stats.fuel_consumption_rate || 20;
+                this.fuelRechargeRate = stats.fuel_recharge_rate || 10;
+                this.oxygenConsumptionRate = stats.oxygen_consumption_rate || 1;
+                
+                // Inicializa valores atuais
+                this.shipFuel = this.shipMaxFuel;
+                this.shipOxygen = this.shipMaxOxygen;
+                this.shipHealth = this.shipMaxHealth;
+                this.currentCargo = 0;
+                
+                // Salva a metadata para uso posterior
+                this.shipMetadata = defaultShipData;
+                
+                console.log('✅ Características da nave carregadas do JSON:', {
+                    velocidade: this.shipMaxSpeed,
+                    carga: this.shipCargoCapacity,
+                    combustivel: this.shipMaxFuel,
+                    oxigenio: this.shipMaxOxygen,
+                    escudo: this.shipMaxHealth
+                });
+            } else {
+                console.warn('⚠️ JSON da nave padrão não encontrado ou inválido, usando valores padrão');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar características da nave:', error);
+            console.log('Usando valores padrão do código');
+        }
+    }
+    
+    /**
+     * Aplica as características do NFT à nave
+     */
+    applyNFTCharacteristics(nftMetadata) {
+        try {
+            if (!nftMetadata || !nftMetadata.attributes) {
+                console.warn('NFT metadata inválida, mantendo características padrão');
+                return;
+            }
+
+            const attributes = nftMetadata.attributes;
+            
+            // Extrai os atributos do NFT
+            const velocidade = this.getAttributeValue(attributes, 'Velocidade') || this.shipMaxSpeed;
+            const carga = this.getAttributeValue(attributes, 'Carga') || this.shipCargoCapacity;
+            const combustivel = this.getAttributeValue(attributes, 'Combustível') || this.shipMaxFuel;
+            const oxigenio = this.getAttributeValue(attributes, 'Oxigênio') || this.shipMaxOxygen;
+            const escudo = this.getAttributeValue(attributes, 'Escudo') || this.shipMaxHealth;
+            const raridade = this.getAttributeValue(attributes, 'Raridade') || 'Comum';
+            
+            // Aplica as características do NFT (sobrescreve as padrão)
+            this.shipMaxSpeed = velocidade;
+            this.shipCargoCapacity = carga;
+            this.shipMaxFuel = combustivel;
+            this.shipMaxOxygen = oxigenio;
+            this.shipMaxHealth = escudo;
+            
+            // Inicializa valores atuais com os novos máximos
+            this.shipFuel = this.shipMaxFuel;
+            this.shipOxygen = this.shipMaxOxygen;
+            this.shipHealth = this.shipMaxHealth;
+            this.currentCargo = 0;
+            
+            // Salva a metadata do NFT
+            this.shipMetadata = nftMetadata;
+            
+            console.log('✅ Características do NFT aplicadas:', {
+                nome: nftMetadata.name || 'NFT Desconhecido',
+                raridade: raridade,
+                velocidade: velocidade,
+                carga: carga,
+                combustivel: combustivel,
+                oxigenio: oxigenio,
+                escudo: escudo
+            });
+            
+            // Atualiza o nome da nave na UI se disponível
+            if (nftMetadata.name && this.playerNameText) {
+                this.playerNameText.setText(nftMetadata.name);
+                this.playerNameText.setColor(this.getRarityColor(raridade));
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao aplicar características do NFT:', error);
+            console.log('Mantendo características padrão da nave');
+        }
+    }
+    
+    /**
+     * Extrai o valor de um atributo específico do NFT
+     */
+    getAttributeValue(attributes, traitType) {
+        if (!attributes || !Array.isArray(attributes)) {
+            return null;
+        }
+        
+        const attribute = attributes.find(attr => 
+            attr.trait_type === traitType || attr.trait_type === traitType.toLowerCase()
+        );
+        
+        return attribute ? attribute.value : null;
+    }
+    
+    /**
+     * Retorna a cor da raridade baseada no nível
+     */
+    getRarityColor(rarity) {
+        const colors = {
+            'Comum': '#CCCCCC',
+            'Incomum': '#00FF00',
+            'Raro': '#0080FF',
+            'Épico': '#A020F0',
+            'Lendário': '#FFD700'
+        };
+        return colors[rarity] || '#FFFFFF';
     }
 }

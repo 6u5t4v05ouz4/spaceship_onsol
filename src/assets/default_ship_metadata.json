@@ -1,0 +1,75 @@
+{
+  "name": "Space Miner Padrão",
+  "symbol": "SPACESHIP",
+  "description": "Nave espacial mineradora padrão do Space Crypto Miner - disponível para todos os jogadores sem necessidade de NFT",
+  "seller_fee_basis_points": 0,
+  "image": "default_ship.png",
+  "external_url": "https://space-crypto-miner.com",
+  "attributes": [
+    {
+      "trait_type": "Raridade",
+      "value": "Comum"
+    },
+    {
+      "trait_type": "Velocidade",
+      "value": 100
+    },
+    {
+      "trait_type": "Carga",
+      "value": 50
+    },
+    {
+      "trait_type": "Combustível",
+      "value": 100
+    },
+    {
+      "trait_type": "Oxigênio",
+      "value": 100
+    },
+    {
+      "trait_type": "Escudo",
+      "value": 100
+    },
+    {
+      "trait_type": "Modelo",
+      "value": "Nave-Padrão"
+    },
+    {
+      "trait_type": "Tipo",
+      "value": "Nave-Gratuita"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "default_ship.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image",
+    "creators": [
+      {
+        "address": "DEFAULT_SHIP_ADDRESS",
+        "share": 100
+      }
+    ]
+  },
+  "gameplay_stats": {
+    "max_speed": 100,
+    "cargo_capacity": 50,
+    "max_fuel": 100,
+    "max_oxygen": 100,
+    "max_health": 100,
+    "acceleration": 800,
+    "fuel_consumption_rate": 20,
+    "fuel_recharge_rate": 10,
+    "oxygen_consumption_rate": 1
+  },
+  "description_detailed": "Esta é a nave padrão do Space Crypto Miner, disponível para todos os jogadores. Possui características balanceadas de raridade comum, sendo uma excelente opção para iniciantes e jogadores que ainda não possuem NFTs da coleção oficial. Equipada com sistemas básicos de mineração, propulsão e defesa.",
+  "rarity_info": {
+    "level": "Comum",
+    "color": "#CCCCCC",
+    "percentage": "50%",
+    "description": "Nave básica com características equilibradas para iniciantes"
+  }
+}

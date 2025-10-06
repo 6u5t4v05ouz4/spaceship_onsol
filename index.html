@@ -199,6 +199,16 @@
         .tab-content.active {
             display: block;
         }
+        
+        /* Garantir que o conteúdo principal seja sempre visível */
+        .wrap {
+            display: block !important;
+        }
+        
+        /* Garantir que o body seja sempre visível */
+        body {
+            display: block !important;
+        }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -1935,12 +1945,34 @@
             console.log('Found tabs:', tabs.length);
             console.log('Found contents:', contents.length);
             
+            // Debug: log each tab element
+            tabs.forEach((tab, index) => {
+                console.log(`Tab ${index}:`, {
+                    element: tab,
+                    dataTab: tab.getAttribute('data-tab'),
+                    classes: tab.className,
+                    text: tab.textContent.trim()
+                });
+            });
+            
+            // Debug: log each content element
+            contents.forEach((content, index) => {
+                console.log(`Content ${index}:`, {
+                    element: content,
+                    id: content.id,
+                    classes: content.className
+                });
+            });
+            
             function switchTab(tabName) {
                 console.log('Switching to tab:', tabName);
                 
                 // Remove active from all tabs and contents
                 tabs.forEach(tab => tab.classList.remove('active'));
-                contents.forEach(content => content.classList.remove('active'));
+                contents.forEach(content => {
+                    content.classList.remove('active');
+                    content.style.display = 'none'; // Force hide all content
+                });
                 
                 // Add active to selected tab and content
                 const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
@@ -1959,7 +1991,8 @@
                 
                 if (activeContent) {
                     activeContent.classList.add('active');
-                    console.log('Added active class to content');
+                    activeContent.style.display = 'block'; // Force show selected content
+                    console.log('Added active class to content and forced display');
                 } else {
                     console.error('Content not found:', `${tabName}-content`);
                 }
@@ -2021,6 +2054,14 @@
         
         // Run immediately
         initTabsNow();
+        
+        // Check initial session immediately if DOM is ready
+        if (document.readyState !== 'loading') {
+            console.log('DOM already ready, checking initial session immediately...');
+            setTimeout(() => {
+                checkInitialSession();
+            }, 100);
+        }
         
         // Also run when DOM is ready (in case elements weren't ready)
         if (document.readyState === 'loading') {
@@ -2091,6 +2132,141 @@
             console.log('Supabase not available, continuing without auth');
         }
 
+        // Check initial session on page load
+        async function checkInitialSession() {
+            console.log('🔍 Starting checkInitialSession...');
+            console.log('DOM ready state:', document.readyState);
+            console.log('Supabase available:', !!supabase);
+            
+            // First, try to restore wallet connection from localStorage
+            try {
+                const savedWalletAddress = localStorage.getItem('walletAddress');
+                if (savedWalletAddress) {
+                    console.log('Restoring wallet from localStorage:', savedWalletAddress);
+                    walletAddress = savedWalletAddress;
+                    isWalletConnected = true;
+                    
+                    // Update wallet UI
+                    if (walletAddrEl) {
+                        walletAddrEl.textContent = walletAddress.substring(0, 8) + '...' + walletAddress.substring(walletAddress.length - 8);
+                    }
+                }
+            } catch (error) {
+                console.error('Error restoring wallet from localStorage:', error);
+            }
+            
+            if (supabase && supabase.auth) {
+                try {
+                    console.log('Checking initial session...');
+                    const { data: { session }, error } = await supabase.auth.getSession();
+                    
+                    if (error) {
+                        console.error('Error getting session:', error);
+                        return;
+                    }
+                    
+                    if (session) {
+                        console.log('✅ Initial session found:', session);
+                        console.log('Session user:', session.user);
+                        currentUser = session.user;
+                        isGoogleLoggedIn = true;
+                        
+                        console.log('Current user set:', {
+                            email: currentUser.email,
+                            displayName: currentUser.displayName,
+                            userMetadata: currentUser.user_metadata
+                        });
+                        
+                        // Load user profile
+                        console.log('Loading user profile...');
+                        const profile = await createOrUpdateUserProfile(
+                            currentUser.email,
+                            walletAddress,
+                            currentUser.user_metadata?.full_name || currentUser.displayName
+                        );
+                        
+                        if (profile) {
+                            console.log('✅ Initial profile loaded:', profile);
+                            userProfile = profile;
+                            
+                            // If profile has wallet address, restore wallet connection
+                            if (profile.wallet_address && !walletAddress) {
+                                console.log('Restoring wallet connection from profile:', profile.wallet_address);
+                                walletAddress = profile.wallet_address;
+                                isWalletConnected = true;
+                                
+                                // Update wallet UI
+                                if (walletAddrEl) {
+                                    walletAddrEl.textContent = walletAddress.substring(0, 8) + '...' + walletAddress.substring(walletAddress.length - 8);
+                                }
+                            }
+                        } else {
+                            console.log('❌ No profile loaded');
+                        }
+                        
+                        // Update UI
+                        console.log('🔄 Updating dual login UI...');
+                        updateDualLoginUI();
+                        
+                        // Show main content
+                        console.log('🔍 Looking for main content elements...');
+                        const mainContent = document.querySelector('.wrap');
+                        console.log('Main content element (.wrap):', mainContent);
+                        if (mainContent) {
+                            mainContent.style.display = 'block';
+                            console.log('✅ Main content displayed');
+                        } else {
+                            console.error('❌ Main content element (.wrap) not found!');
+                        }
+                        
+                        // Ativar aba profile após restaurar sessão
+                        console.log('🔧 Activating profile tab after session restore...');
+                        setTimeout(() => {
+                            if (typeof switchTab === 'function') {
+                                switchTab('profile');
+                                console.log('✅ Profile tab activated after session restore');
+                            } else {
+                                console.error('❌ switchTab function not available');
+                            }
+                        }, 100);
+                        
+                        // Also show the main container
+                        const mainContainer = document.querySelector('.main-container');
+                        console.log('Main container element (.main-container):', mainContainer);
+                        if (mainContainer) {
+                            mainContainer.style.display = 'block';
+                            console.log('✅ Main container displayed');
+                        } else {
+                            console.log('ℹ️ Main container (.main-container) not found (this is normal)');
+                        }
+                        
+                        // Try to show the entire body content
+                        const body = document.body;
+                        console.log('Body element:', body);
+                        if (body) {
+                            body.style.display = 'block';
+                            console.log('✅ Body displayed');
+                        }
+                        
+                        console.log('✅ Initial session restored successfully');
+                        
+                        // Profile tab will be activated by the setTimeout above
+                    } else {
+                        console.log('No initial session found');
+                        // Show login overlay if no session
+                        showLoginOverlay();
+                    }
+                } catch (error) {
+                    console.error('Error checking initial session:', error);
+                    // Show login overlay on error
+                    showLoginOverlay();
+                }
+            } else {
+                console.log('Supabase not available, showing login overlay');
+                showLoginOverlay();
+            }
+        }
+
         // Basic UI wiring
         const loginBtn = document.getElementById('loginBtn');
         const playerNameInput = document.getElementById('playerName');
@@ -2126,6 +2302,196 @@
 
         // Supabase Auth functions
         let currentUser = null;
+        let userProfile = null;
+
+        // User Profile Management Functions
+        async function createOrUpdateUserProfile(googleEmail = null, walletAddress = null, displayName = null) {
+            try {
+                console.log('Creating/updating user profile:', { 
+                    googleEmail, 
+                    walletAddress, 
+                    displayName,
+                    currentUserEmail: currentUser?.email,
+                    hasCurrentUser: !!currentUser
+                });
+                
+                if (!supabase) {
+                    console.error('Supabase not available');
+                    return null;
+                }
+
+                // Check if profile already exists with this email or wallet
+                let existingProfile = null;
+                
+                // First, try to find by email if provided
+                if (googleEmail) {
+                    const { data: emailProfile, error: emailError } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('google_email', googleEmail)
+                        .single();
+                    
+                    if (emailProfile && !emailError) {
+                        existingProfile = emailProfile;
+                        console.log('Found existing profile by email:', existingProfile);
+                    }
+                }
+                
+                // If not found by email, try to find by wallet address if provided
+                if (!existingProfile && walletAddress) {
+                    const { data: walletProfile, error: walletError } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('wallet_address', walletAddress)
+                        .single();
+                    
+                    if (walletProfile && !walletError) {
+                        existingProfile = walletProfile;
+                        console.log('Found existing profile by wallet:', existingProfile);
+                    }
+                }
+                
+                // If still not found, try to find by current user's email (if available)
+                if (!existingProfile && currentUser && currentUser.email) {
+                    const { data: currentUserProfile, error: currentUserError } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('google_email', currentUser.email)
+                        .single();
+                    
+                    if (currentUserProfile && !currentUserError) {
+                        existingProfile = currentUserProfile;
+                        console.log('Found existing profile by current user email:', existingProfile);
+                    }
+                }
+
+                if (existingProfile) {
+                    // Update existing profile
+                    const updateData = {};
+                    if (googleEmail && !existingProfile.google_email) {
+                        updateData.google_email = googleEmail;
+                    }
+                    if (walletAddress && !existingProfile.wallet_address) {
+                        updateData.wallet_address = walletAddress;
+                    }
+                    if (displayName && !existingProfile.display_name) {
+                        updateData.display_name = displayName;
+                    }
+                    updateData.updated_at = new Date().toISOString();
+
+                    const { data: updatedProfile, error: updateError } = await supabase
+                        .from('user_profiles')
+                        .update(updateData)
+                        .eq('id', existingProfile.id)
+                        .select()
+                        .single();
+
+                    if (updateError) {
+                        console.error('Error updating profile:', updateError);
+                        return null;
+                    }
+
+                    userProfile = updatedProfile;
+                    console.log('Profile updated:', userProfile);
+                    return userProfile;
+                } else {
+                    // Create new profile
+                    const profileData = {
+                        google_email: googleEmail,
+                        wallet_address: walletAddress,
+                        display_name: displayName || 'Space Pilot',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    };
+
+                    const { data: newProfile, error: createError } = await supabase
+                        .from('user_profiles')
+                        .insert(profileData)
+                        .select()
+                        .single();
+
+                    if (createError) {
+                        console.error('Error creating profile:', createError);
+                        return null;
+                    }
+
+                    userProfile = newProfile;
+                    console.log('Profile created:', userProfile);
+                    return userProfile;
+                }
+            } catch (error) {
+                console.error('Error in createOrUpdateUserProfile:', error);
+                return null;
+            }
+        }
+
+        async function getUserProfile(googleEmail = null, walletAddress = null) {
+            try {
+                if (!supabase) return null;
+
+                let query = supabase.from('user_profiles').select('*');
+                
+                if (googleEmail) {
+                    query = query.eq('google_email', googleEmail);
+                } else if (walletAddress) {
+                    query = query.eq('wallet_address', walletAddress);
+                } else {
+                    return null;
+                }
+
+                const { data, error } = await query.single();
+                
+                if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+                    console.error('Error fetching profile:', error);
+                    return null;
+                }
+
+                userProfile = data;
+                return data;
+            } catch (error) {
+                console.error('Error in getUserProfile:', error);
+                return null;
+            }
+        }
+
+        async function validateAccountLinking(googleEmail, walletAddress) {
+            try {
+                if (!supabase) return { valid: true };
+
+                // Check if this email is already linked to another wallet
+                const { data: emailProfile, error: emailError } = await supabase
+                    .from('user_profiles')
+                    .select('wallet_address')
+                    .eq('google_email', googleEmail)
+                    .single();
+
+                if (emailProfile && emailProfile.wallet_address && emailProfile.wallet_address !== walletAddress) {
+                    return { 
+                        valid: false, 
+                        error: 'Este email já está vinculado a outra carteira' 
+                    };
+                }
+
+                // Check if this wallet is already linked to another email
+                const { data: walletProfile, error: walletError } = await supabase
+                    .from('user_profiles')
+                    .select('google_email')
+                    .eq('wallet_address', walletAddress)
+                    .single();
+
+                if (walletProfile && walletProfile.google_email && walletProfile.google_email !== googleEmail) {
+                    return { 
+                        valid: false, 
+                        error: 'Esta carteira já está vinculada a outro email' 
+                    };
+                }
+
+                return { valid: true };
+            } catch (error) {
+                console.error('Error in validateAccountLinking:', error);
+                return { valid: true }; // Allow on error to not block user
+            }
+        }
 
         // Login with Google using Supabase
         async function loginWithGoogle() {
@@ -2224,15 +2590,37 @@
 
         // Supabase auth state listener
         if (supabase && supabase.auth) {
-            supabase.auth.onAuthStateChange((event, session) => {
+            supabase.auth.onAuthStateChange(async (event, session) => {
                 console.log('Auth state changed:', event, session);
                 currentUser = session?.user || null;
                 isGoogleLoggedIn = !!currentUser;
                 
-                // Update Google account info
                 if (currentUser) {
+                    console.log('User logged in:', currentUser);
+                    
+                    // Create or update user profile with Google info
+                    const profile = await createOrUpdateUserProfile(
+                        currentUser.email,
+                        walletAddress,
+                        currentUser.user_metadata?.full_name || currentUser.displayName
+                    );
+                    
+                    if (profile) {
+                        console.log('User profile loaded:', profile);
+                        userProfile = profile;
+                    }
+                    
+                    // Update Google account info
                     if (googleName) googleName.textContent = currentUser.user_metadata?.full_name || 'Google User';
                     if (googleEmail) googleEmail.textContent = currentUser.email || 'No email';
+                    
+                    // Update player name if empty
+                    if (playerNameInput && !playerNameInput.value.trim()) {
+                        playerNameInput.value = currentUser.user_metadata?.full_name || 'Pilot';
+                    }
+                } else {
+                    console.log('User logged out');
+                    userProfile = null;
                 }
                 
                 updateDualLoginUI();
@@ -2252,9 +2640,13 @@
         
         function hideLoginOverlay() {
             const overlay = document.getElementById('login-overlay');
+            console.log('hideLoginOverlay called, overlay element:', overlay);
             if (overlay) {
                 overlay.classList.remove('show');
-                console.log('Login overlay hidden');
+                overlay.style.display = 'none';
+                console.log('✅ Login overlay hidden and display set to none');
+            } else {
+                console.error('❌ Login overlay element not found!');
             }
         }
         
@@ -2280,6 +2672,26 @@
                 connectWalletBtn.disabled = true;
                 
                 await connectPhantomWithSupabase();
+                
+                // After successful wallet connection, update profile
+                if (walletAddress && currentUser) {
+                    const validation = await validateAccountLinking(currentUser.email, walletAddress);
+                    if (!validation.valid) {
+                        alert(validation.error);
+                        return;
+                    }
+                    
+                    const profile = await createOrUpdateUserProfile(
+                        currentUser.email,
+                        walletAddress,
+                        currentUser.user_metadata?.full_name || currentUser.displayName
+                    );
+                    
+                    if (profile) {
+                        console.log('Profile updated with wallet:', profile);
+                    }
+                }
+                
                 updateDualLoginUI();
                 
             } catch (error) {
@@ -2330,6 +2742,25 @@
                 // Update dual login state
                 walletAddress = pub;
                 isWalletConnected = true;
+                
+                // Save wallet address to localStorage
+                try {
+                    localStorage.setItem('walletAddress', pub);
+                    console.log('Wallet address saved to localStorage');
+                } catch (error) {
+                    console.error('Error saving wallet to localStorage:', error);
+                }
+                
+                // Create or update user profile with wallet
+                const profile = await createOrUpdateUserProfile(
+                    currentUser?.email || null, 
+                    pub, 
+                    currentUser?.user_metadata?.full_name || currentUser?.displayName || null
+                );
+                
+                if (profile) {
+                    console.log('User profile updated with wallet:', profile);
+                }
                 
                 // Update UI
                 if (walletAddrEl) {
@@ -2425,6 +2856,26 @@
                 connectGoogleBtn.disabled = true;
                 
                 await loginWithGoogle();
+                
+                // After successful Google login, update profile
+                if (currentUser && walletAddress) {
+                    const validation = await validateAccountLinking(currentUser.email, walletAddress);
+                    if (!validation.valid) {
+                        alert(validation.error);
+                        return;
+                    }
+                    
+                    const profile = await createOrUpdateUserProfile(
+                        currentUser.email,
+                        walletAddress,
+                        currentUser.user_metadata?.full_name || currentUser.displayName
+                    );
+                    
+                    if (profile) {
+                        console.log('Profile updated with Google:', profile);
+                    }
+                }
+                
                 updateDualLoginUI();
                 
             } catch (error) {
@@ -2444,6 +2895,14 @@
                 }
                 isWalletConnected = false;
                 walletAddress = null;
+                
+                // Clear wallet from localStorage
+                try {
+                    localStorage.removeItem('walletAddress');
+                    console.log('Wallet address removed from localStorage');
+                } catch (error) {
+                    console.error('Error removing wallet from localStorage:', error);
+                }
                 
                 // Clear wallet UI
                 if (walletAddrEl) {
@@ -2505,57 +2964,103 @@
         
         // Update dual login UI
         function updateDualLoginUI() {
+            console.log('updateDualLoginUI called with:', {
+                isWalletConnected,
+                walletAddress,
+                isGoogleLoggedIn,
+                currentUser: !!currentUser
+            });
+            
             // Update wallet status
             if (isWalletConnected && walletAddress) {
-                walletStatus.textContent = `Connected: ${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
-                walletStatus.style.color = 'var(--success)';
-                connectWalletBtn.style.display = 'none';
-                disconnectWalletBtn.style.display = 'inline-block';
+                if (walletStatus) {
+                    walletStatus.textContent = `Connected: ${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
+                    walletStatus.style.color = 'var(--success)';
+                }
+                if (connectWalletBtn) connectWalletBtn.style.display = 'none';
+                if (disconnectWalletBtn) disconnectWalletBtn.style.display = 'inline-block';
             } else {
-                walletStatus.textContent = 'Not connected';
-                walletStatus.style.color = 'var(--muted)';
-                connectWalletBtn.style.display = 'inline-block';
-                disconnectWalletBtn.style.display = 'none';
+                if (walletStatus) {
+                    walletStatus.textContent = 'Not connected';
+                    walletStatus.style.color = 'var(--muted)';
+                }
+                if (connectWalletBtn) connectWalletBtn.style.display = 'inline-block';
+                if (disconnectWalletBtn) disconnectWalletBtn.style.display = 'none';
             }
             
             // Update Google status
             if (isGoogleLoggedIn && currentUser) {
-                googleStatus.textContent = `Connected: ${currentUser.email}`;
-                googleStatus.style.color = 'var(--success)';
-                connectGoogleBtn.style.display = 'none';
-                disconnectGoogleBtn.style.display = 'inline-block';
+                if (googleStatus) {
+                    googleStatus.textContent = `Connected: ${currentUser.email}`;
+                    googleStatus.style.color = 'var(--success)';
+                }
+                if (connectGoogleBtn) connectGoogleBtn.style.display = 'none';
+                if (disconnectGoogleBtn) disconnectGoogleBtn.style.display = 'inline-block';
             } else {
-                googleStatus.textContent = 'Not connected';
-                googleStatus.style.color = 'var(--muted)';
-                connectGoogleBtn.style.display = 'inline-block';
-                disconnectGoogleBtn.style.display = 'none';
+                if (googleStatus) {
+                    googleStatus.textContent = 'Not connected';
+                    googleStatus.style.color = 'var(--muted)';
+                }
+                if (connectGoogleBtn) connectGoogleBtn.style.display = 'inline-block';
+                if (disconnectGoogleBtn) disconnectGoogleBtn.style.display = 'none';
             }
             
             // Check if user is completely disconnected
             const hasAnyLogin = isGoogleLoggedIn || isWalletConnected;
+            console.log('hasAnyLogin:', hasAnyLogin);
             
             if (hasAnyLogin) {
                 // User is logged in with at least one method
-                loginStatusText.textContent = '✅ Logged in';
-                loginStatusText.style.color = 'var(--success)';
-                loginBtn.style.display = 'none';
-                playBtn.style.display = 'inline-block';
+                console.log('User is logged in, showing main content');
+                if (loginStatusText) {
+                    loginStatusText.textContent = '✅ Logged in';
+                    loginStatusText.style.color = 'var(--success)';
+                }
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (playBtn) playBtn.style.display = 'inline-block';
                 
                 // Hide login overlay
+                console.log('Hiding login overlay...');
                 hideLoginOverlay();
                 
                 // Show main content
                 const mainContent = document.querySelector('.wrap');
+                console.log('Main content in updateDualLoginUI:', mainContent);
                 if (mainContent) {
                     mainContent.style.display = 'block';
+                    console.log('Main content displayed in updateDualLoginUI');
+                } else {
+                    console.error('Main content not found in updateDualLoginUI!');
                 }
+                
+                // Ativar aba profile na updateDualLoginUI
+                console.log('🔧 Activating profile tab in updateDualLoginUI...');
+                setTimeout(() => {
+                    if (typeof switchTab === 'function') {
+                        switchTab('profile');
+                        console.log('✅ Profile tab activated in updateDualLoginUI');
+                    } else {
+                        console.error('❌ switchTab function not available in updateDualLoginUI');
+                    }
+                }, 100);
+                
+                // Also ensure body is visible
+                if (document.body) {
+                    document.body.style.display = 'block';
+                    console.log('Body made visible in updateDualLoginUI');
+                }
+                
+                // Profile tab will be activated by the setTimeout above
                 
             } else {
                 // User is completely disconnected
-                loginStatusText.textContent = 'Not logged in';
-                loginStatusText.style.color = 'var(--muted)';
-                loginBtn.style.display = 'inline-block';
-                playBtn.style.display = 'none';
+                console.log('User is not logged in, showing login overlay');
+                if (loginStatusText) {
+                    loginStatusText.textContent = 'Not logged in';
+                    loginStatusText.style.color = 'var(--muted)';
+                }
+                if (loginBtn) loginBtn.style.display = 'inline-block';
+                if (playBtn) playBtn.style.display = 'none';
                 
                 // Show login overlay
                 showLoginOverlay();
@@ -2830,6 +3335,16 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM fully loaded, registering overlay button events...');
             
+            // Check initial session after a small delay to ensure all elements are ready
+            setTimeout(() => {
+                console.log('Checking initial session after DOM load...');
+                checkInitialSession();
+            }, 100);
+            
+            // Reinitialize tabs after DOM is loaded
+            console.log('Reinitializing tabs after DOM load...');
+            initTabsNow();
+            
             // Try to register events immediately
             registerOverlayButtonEvents();
             
@@ -3095,81 +3610,7 @@
             });
         });
 
-        // Navegação por abas
-        function initTabNavigation() {
-            console.log('🚀 Initializing tab navigation...');
-            console.log('Document ready state:', document.readyState);
-            
-            const tabs = document.querySelectorAll('.nav-tab');
-            const tabContents = document.querySelectorAll('.tab-content');
-            const currentTab = 'profile'; // Tab padrão
-            
-            console.log('Found tabs:', tabs.length);
-            console.log('Found contents:', tabContents.length);
-            
-            // Debug: log each tab element
-            tabs.forEach((tab, index) => {
-                console.log(`Tab ${index}:`, {
-                    element: tab,
-                    dataTab: tab.getAttribute('data-tab'),
-                    classes: tab.className,
-                    text: tab.textContent.trim()
-                });
-            });
-
-            function switchTab(tabName) {
-                console.log('Switching to tab:', tabName);
-                // Remove active class de todas as abas
-                tabs.forEach(tab => {
-                    tab.classList.remove('active');
-                });
-
-                // Remove active class de todo conteúdo
-                tabContents.forEach(content => {
-                    content.classList.remove('active');
-                });
-
-                // Adiciona active class na aba clicada
-                const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
-                if (activeTab) {
-                    activeTab.classList.add('active');
-                }
-
-                // Mostra o conteúdo correspondente
-                const activeContent = document.getElementById(`${tabName}-content`);
-                if (activeContent) {
-                    activeContent.classList.add('active');
-                }
-
-                console.log(`Switched to tab: ${tabName}`);
-            }
-
-            // Adiciona event listeners
-            tabs.forEach(tab => {
-                console.log('Adding click listener to tab:', tab.getAttribute('data-tab'));
-                tab.addEventListener('click', (e) => {
-                    console.log('Tab clicked!', e.target, tab.getAttribute('data-tab'));
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const tabName = tab.getAttribute('data-tab');
-                    switchTab(tabName);
-                });
-            });
-
-            // Inicializa com a tab padrão
-            switchTab(currentTab);
-        }
-
-        // Inicializa navegação por abas quando DOM estiver pronto
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                console.log('DOM loaded, initializing tabs...');
-                setTimeout(initTabNavigation, 100); // Small delay to ensure everything is ready
-            });
-        } else {
-            console.log('DOM already loaded, initializing tabs...');
-            setTimeout(initTabNavigation, 100);
-        }
+        // Navegação por abas - removida função duplicada, usando apenas initTabsNow
         
         // Função de teste para debug
         window.testTabs = function() {
@@ -3227,7 +3668,7 @@
         // Função para reinicializar as abas
         window.reinitTabs = function() {
             console.log('🔄 Reinitializing tabs...');
-            initTabNavigation();
+            initTabsNow();
         };
 
         // Expose quick helper for debugging

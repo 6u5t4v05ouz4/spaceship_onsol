@@ -2955,6 +2955,12 @@
                 if (googleName) googleName.textContent = '';
                 if (googleEmail) googleEmail.textContent = '';
                 
+                // Mostrar overlay de login após desconexão
+                showLoginOverlay();
+                
+                // Redirecionar para a página inicial
+                window.location.href = window.location.origin;
+                
                 updateDualLoginUI();
                 console.log('Google disconnected');
             } catch (error) {

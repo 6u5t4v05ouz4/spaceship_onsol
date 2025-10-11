@@ -18,7 +18,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        styles: resolve(__dirname, 'src/styles.css'),
       },
       output: {
         assetFileNames: 'assets/[name].[hash][extname]',

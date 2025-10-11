@@ -6,6 +6,9 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    rollupOptions: {
+      input: 'game.html'
+    }
   },
   server: {
     open: '/game.html',

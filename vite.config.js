@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  base: './',
+  base: process.env.NODE_ENV === 'production' ? '/' : './',
   publicDir: 'public',
   server: {
     host: true,

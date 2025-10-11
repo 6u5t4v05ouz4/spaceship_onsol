@@ -10,8 +10,10 @@ export default class MenuScene extends Phaser.Scene {
 
     preload() {
         // Carrega os assets do menu
-        this.load.image('phantom_logo', '/assets/icones/phantom_logo.png'); // Assumindo que o logo está aqui
-        this.load.image('input_bg', '/assets/icones/input_bg.png'); // Assumindo que existe uma imagem para o fundo do input
+        this.load.image('phantom_logo', '/assets/icones/phantom_logo.png');
+        this.load.image('astronauta', '/assets/icones/astronauta.png');
+        this.load.image('nave1', '/assets/icones/nave1.png');
+        this.load.image('nave2', '/assets/icones/nave2.png');
         // Removidas as cargas de astronaut_icon e naves para a tela inicial
     }
 
@@ -22,6 +24,13 @@ export default class MenuScene extends Phaser.Scene {
         this.createBackground();
         const title = this.add.text(W/2, H*0.22, 'SPACE CRYPTO MINER', { fontFamily:'Arial', fontSize: '36px', color:'#00ffcc' }).setOrigin(0.5);
         this.add.text(W/2, H*0.28, 'Click PLAY on the home page to start', { fontFamily:'Arial', fontSize: '16px', color:'#aef7ee' }).setOrigin(0.5);
+
+        // Add the loaded phantom logo
+        this.add.image(W/2, H*0.1, 'phantom_logo').setOrigin(0.5).setScale(0.5);
+
+        // Add astronauta and nave images
+        this.add.image(W/2 - 100, H*0.4, 'astronauta').setOrigin(0.5).setScale(0.3);
+        this.add.image(W/2 + 100, H*0.4, 'nave1').setOrigin(0.5).setScale(0.3);
 
         // Play button (starts the game using window.__GAME_CONFIG__ or localStorage)
         const playBtn = this.add.rectangle(W/2, H/2, 260, 84, 0x00ffcc).setOrigin(0.5).setInteractive({ useHandCursor: true });

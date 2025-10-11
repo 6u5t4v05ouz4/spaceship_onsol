@@ -7,4 +7,8 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
   },
+  server: {
+    open: '/game.html',
+    port: 3000
+  }
 });

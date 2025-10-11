@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Space Crypto Miner - Game Only</title>
+    <link rel="icon" href="/assets/icone.png" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #game-canvas {
+            border: none;
+            outline: none;
+        }
+        
+        .loading {
+            color: #00d4ff;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .error {
+            color: #ff4444;
+            font-size: 16px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="loading" class="loading">
+            🚀 Carregando Space Crypto Miner...
+        </div>
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <!-- Phaser.js -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+    
+    <!-- Game Script -->
+    <script type="module" src="/src/game-only.js"></script>
+</body>
+</html>

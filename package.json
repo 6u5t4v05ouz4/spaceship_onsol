@@ -2,14 +2,12 @@
   "name": "space-crypto-miner",
   "version": "1.0.0",
   "description": "Space Crypto Miner Game",
-  "main": "src/main.js",
+  "main": "src/game-only.js",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --open /game.html",
     "build": "vite build",
-    "preview": "vite preview",
-    "deploy": "vercel --prod",
-    "vercel-build": "npm run build"
+    "preview": "vite preview"
   },
   "keywords": [
     "game",
@@ -20,12 +18,9 @@
   "license": "ISC",
   "dependencies": {
     "@solana/web3.js": "^1.98.4",
-    "firebase": "^12.3.0",
     "phaser": "^3.90.0"
   },
   "devDependencies": {
-    "@vercel/node": "^2.15.10",
-    "@vitejs/plugin-basic-ssl": "^2.1.0",
     "vite": "^7.1.9"
   },
   "overrides": {

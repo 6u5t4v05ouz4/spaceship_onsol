@@ -38,6 +38,13 @@ function initTabsNow() {
                 tabContent.classList.add('active');
             }
             
+            // Update config fields if switching to config tab
+            if (tabName === 'config') {
+                setTimeout(() => {
+                    updateConfigTabFields();
+                }, 50);
+            }
+            
             console.log(`Switched to ${tabName} tab`);
         } else {
             console.error(`Container not found for tab: ${tabName}`);
@@ -133,6 +140,11 @@ async function loadConfigTabComponent() {
             configTabContainer.innerHTML = configHTML;
             configTabContainer.style.display = 'none'; // Hidden by default
             console.log('Config tab loaded successfully');
+            
+            // Update config fields after loading
+            setTimeout(() => {
+                updateConfigTabFields();
+            }, 100);
         } else {
             console.error('Config tab container not found');
         }
@@ -267,6 +279,9 @@ async function checkInitialSession() {
 const loginBtn = document.getElementById('loginBtn');
 const playerNameInput = document.getElementById('playerName');
 const walletAddrEl = document.getElementById('walletAddr');
+
+// Store original login function reference
+let originalLoginHandler = null;
 
 // Global variables
 let currentUser = null;
@@ -455,39 +470,56 @@ async function logout() {
 // Update login UI
 function updateLoginUI(isLoggedIn) {
     if (isLoggedIn && currentUser) {
-        // Hide login button and show play button
+        // Change login button to PLAY button
         if (loginBtn) {
-        loginBtn.style.display = 'none';
+            loginBtn.textContent = 'PLAY';
+            loginBtn.style.display = 'block';
+            // Store original handler and replace with play functionality
+            if (originalLoginHandler) {
+                loginBtn.removeEventListener('click', originalLoginHandler);
+            }
+            originalLoginHandler = () => {
+                // TODO: Implement play functionality
+                console.log('Play button clicked - game starting...');
+            };
+            loginBtn.addEventListener('click', originalLoginHandler);
         }
 
         // Show logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-        logoutBtn.style.display = 'block';
+            logoutBtn.style.display = 'block';
         }
 
         // Show Google account info
         const googleInfoField = document.getElementById('googleInfo');
         if (googleInfoField) {
-        googleInfoField.style.display = 'block';
+            googleInfoField.style.display = 'block';
             googleInfoField.textContent = `Logged in as: ${currentUser.email}`;
         }
     } else {
-        // Show login button and hide play button
+        // Change PLAY button back to LOGIN button
         if (loginBtn) {
-        loginBtn.style.display = 'block';
+            loginBtn.textContent = 'LOGIN';
+            loginBtn.style.display = 'block';
+            // Remove play event listener and add login functionality
+            if (originalLoginHandler) {
+                loginBtn.removeEventListener('click', originalLoginHandler);
+            }
+            originalLoginHandler = loginWithGoogle;
+            loginBtn.addEventListener('click', originalLoginHandler);
         }
 
         // Hide logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-        logoutBtn.style.display = 'none';
+            logoutBtn.style.display = 'none';
         }
 
         // Hide Google account info
         const googleInfoField = document.getElementById('googleInfo');
         if (googleInfoField) {
-        googleInfoField.style.display = 'none';
+            googleInfoField.style.display = 'none';
         }
     }
 }
@@ -685,6 +717,119 @@ async function disconnectGoogle() {
     }
 }
 
+// Update config tab fields specifically
+function updateConfigTabFields() {
+    // Update player name in config tab
+    const playerNameInput = document.getElementById('playerName');
+    if (playerNameInput) {
+        if (currentUser) {
+            playerNameInput.value = currentUser.user_metadata?.full_name || currentUser.email || '';
+        } else {
+            playerNameInput.value = '';
+        }
+    }
+
+    // Update wallet address in config tab
+    const walletAddrConfig = document.getElementById('walletAddr');
+    if (walletAddrConfig) {
+        if (isWalletConnected && walletAddress) {
+            walletAddrConfig.textContent = `${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
+        } else {
+            walletAddrConfig.textContent = 'No wallet connected';
+        }
+    }
+
+    // Update login status in config tab
+    const loginStatusConfig = document.getElementById('loginStatusText');
+    if (loginStatusConfig) {
+        if (currentUser) {
+            loginStatusConfig.textContent = 'Logged in with Google';
+        } else if (isWalletConnected) {
+            loginStatusConfig.textContent = 'Wallet connected';
+        } else {
+            loginStatusConfig.textContent = 'Not logged in';
+        }
+    }
+
+    // Update Google info field visibility
+    const googleInfoFieldConfig = document.getElementById('googleInfoField');
+    if (googleInfoFieldConfig) {
+        if (currentUser) {
+            googleInfoFieldConfig.style.display = 'block';
+            
+            // Update Google name and email
+            const googleNameConfig = document.getElementById('googleName');
+            const googleEmailConfig = document.getElementById('googleEmail');
+            if (googleNameConfig) {
+                googleNameConfig.textContent = currentUser.user_metadata?.full_name || 'User';
+            }
+            if (googleEmailConfig) {
+                googleEmailConfig.textContent = currentUser.email || '';
+            }
+        } else {
+            googleInfoFieldConfig.style.display = 'none';
+        }
+    }
+
+    // Update Google section buttons in config tab
+    const connectGoogleBtnConfig = document.getElementById('connectGoogleBtn');
+    const disconnectGoogleBtnConfig = document.getElementById('disconnectGoogleBtn');
+    const googleStatusConfig = document.getElementById('googleStatus');
+    
+    if (currentUser) {
+        // User is logged in - show disconnect button
+        if (connectGoogleBtnConfig) {
+            connectGoogleBtnConfig.style.display = 'none';
+        }
+        if (disconnectGoogleBtnConfig) {
+            disconnectGoogleBtnConfig.style.display = 'inline-block';
+        }
+        if (googleStatusConfig) {
+            googleStatusConfig.textContent = `Connected as: ${currentUser.email}`;
+        }
+    } else {
+        // User is not logged in - show connect button
+        if (connectGoogleBtnConfig) {
+            connectGoogleBtnConfig.style.display = 'inline-block';
+        }
+        if (disconnectGoogleBtnConfig) {
+            disconnectGoogleBtnConfig.style.display = 'none';
+        }
+        if (googleStatusConfig) {
+            googleStatusConfig.textContent = 'Not connected';
+        }
+    }
+
+    // Update wallet section buttons in config tab
+    const connectWalletBtnConfig = document.getElementById('connectWalletBtn');
+    const disconnectWalletBtnConfig = document.getElementById('disconnectWalletBtn');
+    const walletStatusConfig = document.getElementById('walletStatus');
+    
+    if (isWalletConnected && walletAddress) {
+        // Wallet is connected - show disconnect button
+        if (connectWalletBtnConfig) {
+            connectWalletBtnConfig.style.display = 'none';
+        }
+        if (disconnectWalletBtnConfig) {
+            disconnectWalletBtnConfig.style.display = 'inline-block';
+        }
+        if (walletStatusConfig) {
+            walletStatusConfig.textContent = `Connected: ${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
+        }
+    } else {
+        // Wallet is not connected - show connect button
+        if (connectWalletBtnConfig) {
+            connectWalletBtnConfig.style.display = 'inline-block';
+        }
+        if (disconnectWalletBtnConfig) {
+            disconnectWalletBtnConfig.style.display = 'none';
+        }
+        if (walletStatusConfig) {
+            walletStatusConfig.textContent = 'Not connected';
+        }
+    }
+}
+
 // Update dual login UI
 function updateDualLoginUI() {
 
@@ -731,7 +876,23 @@ function updateDualLoginUI() {
         if (playerNameEl) {
             playerNameEl.textContent = currentUser.user_metadata?.full_name || currentUser.email || 'Player';
         }
-            } else {
+        
+        // Show Google info field
+        const googleInfoField = document.getElementById('googleInfoField');
+        if (googleInfoField) {
+            googleInfoField.style.display = 'block';
+        }
+        
+        // Update Google name and email
+        const googleName = document.getElementById('googleName');
+        const googleEmail = document.getElementById('googleEmail');
+        if (googleName) {
+            googleName.textContent = currentUser.user_metadata?.full_name || 'User';
+        }
+        if (googleEmail) {
+            googleEmail.textContent = currentUser.email || '';
+        }
+    } else {
         if (connectGoogleBtn) {
             connectGoogleBtn.style.display = 'inline-block';
         }
@@ -744,19 +905,33 @@ function updateDualLoginUI() {
         if (playerNameEl) {
             playerNameEl.textContent = 'Player Name';
         }
+        
+        // Hide Google info field
+        const googleInfoField = document.getElementById('googleInfoField');
+        if (googleInfoField) {
+            googleInfoField.style.display = 'none';
+        }
     }
 
-    // Show/hide main content based on login status
-    if (isWalletConnected || currentUser) {
-        const mainContent = document.querySelector('.wrap');
-        if (mainContent) {
-            mainContent.style.display = 'block';
+        // Update login status text
+        const loginStatusText = document.getElementById('loginStatusText');
+        if (loginStatusText) {
+            if (currentUser) {
+                loginStatusText.textContent = 'Logged in with Google';
+            } else if (isWalletConnected) {
+                loginStatusText.textContent = 'Wallet connected';
+            } else {
+                loginStatusText.textContent = 'Not logged in';
+            }
         }
-    } else {
-        const mainContent = document.querySelector('.wrap');
-        if (mainContent) {
-            mainContent.style.display = 'none';
-        }
+
+        // Update config tab fields specifically
+        updateConfigTabFields();
+
+    // Always show main content - login button should always be visible
+    const mainContent = document.querySelector('.wrap');
+    if (mainContent) {
+        mainContent.style.display = 'block';
     }
 }
 
@@ -874,8 +1049,11 @@ if (shipImg) {
     shipImg.classList.add('rarity-comum');
 }
 
-// Login and logout event listeners
-loginBtn.addEventListener('click', loginWithGoogle);
+// Initialize login button
+if (loginBtn) {
+    originalLoginHandler = loginWithGoogle;
+    loginBtn.addEventListener('click', originalLoginHandler);
+}
 
 // Dual login event listeners
 if (connectWalletBtn) {

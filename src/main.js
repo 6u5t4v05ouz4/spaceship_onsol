@@ -163,20 +163,54 @@ async function initializeApp() {
     console.log('📍 Current URL:', window.location.href);
     console.log('📍 Current origin:', window.location.origin);
     
-    await loadProfileTabComponent();
-    await loadConfigTabComponent();
-    await loadRoadmapTabComponent();
+    // Check if containers exist
+    const containers = document.querySelectorAll('[id$="-tab-container"]');
+    console.log('📊 Found containers:', containers.length);
+    containers.forEach(container => {
+        console.log('📦 Container:', container.id, 'exists:', !!container);
+    });
     
-    console.log('🔄 Initializing tabs...');
-    initTabsNow();
+    try {
+        await loadProfileTabComponent();
+        await loadConfigTabComponent();
+        await loadRoadmapTabComponent();
+        
+        console.log('🔄 Initializing tabs...');
+        initTabsNow();
+        
+        // Verify content was loaded
+        const profileContainer = document.getElementById('profile-tab-container');
+        if (profileContainer) {
+            console.log('✅ Profile container content length:', profileContainer.innerHTML.length);
+            console.log('✅ Profile container has content:', profileContainer.innerHTML.includes('tab-content'));
+        }
+        
+        console.log('✅ App initialized successfully');
+        console.log('📊 Available containers:', document.querySelectorAll('[id$="-tab-container"]').length);
+    } catch (error) {
+        console.error('❌ Error during app initialization:', error);
+    }
+}
+
+// Prevent multiple initialization
+let appInitialized = false;
+
+// Start the app
+function startApp() {
+    if (appInitialized) {
+        console.log('⚠️ App already initialized, skipping...');
+        return;
+    }
     
-    console.log('✅ App initialized successfully');
-    console.log('📊 Available containers:', document.querySelectorAll('[id$="-tab-container"]').length);
+    appInitialized = true;
+    console.log('🚀 Starting app initialization...');
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+        initializeApp();
+    }
 }
 
 // Start the app
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp();
-}
+startApp();

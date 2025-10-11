@@ -11,12 +11,26 @@
   ],
   "routes": [
     {
+      "src": "^/(astronauta\\.png|icone\\.png|idle\\.png|banner\\.png|icones\\.png|nave1\\.png|nave2\\.png|phantom_logo\\.png)",
+      "dest": "/$1"
+    },
+    {
+      "src": "^/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
       "src": "^/assets/(.*)",
       "dest": "/assets/$1"
     },
     {
       "src": "^/components/(.*)",
       "dest": "/components/$1"
+    },
+    {
+      "src": "^/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot))",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
     },
     {
       "src": "^/(.*)",

@@ -1,6 +1,6 @@
 // Game-only entry point - Loads only the Phaser game without web interface
 import './styles.css';
-import { Analytics } from '@vercel/analytics/react';
+import { inject } from '@vercel/analytics';
 
 // Import game scenes
 import GameScene from './scenes/GameScene.js';
@@ -87,7 +87,7 @@ try {
     window.game = game;
     
     // Initialize Vercel Analytics
-    Analytics();
+    inject();
     
     console.log('✅ Jogo inicializado com sucesso!');
     

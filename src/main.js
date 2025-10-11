@@ -100,7 +100,7 @@ function initTabsNow() {
 async function loadProfileTabComponent() {
     try {
         console.log('🔄 Loading profile tab component...');
-        const response = await fetch('./components/profile-tab.html');
+        const response = await fetch('/components/profile-tab.html');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const profileHTML = await response.text();
         
@@ -120,7 +120,7 @@ async function loadProfileTabComponent() {
 async function loadConfigTabComponent() {
     try {
         console.log('🔄 Loading config tab component...');
-        const response = await fetch('./components/config-tab.html');
+        const response = await fetch('/components/config-tab.html');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const configHTML = await response.text();
         
@@ -140,7 +140,7 @@ async function loadConfigTabComponent() {
 async function loadRoadmapTabComponent() {
     try {
         console.log('🔄 Loading roadmap tab component...');
-        const response = await fetch('./components/roadmap-tab.html');
+        const response = await fetch('/components/roadmap-tab.html');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const roadmapHTML = await response.text();
         

@@ -27,6 +27,19 @@ const config = {
     }
 };
 
+// Initialize Speed Insights
+function initializeSpeedInsights() {
+    try {
+        const script = document.createElement('script');
+        script.src = 'https://vercel.com/speed-insights/script.js';
+        script.defer = true;
+        document.head.appendChild(script);
+        console.log('📊 Speed Insights initialized');
+    } catch (error) {
+        console.warn('⚠️ Failed to initialize Speed Insights:', error);
+    }
+}
+
 // Hide loading screen
 function hideLoading() {
     const loading = document.getElementById('loading');
@@ -88,6 +101,9 @@ try {
     
     // Initialize Vercel Analytics
     inject();
+    
+    // Initialize Vercel Speed Insights
+    initializeSpeedInsights();
     
     console.log('✅ Jogo inicializado com sucesso!');
     

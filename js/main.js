@@ -1,29 +1,53 @@
-// Initialize tabs immediately and also when DOM is ready
-
+// Tab navigation with URL hash support
 function initTabsNow() {
     const tabs = document.querySelectorAll('.nav-tab');
-    const contents = document.querySelectorAll('.tab-content');
 
     function switchTab(tabName) {
-        // Remove active from all tabs and contents
+        // Update URL hash
+        window.location.hash = tabName;
+        
+        // Remove active from all tabs
         tabs.forEach(tab => tab.classList.remove('active'));
-        contents.forEach(content => {
-            content.classList.remove('active');
-            content.style.display = 'none';
+        
+        // Hide ALL tab containers
+        const allContainers = document.querySelectorAll('[id$="-tab-container"]');
+        allContainers.forEach(container => {
+            container.style.display = 'none';
         });
 
-        // Add active to selected tab and content
-        const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
-        const activeContent = document.getElementById(`${tabName}-content`);
+        // Remove active class from all tab contents
+        const allTabContents = document.querySelectorAll('.tab-content');
+        allTabContents.forEach(content => {
+            content.classList.remove('active');
+        });
 
+        // Add active to selected tab
+        const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
         if (activeTab) {
             activeTab.classList.add('active');
         }
 
-        if (activeContent) {
-            activeContent.classList.add('active');
-            activeContent.style.display = 'block';
+        // Show the selected tab container
+        const activeContainer = document.getElementById(`${tabName}-tab-container`);
+        if (activeContainer) {
+            activeContainer.style.display = 'block';
+            
+            // Add active class to the tab content inside the container
+            const tabContent = activeContainer.querySelector('.tab-content');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            console.log(`Switched to ${tabName} tab`);
+        } else {
+            console.error(`Container not found for tab: ${tabName}`);
         }
+    }
+
+    // Handle URL hash changes
+    function handleHashChange() {
+        const hash = window.location.hash.substring(1) || 'profile';
+        switchTab(hash);
     }
 
     // Add click listeners
@@ -36,8 +60,11 @@ function initTabsNow() {
         });
     });
 
-    // Set initial tab
-    switchTab('profile');
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Set initial tab based on URL hash
+    handleHashChange();
 
     // Make functions available globally
     window.switchTab = switchTab;
@@ -52,18 +79,18 @@ async function loadHeaderComponent() {
 async function loadProfileTabComponent() {
     try {
         const response = await fetch('components/profile-tab.html');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const profileHTML = await response.text();
         
         const profileTabContainer = document.getElementById('profile-tab-container');
         if (profileTabContainer) {
             profileTabContainer.innerHTML = profileHTML;
-            profileTabContainer.style.display = 'block';
-            setTimeout(() => {
-                const profileContent = document.getElementById('profile-content');
-                if (profileContent) {
-                    profileContent.style.display = 'block';
-                }
-            }, 50);
+            profileTabContainer.style.display = 'none'; // Hidden by default
+            console.log('Profile tab loaded successfully');
+        } else {
+            console.error('Profile tab container not found');
         }
     } catch (error) {
         console.error('Error loading profile tab component:', error);
@@ -74,18 +101,18 @@ async function loadProfileTabComponent() {
 async function loadRoadmapTabComponent() {
     try {
         const response = await fetch('components/roadmap-tab.html');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const roadmapHTML = await response.text();
         
         const roadmapTabContainer = document.getElementById('roadmap-tab-container');
         if (roadmapTabContainer) {
             roadmapTabContainer.innerHTML = roadmapHTML;
-            roadmapTabContainer.style.display = 'block';
-            setTimeout(() => {
-                const roadmapContent = document.getElementById('roadmap-content');
-                if (roadmapContent) {
-                    roadmapContent.style.display = 'block';
-                }
-            }, 50);
+            roadmapTabContainer.style.display = 'none'; // Hidden by default
+            console.log('Roadmap tab loaded successfully');
+        } else {
+            console.error('Roadmap tab container not found');
         }
     } catch (error) {
         console.error('Error loading roadmap tab component:', error);
@@ -96,18 +123,18 @@ async function loadRoadmapTabComponent() {
 async function loadConfigTabComponent() {
     try {
         const response = await fetch('components/config-tab.html');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const configHTML = await response.text();
         
         const configTabContainer = document.getElementById('config-tab-container');
         if (configTabContainer) {
             configTabContainer.innerHTML = configHTML;
-            configTabContainer.style.display = 'block';
-            setTimeout(() => {
-                const configContent = document.getElementById('config-content');
-                if (configContent) {
-                    configContent.style.display = 'block';
-                }
-            }, 50);
+            configTabContainer.style.display = 'none'; // Hidden by default
+            console.log('Config tab loaded successfully');
+        } else {
+            console.error('Config tab container not found');
         }
     } catch (error) {
         console.error('Error loading config tab component:', error);
@@ -116,21 +143,27 @@ async function loadConfigTabComponent() {
 
 // Load components immediately after basic setup
 loadHeaderComponent();
-loadProfileTabComponent();
-loadConfigTabComponent();
 
 // Wait for DOM to be fully loaded before initializing
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            loadRoadmapTabComponent();
+        setTimeout(async () => {
+            console.log('Loading tabs...');
+            await loadProfileTabComponent();
+            await loadConfigTabComponent();
+            await loadRoadmapTabComponent();
+            console.log('All tabs loaded, initializing...');
             initTabsNow();
         }, 100);
     });
 } else {
     // DOM is already ready
-    setTimeout(() => {
-        loadRoadmapTabComponent();
+    setTimeout(async () => {
+        console.log('Loading tabs...');
+        await loadProfileTabComponent();
+        await loadConfigTabComponent();
+        await loadRoadmapTabComponent();
+        console.log('All tabs loaded, initializing...');
         initTabsNow();
     }, 100);
 }
@@ -218,7 +251,7 @@ async function checkInitialSession() {
                 }
                 
                 updateDualLoginUI();
-            } else {
+                } else {
                 updateDualLoginUI();
             }
         } catch (error) {
@@ -261,10 +294,10 @@ async function createOrUpdateUserProfile(googleEmail, walletAddress, playerName)
 
         // Try to update existing profile first
         const { data: existingProfile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('google_email', googleEmail)
-            .single();
+                .from('user_profiles')
+                .select('*')
+                .eq('google_email', googleEmail)
+                .single();
 
         if (existingProfile) {
             // Update existing profile
@@ -341,8 +374,8 @@ async function validateAccountLinking(googleEmail, walletAddress) {
             .single();
 
         if (existingWalletProfile) {
-            return { 
-                valid: false, 
+            return {
+                valid: false,
                 message: 'This wallet is already linked to another Google account' 
             };
         }
@@ -356,8 +389,8 @@ async function validateAccountLinking(googleEmail, walletAddress) {
             .single();
 
         if (existingGoogleProfile) {
-            return { 
-                valid: false, 
+            return {
+                valid: false,
                 message: 'This Google account is already linked to another wallet' 
             };
         }
@@ -380,7 +413,7 @@ async function loginWithGoogle() {
 
         // Use centralized config for redirect URL
         const redirectUrl = window.appConfig ? window.appConfig.getRedirectUrl() : window.location.origin;
-        
+
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -424,37 +457,37 @@ function updateLoginUI(isLoggedIn) {
     if (isLoggedIn && currentUser) {
         // Hide login button and show play button
         if (loginBtn) {
-            loginBtn.style.display = 'none';
+        loginBtn.style.display = 'none';
         }
 
         // Show logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-            logoutBtn.style.display = 'block';
+        logoutBtn.style.display = 'block';
         }
 
         // Show Google account info
         const googleInfoField = document.getElementById('googleInfo');
         if (googleInfoField) {
-            googleInfoField.style.display = 'block';
+        googleInfoField.style.display = 'block';
             googleInfoField.textContent = `Logged in as: ${currentUser.email}`;
         }
     } else {
         // Show login button and hide play button
         if (loginBtn) {
-            loginBtn.style.display = 'block';
+        loginBtn.style.display = 'block';
         }
 
         // Hide logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-            logoutBtn.style.display = 'none';
+        logoutBtn.style.display = 'none';
         }
 
         // Hide Google account info
         const googleInfoField = document.getElementById('googleInfo');
         if (googleInfoField) {
-            googleInfoField.style.display = 'none';
+        googleInfoField.style.display = 'none';
         }
     }
 }
@@ -506,8 +539,8 @@ async function connectWalletFromConfig() {
 
         if (!(window && window.solana && window.solana.isPhantom)) {
             alert('Instale Phantom ou abra o site num navegador com a extensão Phantom');
-            return;
-        }
+                return;
+            }
 
         const response = await window.solana.connect();
         walletAddress = response.publicKey.toString();
@@ -550,22 +583,22 @@ async function connectPhantomWithSupabase() {
                     prompt: 'consent',
                 },
             }
-        });
+            });
 
-        if (error) {
+            if (error) {
             console.error('Supabase Web3 Auth error:', error);
             throw error;
         }
 
         walletAddress = publicKey;
         isWalletConnected = true;
-        
+
         // Save to localStorage
         localStorage.setItem('walletAddress', walletAddress);
         
         updateDualLoginUI();
         console.log('Phantom connected with Supabase:', publicKey);
-        
+
     } catch(e) {
         console.error('connect error', e);
         alert('Failed to connect Phantom');
@@ -609,18 +642,18 @@ async function disconnectWallet() {
     try {
         if (window && window.solana && window.solana.isPhantom) {
             try {
-                await window.solana.disconnect();
+            await window.solana.disconnect();
             } catch (disconnectError) {
                 console.log('Phantom disconnect error (non-critical):', disconnectError);
-            }
+        }
         }
 
         // Clear local state
         walletAddress = null;
         isWalletConnected = false;
-        
+
         // Remove from localStorage
-        localStorage.removeItem('walletAddress');
+            localStorage.removeItem('walletAddress');
         
         // Update UI
         updateDualLoginUI();
@@ -637,7 +670,7 @@ async function disconnectGoogle() {
             const { error } = await supabase.auth.signOut();
             if (error) {
                 console.error('Google logout error:', error);
-            }
+        }
         }
 
         // Clear local state
@@ -698,7 +731,7 @@ function updateDualLoginUI() {
         if (playerNameEl) {
             playerNameEl.textContent = currentUser.user_metadata?.full_name || currentUser.email || 'Player';
         }
-    } else {
+            } else {
         if (connectGoogleBtn) {
             connectGoogleBtn.style.display = 'inline-block';
         }
@@ -736,10 +769,10 @@ async function connectPhantom() {
     try {
         const response = await window.solana.connect();
         const publicKey = response.publicKey.toString();
-        
+
         walletAddress = publicKey;
         isWalletConnected = true;
-        
+
         // Save to localStorage
         localStorage.setItem('walletAddress', walletAddress);
         
@@ -761,7 +794,7 @@ async function connectPhantom() {
         }
         
         console.log('Phantom connected:', publicKey);
-        
+
     } catch(e) {
         console.error('connect error', e);
         alert('Failed to connect Phantom');
@@ -807,10 +840,10 @@ function updateShipStats(shipData) {
     // Update rarity
     const rarity = shipData.rarity || 'common';
     const statsRarity = document.getElementById('statsRarity');
-    if (statsRarity) {
-        statsRarity.textContent = rarity.toUpperCase();
-        statsRarity.className = `stats-rarity rarity-${rarity.toLowerCase()}`;
-    }
+        if (statsRarity) {
+            statsRarity.textContent = rarity.toUpperCase();
+            statsRarity.className = `stats-rarity rarity-${rarity.toLowerCase()}`;
+        }
 }
 
 // Initialize dual login UI
@@ -861,14 +894,14 @@ if (disconnectGoogleBtn) {
 // Wait for DOM to be fully loaded before initializing
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-            checkInitialSession();
-            createFloatingParticles();
-        }, 100);
-    });
-} else {
     setTimeout(() => {
         checkInitialSession();
-        createFloatingParticles();
+            createFloatingParticles();
+    }, 100);
+    });
+    } else {
+    setTimeout(() => {
+        checkInitialSession();
+createFloatingParticles();
     }, 100);
 }

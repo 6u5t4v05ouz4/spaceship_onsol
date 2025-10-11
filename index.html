@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Space Crypto Miner — Início</title>
-    <link rel="icon" href="/assets/icones/icone.png">
+    <link rel="icon" href="./assets/icones/icone.png">
     <!-- Fontes futurísticas do Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,7 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="./src/styles.css">
 </head>
 <body>
     <!-- Background animado -->
@@ -30,7 +30,7 @@
     <div class="wrap">
         <header>
             <div class="brand">
-                <img src="/assets/icones/icone.png" alt="logo">
+                <img src="./assets/icones/icone.png" alt="logo">
                 <div>
                     <h1>SPACE CRYPTO MINER</h1>
                     <div class="tagline">Conquer space with your Phantom wallet</div>
@@ -78,7 +78,13 @@
     </div>
 
     <!-- JavaScript -->
-    <script>
+    <script type="module">
+        // Import configuration
+        import config from './src/config-legacy.js';
+        
+        // Make config available globally
+        window.appConfig = config;
+        
         // Fallback para config.js se não carregar
         if (!window.appConfig) {
             window.appConfig = {

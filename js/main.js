@@ -166,6 +166,7 @@ if (document.readyState === 'loading') {
             await loadRoadmapTabComponent();
             console.log('All tabs loaded, initializing...');
             initTabsNow();
+            initializeEventListeners();
         }, 100);
     });
 } else {
@@ -177,6 +178,7 @@ if (document.readyState === 'loading') {
         await loadRoadmapTabComponent();
         console.log('All tabs loaded, initializing...');
         initTabsNow();
+        initializeEventListeners();
     }, 100);
 }
 
@@ -469,20 +471,22 @@ async function logout() {
 
 // Update login UI
 function updateLoginUI(isLoggedIn) {
+    const loginBtnEl = document.getElementById('loginBtn');
+    
     if (isLoggedIn && currentUser) {
         // Change login button to PLAY button
-        if (loginBtn) {
-            loginBtn.textContent = 'PLAY';
-            loginBtn.style.display = 'block';
+        if (loginBtnEl) {
+            loginBtnEl.textContent = 'PLAY';
+            loginBtnEl.style.display = 'block';
             // Store original handler and replace with play functionality
             if (originalLoginHandler) {
-                loginBtn.removeEventListener('click', originalLoginHandler);
+                loginBtnEl.removeEventListener('click', originalLoginHandler);
             }
             originalLoginHandler = () => {
                 // TODO: Implement play functionality
                 console.log('Play button clicked - game starting...');
             };
-            loginBtn.addEventListener('click', originalLoginHandler);
+            loginBtnEl.addEventListener('click', originalLoginHandler);
         }
 
         // Show logout button
@@ -499,15 +503,15 @@ function updateLoginUI(isLoggedIn) {
         }
     } else {
         // Change PLAY button back to LOGIN button
-        if (loginBtn) {
-            loginBtn.textContent = 'LOGIN';
-            loginBtn.style.display = 'block';
+        if (loginBtnEl) {
+            loginBtnEl.textContent = 'LOGIN';
+            loginBtnEl.style.display = 'block';
             // Remove play event listener and add login functionality
             if (originalLoginHandler) {
-                loginBtn.removeEventListener('click', originalLoginHandler);
+                loginBtnEl.removeEventListener('click', originalLoginHandler);
             }
             originalLoginHandler = loginWithGoogle;
-            loginBtn.addEventListener('click', originalLoginHandler);
+            loginBtnEl.addEventListener('click', originalLoginHandler);
         }
 
         // Hide logout button
@@ -1049,24 +1053,33 @@ if (shipImg) {
     shipImg.classList.add('rarity-comum');
 }
 
-// Initialize login button
-if (loginBtn) {
-    originalLoginHandler = loginWithGoogle;
-    loginBtn.addEventListener('click', originalLoginHandler);
-}
+// Initialize event listeners after dynamic content loads
+function initializeEventListeners() {
+    // Initialize login button
+    const loginBtnEl = document.getElementById('loginBtn');
+    if (loginBtnEl) {
+        originalLoginHandler = loginWithGoogle;
+        loginBtnEl.addEventListener('click', originalLoginHandler);
+    }
 
-// Dual login event listeners
-if (connectWalletBtn) {
-    connectWalletBtn.addEventListener('click', connectWalletFromConfig);
-}
-if (connectGoogleBtn) {
-    connectGoogleBtn.addEventListener('click', connectGoogleFromConfig);
-}
-if (disconnectWalletBtn) {
-    disconnectWalletBtn.addEventListener('click', disconnectWallet);
-}
-if (disconnectGoogleBtn) {
-    disconnectGoogleBtn.addEventListener('click', disconnectGoogle);
+    // Dual login event listeners
+    const connectWalletBtnEl = document.getElementById('connectWalletBtn');
+    const connectGoogleBtnEl = document.getElementById('connectGoogleBtn');
+    const disconnectWalletBtnEl = document.getElementById('disconnectWalletBtn');
+    const disconnectGoogleBtnEl = document.getElementById('disconnectGoogleBtn');
+
+    if (connectWalletBtnEl) {
+        connectWalletBtnEl.addEventListener('click', connectWalletFromConfig);
+    }
+    if (connectGoogleBtnEl) {
+        connectGoogleBtnEl.addEventListener('click', connectGoogleFromConfig);
+    }
+    if (disconnectWalletBtnEl) {
+        disconnectWalletBtnEl.addEventListener('click', disconnectWallet);
+    }
+    if (disconnectGoogleBtnEl) {
+        disconnectGoogleBtnEl.addEventListener('click', disconnectGoogle);
+    }
 }
 
 // Wait for DOM to be fully loaded before initializing

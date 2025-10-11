@@ -15,8 +15,17 @@
       "dest": "/assets/$1"
     },
     {
+      "src": "^/components/(.*)",
+      "dest": "/components/$1"
+    },
+    {
       "src": "^/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }

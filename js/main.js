@@ -85,7 +85,7 @@ async function loadHeaderComponent() {
 // Load profile tab component dynamically
 async function loadProfileTabComponent() {
     try {
-        const response = await fetch('components/profile-tab.html');
+        const response = await fetch('./components/profile-tab.html');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -107,7 +107,7 @@ async function loadProfileTabComponent() {
 // Load roadmap tab component dynamically
 async function loadRoadmapTabComponent() {
     try {
-        const response = await fetch('components/roadmap-tab.html');
+        const response = await fetch('./components/roadmap-tab.html');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -129,7 +129,7 @@ async function loadRoadmapTabComponent() {
 // Load config tab component dynamically
 async function loadConfigTabComponent() {
     try {
-        const response = await fetch('components/config-tab.html');
+        const response = await fetch('./components/config-tab.html');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

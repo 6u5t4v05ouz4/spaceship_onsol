@@ -1,5 +1,6 @@
 // Game-only entry point - Loads only the Phaser game without web interface
 import './styles.css';
+import { Analytics } from '@vercel/analytics/react';
 
 // Import game scenes
 import GameScene from './scenes/GameScene.js';
@@ -11,7 +12,6 @@ const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    parent: 'game-container',
     backgroundColor: '#000000',
     physics: {
         default: 'arcade',
@@ -54,8 +54,23 @@ try {
     // Create Phaser game instance
     const game = new Phaser.Game(config);
     
-    // Hide loading when game is ready
-    game.events.once('ready', hideLoading);
+    // Hide loading when game starts
+    game.events.once('boot', () => {
+        console.log('🎮 Game booted');
+        hideLoading();
+    });
+    
+    // Alternative: Hide loading when first scene starts
+    game.events.once('scenecreate', () => {
+        console.log('🎬 First scene created');
+        hideLoading();
+    });
+    
+    // Force hide loading after 1 second
+    setTimeout(() => {
+        console.log('⏰ Force hiding loading screen');
+        hideLoading();
+    }, 1000);
     
     // Handle resize
     window.addEventListener('resize', () => {
@@ -71,7 +86,16 @@ try {
     // Make game globally accessible for debugging
     window.game = game;
     
+    // Initialize Vercel Analytics
+    Analytics();
+    
     console.log('✅ Jogo inicializado com sucesso!');
+    
+    // Fallback: Hide loading after 3 seconds regardless
+    setTimeout(() => {
+        hideLoading();
+        console.log('⏰ Loading screen hidden by timeout');
+    }, 3000);
     
 } catch (error) {
     console.error('❌ Erro ao inicializar o jogo:', error);

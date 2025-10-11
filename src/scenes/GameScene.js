@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { track } from '@vercel/analytics';
 import JuiceManager from '../managers/JuiceManager.js';
 import AudioManager from '../managers/AudioManager.js';
 import ParticleEffects from '../effects/ParticleEffects.js';
@@ -107,6 +108,13 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async create(data) {
+        // Track game scene load
+        track('game_scene_loaded', {
+            player_name: data?.playerName || 'Unknown',
+            has_wallet: !!data?.walletAddress,
+            has_nft: !!data?.nftImage
+        });
+        
         // Inicializa os managers de Game Juice
         this.juiceManager = new JuiceManager(this);
         this.audioManager = new AudioManager(this);
@@ -928,6 +936,16 @@ export default class GameScene extends Phaser.Scene {
         if (this.isGameOver) return;
         this.isGameOver = true;
         
+        // Track game over event
+        track('game_over', {
+            player_name: this.playerName,
+            reason: reason || 'unknown',
+            final_score: this.score || 0,
+            final_level: this.level || 1,
+            enemies_killed: this.enemiesKilled || 0,
+            crypto_mined: this.cryptoMined || 0
+        });
+        
         // CORREÇÃO: Desabilita colisões imediatamente
         if (this.ship && this.ship.body) {
             this.ship.body.enable = false;
@@ -1150,6 +1168,13 @@ export default class GameScene extends Phaser.Scene {
         
         // Click events
         restartBtn.on('pointerdown', () => {
+            // Track game restart
+            track('game_restarted', {
+                player_name: this.playerName,
+                final_score: this.score || 0,
+                final_level: this.level || 1
+            });
+            
             // Efeito de click
             restartBtn.setScale(0.95);
             this.time.delayedCall(100, () => {
@@ -1162,6 +1187,13 @@ export default class GameScene extends Phaser.Scene {
         });
         
         menuBtn.on('pointerdown', () => {
+            // Track return to menu
+            track('return_to_menu', {
+                player_name: this.playerName,
+                final_score: this.score || 0,
+                final_level: this.level || 1
+            });
+            
             // Efeito de click
             menuBtn.setScale(0.95);
             this.time.delayedCall(100, () => {

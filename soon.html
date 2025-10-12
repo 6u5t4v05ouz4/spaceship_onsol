@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Space Crypto Miner - Coming Soon</title>
+    <link rel="icon" href="/assets/icones/icone.png" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000011;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Background animado */
+        .game-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #001122 0%, #000011 100%);
+            z-index: -3;
+        }
+        
+        .stars-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            opacity: 0.4;
+            z-index: -2;
+            animation: parallax 20s linear infinite;
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+        }
+        
+        .star:nth-child(odd) {
+            animation-delay: 1s;
+        }
+        
+        .star:nth-child(even) {
+            animation-delay: 2s;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes parallax {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50px); }
+        }
+        
+        /* Simulation Container */
+        #simulation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        #simulation-container canvas {
+            width: 100vw !important;
+            height: 100vh !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            opacity: 0.6;
+        }
+        
+        /* Container principal */
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+        }
+        
+        /* Logo e título */
+        .logo-section {
+            margin-bottom: 60px;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .title {
+            font-size: 64px;
+            font-weight: 300;
+            color: #00ffcc;
+            text-shadow: 
+                0 0 15px rgba(0, 255, 204, 1),
+                0 0 30px rgba(0, 255, 204, 0.8),
+                0 0 45px rgba(0, 255, 204, 0.6),
+                0 0 60px rgba(0, 255, 204, 0.4);
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+        
+        .subtitle {
+            font-size: 24px;
+            color: #aef7ee;
+            opacity: 0.8;
+            margin-bottom: 40px;
+        }
+        
+        /* Coming Soon */
+        .coming-soon {
+            background: linear-gradient(45deg, #00ffcc, #0099ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            animation: fadeInUp 1s ease-out 0.5s both;
+            text-shadow: none;
+        }
+        
+        .description {
+            font-size: 18px;
+            color: #88ccdd;
+            max-width: 600px;
+            margin: 0 auto 50px;
+            line-height: 1.6;
+            animation: fadeInUp 1s ease-out 1s both;
+        }
+        
+        /* Newsletter */
+        .newsletter {
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            margin: 0 auto;
+            animation: fadeInUp 1s ease-out 1.5s both;
+        }
+        
+        .newsletter h3 {
+            color: #00ffcc;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .newsletter p {
+            color: #aef7ee;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+        
+        .email-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .email-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .email-input:focus {
+            border-color: #00ffcc;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+        }
+        
+        .email-input::placeholder {
+            color: #88ccdd;
+        }
+        
+        .notify-btn {
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #00ffcc, #0099ff);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .notify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
+        }
+        
+        /* Social Links */
+        .social-links {
+            margin-top: 40px;
+            animation: fadeInUp 1s ease-out 2s both;
+        }
+        
+        .social-links h4 {
+            color: #aef7ee;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .social-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .social-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ffcc;
+            text-decoration: none;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .social-btn:hover {
+            background: rgba(0, 255, 204, 0.2);
+            border-color: #00ffcc;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 255, 204, 0.3);
+        }
+        
+        /* Animações */
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes titleGlow {
+            0% {
+                text-shadow: 
+                    0 0 15px rgba(0, 255, 204, 1),
+                    0 0 30px rgba(0, 255, 204, 0.8),
+                    0 0 45px rgba(0, 255, 204, 0.6),
+                    0 0 60px rgba(0, 255, 204, 0.4);
+            }
+            100% {
+                text-shadow: 
+                    0 0 20px rgba(0, 255, 204, 1),
+                    0 0 40px rgba(0, 255, 204, 0.9),
+                    0 0 60px rgba(0, 255, 204, 0.7),
+                    0 0 80px rgba(0, 255, 204, 0.5);
+            }
+        }
+        
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 42px;
+                letter-spacing: 2px;
+            }
+            
+            .subtitle {
+                font-size: 18px;
+            }
+            
+            .coming-soon {
+                font-size: 32px;
+            }
+            
+            .description {
+                font-size: 16px;
+                padding: 0 20px;
+            }
+            
+            .newsletter {
+                margin: 0 20px;
+                padding: 25px;
+            }
+            
+            .email-form {
+                flex-direction: column;
+            }
+            
+            .email-input {
+                min-width: auto;
+            }
+            
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 36px;
+            }
+            
+            .coming-soon {
+                font-size: 28px;
+            }
+            
+        }
+    </style>
+</head>
+<body>
+    <!-- Background animado -->
+    <div class="game-bg"></div>
+    <div class="stars-bg"></div>
+    <div class="stars" id="stars"></div>
+    
+    <!-- Gameplay Simulation Background -->
+    <div id="simulation-container"></div>
+    
+    <!-- Container principal -->
+    <div class="container">
+        <!-- Logo e título -->
+        <div class="logo-section">
+            <h1 class="title">SPACE CRYPTO MINER</h1>
+            <p class="subtitle">Mine Crypto in the Stars</p>
+        </div>
+        
+        <!-- Coming Soon -->
+        <div class="coming-soon">COMING SOON</div>
+        
+        <!-- Description -->
+        <div class="description">
+            Get ready for an epic space adventure where you can mine cryptocurrencies while exploring distant galaxies. 
+            Navigate through the cosmos, collect precious resources, and build your fleet of mining ships.
+        </div>
+        
+        <!-- Newsletter -->
+        <div class="newsletter">
+            <h3>📧 Get Notified</h3>
+            <p>Sign up to receive updates about the launch and get early access!</p>
+            <form class="email-form" id="newsletterForm">
+                <input 
+                    type="email" 
+                    class="email-input" 
+                    placeholder="Your best email"
+                    required
+                >
+                <button type="submit" class="notify-btn">
+                    Notify Me
+                </button>
+            </form>
+        </div>
+        
+        <!-- Social Links -->
+        <div class="social-links">
+            <h4>Follow us for updates</h4>
+            <div class="social-buttons">
+                <a href="#" class="social-btn" title="Twitter">🐦</a>
+                <a href="#" class="social-btn" title="Discord">💬</a>
+                <a href="#" class="social-btn" title="Telegram">📱</a>
+                <a href="#" class="social-btn" title="GitHub">⚡</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phaser.js -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+    
+    <!-- Gameplay Simulation -->
+    <script type="module">
+        // Import GameplaySimulation
+        import GameplaySimulation from './src/simulation/GameplaySimulation.js';
+        
+        // Configuration for background simulation
+        const config = {
+            type: Phaser.AUTO,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            backgroundColor: '#000011',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { x: 0, y: 0 },
+                    debug: false
+                }
+            },
+            scene: [GameplaySimulation],
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                fullscreenTarget: 'simulation-container'
+            },
+            parent: 'simulation-container'
+        };
+        
+        // Initialize simulation when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎮 Starting gameplay simulation background...');
+            
+            try {
+                // Create Phaser game instance
+                const game = new Phaser.Game(config);
+                
+                // Store reference globally
+                window.gameplaySimulation = game;
+                
+                console.log('✅ Gameplay simulation background started!');
+                
+                // Handle resize
+                window.addEventListener('resize', () => {
+                    game.scale.resize(window.innerWidth, window.innerHeight);
+                });
+                
+                // Ensure canvas styling
+                game.events.once('ready', () => {
+                    const canvas = game.canvas;
+                    if (canvas) {
+                        canvas.style.width = '100vw';
+                        canvas.style.height = '100vh';
+                        canvas.style.display = 'block';
+                        canvas.style.position = 'absolute';
+                        canvas.style.top = '0';
+                        canvas.style.left = '0';
+                        canvas.style.opacity = '0.6';
+                        canvas.style.pointerEvents = 'none';
+                    }
+                });
+                
+            } catch (error) {
+                console.error('❌ Error initializing simulation:', error);
+            }
+        });
+    </script>
+
+    <script>
+        // Cria estrelas animadas
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 100; // Reduced since we have simulation background
+            
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 4 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                star.style.opacity = Math.random() * 0.8 + 0.2;
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // Newsletter form
+        function handleNewsletter(e) {
+            e.preventDefault();
+            const email = e.target.querySelector('.email-input').value;
+            
+            if (email) {
+                // Simulate registration
+                alert(`Thank you! You will be notified at ${email} when the game launches! 🚀`);
+                e.target.querySelector('.email-input').value = '';
+            }
+        }
+        
+        // Inicializa quando a página carrega
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            
+            // Newsletter form
+            const newsletterForm = document.getElementById('newsletterForm');
+            newsletterForm.addEventListener('submit', handleNewsletter);
+            
+            // Efeito de parallax no scroll (se houver)
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const parallax = document.querySelector('.stars-bg');
+                const speed = scrolled * 0.5;
+                parallax.style.transform = `translateY(${speed}px)`;
+            });
+            
+            // Adiciona efeito de hover nas estrelas
+            document.querySelectorAll('.star').forEach(star => {
+                star.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.5)';
+                    this.style.opacity = '1';
+                });
+                
+                star.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.opacity = '';
+                });
+            });
+        });
+        
+        // Simple analytics
+        console.log('🚀 Space Crypto Miner - Coming Soon Page Loaded');
+        console.log('📧 Newsletter form ready');
+        console.log('⭐ Stars animation active');
+        console.log('🎮 Gameplay simulation background active');
+    </script>
+</body>
+</html>

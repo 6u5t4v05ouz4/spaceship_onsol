@@ -23,6 +23,17 @@
             padding: 0;
         }
         
+        /* Importação de fontes espaciais futuristas */
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Audiowide&family=Share+Tech+Mono&display=swap');
+        
+        /* Fonte personalizada SD Glitch Robot */
+        @font-face {
+            font-family: 'SD Glitch Robot';
+            src: url('/assets/fonts/Sdglitchrobotdemo-GOPdO.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
         /* Background animado */
         .game-bg {
             position: fixed;
@@ -129,8 +140,9 @@
         }
         
         .title {
+            font-family: 'SD Glitch Robot', 'Audiowide', cursive;
             font-size: 64px;
-            font-weight: 300;
+            font-weight: normal;
             color: #00ffcc;
             text-shadow: 
                 0 0 15px rgba(0, 255, 204, 1),
@@ -139,25 +151,33 @@
                 0 0 60px rgba(0, 255, 204, 0.4);
             margin-bottom: 20px;
             letter-spacing: 4px;
+            text-transform: uppercase;
             animation: titleGlow 2s ease-in-out infinite alternate;
         }
         
         .subtitle {
+            font-family: 'Exo 2', sans-serif;
             font-size: 24px;
+            font-weight: 300;
             color: #aef7ee;
             opacity: 0.8;
             margin-bottom: 40px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
         }
         
         /* Coming Soon */
         .coming-soon {
+            font-family: 'SD Glitch Robot', 'Share Tech Mono', monospace;
             background: linear-gradient(45deg, #00ffcc, #0099ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-size: 48px;
-            font-weight: bold;
+            font-weight: normal;
             margin-bottom: 30px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
             animation: fadeInUp 1s ease-out 0.5s both;
             text-shadow: none;
         }
@@ -183,9 +203,13 @@
         }
         
         .newsletter h3 {
+            font-family: 'SD Glitch Robot', 'Exo 2', sans-serif;
             color: #00ffcc;
             font-size: 24px;
+            font-weight: normal;
             margin-bottom: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
         
         .newsletter p {
@@ -251,9 +275,13 @@
         }
         
         .social-links h4 {
+            font-family: 'SD Glitch Robot', 'Exo 2', sans-serif;
             color: #aef7ee;
             margin-bottom: 20px;
             font-size: 18px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
         
         .social-buttons {

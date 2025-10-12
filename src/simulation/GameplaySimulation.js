@@ -272,22 +272,91 @@ export default class GameplaySimulation extends Phaser.Scene {
         const screenHeight = this.scale.height;
         const frameNames = this.textures.get('planets').getFrameNames()
             .filter(n => n !== '__BASE');
-        const cornerPositions = [
-            { x: Phaser.Math.Between(-screenWidth/2 + 50, -screenWidth/2 + 200), y: Phaser.Math.Between(-screenHeight/2 + 50, -screenHeight/2 + 200) },
-            { x: Phaser.Math.Between(screenWidth/2 - 200, screenWidth/2 - 50), y: Phaser.Math.Between(-screenHeight/2 + 50, -screenHeight/2 + 200) },
-            { x: Phaser.Math.Between(-screenWidth/2 + 50, -screenWidth/2 + 200), y: Phaser.Math.Between(screenHeight/2 - 200, screenHeight/2 - 50) },
-            { x: Phaser.Math.Between(screenWidth/2 - 200, screenWidth/2 - 50), y: Phaser.Math.Between(screenHeight/2 - 200, screenHeight/2 - 50) }
-        ];
+        
+        // Sistema de posicionamento aleatório priorizando laterais
+        const planetPositions = [];
+        const minDistanceFromCenter = 150; // Distância mínima do centro
+        const edgePreference = 0.7; // 70% de chance de aparecer nas laterais
+        
         for (let i = 0; i < Math.min(4, frameNames.length); i++) {
-            const pos = cornerPositions[i];
+            let x, y;
+            let attempts = 0;
+            const maxAttempts = 50;
+            
+            do {
+                // Decide se vai para as laterais ou área central
+                const useEdgeArea = Math.random() < edgePreference;
+                
+                if (useEdgeArea) {
+                    // Prioriza laterais da tela
+                    const side = Phaser.Math.Between(0, 3);
+                    switch(side) {
+                        case 0: // Lado esquerdo
+                            x = Phaser.Math.Between(-screenWidth/2 - 100, -screenWidth/2 + 50);
+                            y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+                            break;
+                        case 1: // Lado direito
+                            x = Phaser.Math.Between(screenWidth/2 - 50, screenWidth/2 + 100);
+                            y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+                            break;
+                        case 2: // Lado superior
+                            x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+                            y = Phaser.Math.Between(-screenHeight/2 - 100, -screenHeight/2 + 50);
+                            break;
+                        case 3: // Lado inferior
+                            x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+                            y = Phaser.Math.Between(screenHeight/2 - 50, screenHeight/2 + 100);
+                            break;
+                    }
+                } else {
+                    // Área central com mais espaço
+                    x = Phaser.Math.Between(-screenWidth/2 + 100, screenWidth/2 - 100);
+                    y = Phaser.Math.Between(-screenHeight/2 + 100, screenHeight/2 - 100);
+                }
+                
+                attempts++;
+            } while (
+                attempts < maxAttempts && 
+                Phaser.Math.Distance.Between(0, 0, x, y) < minDistanceFromCenter
+            );
+            
+            // Se não conseguiu posição válida após muitas tentativas, usa posição padrão
+            if (attempts >= maxAttempts) {
+                const side = Phaser.Math.Between(0, 3);
+                switch(side) {
+                    case 0:
+                        x = -screenWidth/2 + 50;
+                        y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+                        break;
+                    case 1:
+                        x = screenWidth/2 - 50;
+                        y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+                        break;
+                    case 2:
+                        x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+                        y = -screenHeight/2 + 50;
+                        break;
+                    case 3:
+                        x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+                        y = screenHeight/2 - 50;
+                        break;
+                }
+            }
+            
+            planetPositions.push({ x, y });
+        }
+        
+        for (let i = 0; i < planetPositions.length; i++) {
+            const pos = planetPositions[i];
             const frameName = frameNames[i % frameNames.length];
             const planet = this.add.image(pos.x, pos.y, 'planets', frameName);
             planet.setScale(Phaser.Math.FloatBetween(1.0, 1.5));
             planet.setDepth(-0.5);
             this.elements.planets.push(planet);
-            console.log(`Planeta ${i} criado em (${pos.x}, ${pos.y}) com frame ${frameName}`);
+            console.log(`Planeta ${i} criado em (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}) com frame ${frameName}`);
         }
-        this.planetPositions = cornerPositions.slice(0, this.elements.planets.length);
+        
+        this.planetPositions = planetPositions;
         console.log(`Total de planetas criados: ${this.elements.planets.length}`);
     }
 

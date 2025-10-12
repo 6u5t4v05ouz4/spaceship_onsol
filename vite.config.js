@@ -7,11 +7,14 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
-      input: 'game.html'
+      input: {
+        main: 'index.html',
+        game: 'game.html'
+      }
     }
   },
   server: {
-    open: '/game.html',
+    open: '/',
     port: 3000
   }
 });

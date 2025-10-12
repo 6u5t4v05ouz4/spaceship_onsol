@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
       "source": "/game",
       "destination": "/game.html"
     },
@@ -39,6 +43,15 @@
     },
     {
       "source": "/index-backup.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/login.html",
       "headers": [
         {
           "key": "Cache-Control",

@@ -1,7 +1,5 @@
 import Phaser from 'phaser';
 
-import { findFirstNftImageForOwner } from '../solana_nft.js';
-
 export default class ConfigScene extends Phaser.Scene {
     constructor() {
         super('ConfigScene');
@@ -120,6 +118,8 @@ export default class ConfigScene extends Phaser.Scene {
         if (!this.walletAddress) return;
         this.msgText.setText('Searching NFT...');
         try {
+            // Dynamic import to avoid bundling unless used
+            const { findFirstNftImageForOwner } = await import('../solana_nft.js');
             const imageUrl = await findFirstNftImageForOwner(this.walletAddress, { network: 'devnet' });
             if (imageUrl) {
                 this.nftImageUrl = imageUrl;

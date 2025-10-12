@@ -6,6 +6,9 @@
     <title>Space Ship On Sol - Coming Soon</title>
     <link rel="icon" href="/assets/icones/icone.png" />
     <style>
+        /* Importação de fontes espaciais futuristas - DEVE vir primeiro */
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Audiowide&family=Share+Tech+Mono&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -22,9 +25,6 @@
             margin: 0;
             padding: 0;
         }
-        
-        /* Importação de fontes espaciais futuristas */
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Audiowide&family=Share+Tech+Mono&display=swap');
         
         /* Fonte personalizada SD Glitch Robot */
         @font-face {
@@ -451,7 +451,7 @@
     <!-- Gameplay Simulation -->
     <script type="module">
         // Import GameplaySimulation
-        import GameplaySimulation from './src/simulation/GameplaySimulation.js';
+        import GameplaySimulation from '/src/simulation/GameplaySimulation.js';
         
         // Configuration for background simulation
         const config = {

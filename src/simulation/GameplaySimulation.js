@@ -1,5 +1,4 @@
-import Phaser from 'phaser';
-
+// Phaser is loaded globally from CDN
 export default class GameplaySimulation extends Phaser.Scene {
     constructor() {
         super('GameplaySimulation');
@@ -629,6 +628,10 @@ export default class GameplaySimulation extends Phaser.Scene {
         this.playSound('bullet_sound', 0.05);
         this.time.delayedCall(3000, () => {
             if (bullet.active) {
+                // Cria explosão pequena na posição do projétil
+                this.createExplosion(bullet.x, bullet.y);
+                this.playSound('explosion_sound', 0.03);
+                
                 const index = this.elements.bullets.indexOf(bullet);
                 if (index > -1) {
                     this.elements.bullets.splice(index, 1);

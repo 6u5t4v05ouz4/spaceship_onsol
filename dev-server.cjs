@@ -16,7 +16,14 @@ function serveFile(res, filePath, contentType) {
             return;
         }
         
-        res.writeHead(200, { 'Content-Type': contentType });
+        // Headers para fontes
+        const headers = { 'Content-Type': contentType };
+        if (filePath.endsWith('.ttf') || filePath.endsWith('.woff') || filePath.endsWith('.woff2')) {
+            headers['Access-Control-Allow-Origin'] = '*';
+            headers['Cache-Control'] = 'public, max-age=31536000';
+        }
+        
+        res.writeHead(200, headers);
         res.end(data);
     });
 }
@@ -25,17 +32,24 @@ function serveFile(res, filePath, contentType) {
 function getContentType(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     const types = {
-        '.html': 'text/html',
-        '.css': 'text/css',
-        '.js': 'application/javascript',
-        '.json': 'application/json',
+        '.html': 'text/html; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.js': 'application/javascript; charset=utf-8',
+        '.json': 'application/json; charset=utf-8',
         '.png': 'image/png',
         '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
         '.gif': 'image/gif',
         '.ico': 'image/x-icon',
         '.ttf': 'font/ttf',
         '.woff': 'font/woff',
-        '.woff2': 'font/woff2'
+        '.woff2': 'font/woff2',
+        '.mp3': 'audio/mpeg',
+        '.wav': 'audio/wav',
+        '.ogg': 'audio/ogg',
+        '.mp4': 'video/mp4',
+        '.webm': 'video/webm',
+        '.ogv': 'video/ogg'
     };
     return types[ext] || 'text/plain';
 }
@@ -55,6 +69,12 @@ const server = http.createServer((req, res) => {
         filePath = './soon.html';
     } else if (req.url === '/original') {
         filePath = './index-backup.html';
+    } else if (req.url.startsWith('/assets/')) {
+        // Servir arquivos da pasta public/assets
+        filePath = './public' + req.url;
+    } else if (req.url.startsWith('/src/')) {
+        // Servir arquivos da pasta src
+        filePath = '.' + req.url;
     }
     
     // Se não for um arquivo específico, tentar servir como arquivo estático

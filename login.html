@@ -65,6 +65,27 @@
             z-index: -1;
         }
         
+        /* Simulation Container */
+        #simulation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        #simulation-container canvas {
+            width: 100vw !important;
+            height: 100vh !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            opacity: 0.6;
+        }
+        
         .star {
             position: absolute;
             background: white;
@@ -580,13 +601,99 @@
     <div class="stars-bg"></div>
     <div class="stars" id="stars"></div>
     
-    <!-- Simulação de gameplay será carregada aqui -->
+    <!-- Gameplay Simulation Background -->
+    <div id="simulation-container"></div>
 
     <!-- Phaser.js -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
     
     <!-- Gameplay Simulation -->
-    <script type="module" src="/src/simulation/gameplay-simulation.js"></script>
+    <script type="module">
+        // Wait for Phaser to be available
+        function waitForPhaser() {
+            return new Promise((resolve) => {
+                if (typeof Phaser !== 'undefined') {
+                    resolve();
+                } else {
+                    setTimeout(() => waitForPhaser().then(resolve), 100);
+                }
+            });
+        }
+        
+        // Initialize simulation when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🎮 Starting gameplay simulation background...');
+            
+            try {
+                // Wait for Phaser to load
+                await waitForPhaser();
+                console.log('📦 Phaser loaded:', typeof Phaser !== 'undefined');
+                
+                // Import GameplaySimulation
+                const { default: GameplaySimulation } = await import('/src/simulation/GameplaySimulation.js');
+                console.log('📦 GameplaySimulation loaded:', typeof GameplaySimulation !== 'undefined');
+                
+                // Configuration for background simulation
+                const config = {
+                    type: Phaser.AUTO,
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    backgroundColor: '#000011',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { x: 0, y: 0 },
+                            debug: false
+                        }
+                    },
+                    scene: [GameplaySimulation],
+                    scale: {
+                        mode: Phaser.Scale.RESIZE,
+                        autoCenter: Phaser.Scale.CENTER_BOTH,
+                        fullscreenTarget: 'simulation-container'
+                    },
+                    parent: 'simulation-container'
+                };
+                
+                console.log('📦 Container element:', document.getElementById('simulation-container'));
+                
+                // Create Phaser game instance
+                const game = new Phaser.Game(config);
+                
+                // Store reference globally
+                window.gameplaySimulation = game;
+                
+                console.log('✅ Gameplay simulation background started!');
+                console.log('🎮 Game instance:', game);
+                
+                // Handle resize
+                window.addEventListener('resize', () => {
+                    game.scale.resize(window.innerWidth, window.innerHeight);
+                });
+                
+                // Ensure canvas styling
+                game.events.once('ready', () => {
+                    const canvas = game.canvas;
+                    console.log('🎨 Canvas ready:', canvas);
+                    if (canvas) {
+                        canvas.style.width = '100vw';
+                        canvas.style.height = '100vh';
+                        canvas.style.display = 'block';
+                        canvas.style.position = 'absolute';
+                        canvas.style.top = '0';
+                        canvas.style.left = '0';
+                        canvas.style.opacity = '0.6';
+                        canvas.style.pointerEvents = 'none';
+                        console.log('✅ Canvas styled successfully');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('❌ Error initializing simulation:', error);
+                console.error('❌ Error stack:', error.stack);
+            }
+        });
+    </script>
 
     <!-- Container principal -->
     <div class="container">

@@ -6,6 +6,9 @@
     <title>Space Ship On Sol - Coming Soon</title>
     <link rel="icon" href="/assets/icones/icone.png" />
     <style>
+        /* Importação de fontes espaciais futuristas - DEVE vir primeiro */
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Audiowide&family=Share+Tech+Mono&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -22,9 +25,6 @@
             margin: 0;
             padding: 0;
         }
-        
-        /* Importação de fontes espaciais futuristas */
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Audiowide&family=Share+Tech+Mono&display=swap');
         
         /* Fonte personalizada SD Glitch Robot */
         @font-face {
@@ -450,36 +450,54 @@
     
     <!-- Gameplay Simulation -->
     <script type="module">
-        // Import GameplaySimulation
-        import GameplaySimulation from './src/simulation/GameplaySimulation.js';
-        
-        // Configuration for background simulation
-        const config = {
-            type: Phaser.AUTO,
-            width: window.innerWidth,
-            height: window.innerHeight,
-            backgroundColor: '#000011',
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { x: 0, y: 0 },
-                    debug: false
+        // Wait for Phaser to be available
+        function waitForPhaser() {
+            return new Promise((resolve) => {
+                if (typeof Phaser !== 'undefined') {
+                    resolve();
+                } else {
+                    setTimeout(() => waitForPhaser().then(resolve), 100);
                 }
-            },
-            scene: [GameplaySimulation],
-            scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                fullscreenTarget: 'simulation-container'
-            },
-            parent: 'simulation-container'
-        };
+            });
+        }
         
         // Initialize simulation when page loads
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('🎮 Starting gameplay simulation background...');
             
             try {
+                // Wait for Phaser to load
+                await waitForPhaser();
+                console.log('📦 Phaser loaded:', typeof Phaser !== 'undefined');
+                
+                // Import GameplaySimulation
+                const { default: GameplaySimulation } = await import('/src/simulation/GameplaySimulation.js');
+                console.log('📦 GameplaySimulation loaded:', typeof GameplaySimulation !== 'undefined');
+                
+                // Configuration for background simulation
+                const config = {
+                    type: Phaser.AUTO,
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    backgroundColor: '#000011',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { x: 0, y: 0 },
+                            debug: false
+                        }
+                    },
+                    scene: [GameplaySimulation],
+                    scale: {
+                        mode: Phaser.Scale.RESIZE,
+                        autoCenter: Phaser.Scale.CENTER_BOTH,
+                        fullscreenTarget: 'simulation-container'
+                    },
+                    parent: 'simulation-container'
+                };
+                
+                console.log('📦 Container element:', document.getElementById('simulation-container'));
+                
                 // Create Phaser game instance
                 const game = new Phaser.Game(config);
                 
@@ -487,6 +505,7 @@
                 window.gameplaySimulation = game;
                 
                 console.log('✅ Gameplay simulation background started!');
+                console.log('🎮 Game instance:', game);
                 
                 // Handle resize
                 window.addEventListener('resize', () => {
@@ -496,6 +515,7 @@
                 // Ensure canvas styling
                 game.events.once('ready', () => {
                     const canvas = game.canvas;
+                    console.log('🎨 Canvas ready:', canvas);
                     if (canvas) {
                         canvas.style.width = '100vw';
                         canvas.style.height = '100vh';
@@ -505,11 +525,13 @@
                         canvas.style.left = '0';
                         canvas.style.opacity = '0.6';
                         canvas.style.pointerEvents = 'none';
+                        console.log('✅ Canvas styled successfully');
                     }
                 });
                 
             } catch (error) {
                 console.error('❌ Error initializing simulation:', error);
+                console.error('❌ Error stack:', error.stack);
             }
         });
     </script>

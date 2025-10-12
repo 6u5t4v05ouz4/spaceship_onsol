@@ -5,9 +5,9 @@
   "main": "src/game-only.js",
   "type": "module",
   "scripts": {
-    "dev": "node dev-server.js",
+    "dev": "node dev-server.cjs",
     "dev-vite": "vite --open /game.html",
-    "dev-login": "node dev-server.js",
+    "dev-login": "node dev-server.cjs",
     "build": "vite build",
     "preview": "vite preview",
     "vercel-build": "npm run build"

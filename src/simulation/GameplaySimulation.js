@@ -188,15 +188,14 @@ export default class GameplaySimulation extends Phaser.Scene {
         enemy.health = 10; // 10 tiros para destruir
         enemy.maxHealth = 10;
         
-        const centerX = Phaser.Math.Between(-100, 100);
-        const centerY = Phaser.Math.Between(-100, 100);
-        const angle = Phaser.Math.Angle.Between(x, y, centerX, centerY);
+        // Direção aleatória em vez de sempre ir para o centro
+        const randomAngle = Phaser.Math.FloatBetween(0, Math.PI * 2);
         const speed = Phaser.Math.Between(5, 10);
         enemy.setVelocity(
-            Math.cos(angle) * speed,
-            Math.sin(angle) * speed
+            Math.cos(randomAngle) * speed,
+            Math.sin(randomAngle) * speed
         );
-        enemy.rotation = angle + Math.PI / 2;
+        enemy.rotation = randomAngle + Math.PI / 2;
         this.elements.enemies.push(enemy);
 
         // Debug: Desenhar colisor (remover após testes)
@@ -745,27 +744,54 @@ export default class GameplaySimulation extends Phaser.Scene {
     }
 
     updateSimulation() {
-        this.elements.enemies.forEach(enemy => {
+        // Remove inimigos que saíram dos limites da tela
+        for (let i = this.elements.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.elements.enemies[i];
             if (enemy.active) {
-                // Mantém movimento
-                // if (enemy.debugGraphics) {
-                //     enemy.debugGraphics.clear();
-                //     enemy.debugGraphics.lineStyle(2, 0x00ff00);
-                //     enemy.debugGraphics.strokeCircle(enemy.x, enemy.y, 40);
-                // }
-            }
-        });
-        this.elements.meteors.forEach(meteor => {
-            if (meteor.active) {
-                // Atualiza a rotação baseada na direção do movimento
-                const velocity = meteor.body.velocity;
-                if (velocity.x !== 0 || velocity.y !== 0) {
-                    const movementAngle = Math.atan2(velocity.y, velocity.x);
-                    // Adiciona Math.PI/2 para corrigir a orientação do sprite
-                    meteor.rotation = movementAngle + Math.PI/2;
+                const screenWidth = this.scale.width;
+                const screenHeight = this.scale.height;
+                const margin = 100; // Margem para remoção
+                
+                // Verifica se saiu dos limites visíveis
+                if (enemy.x < -screenWidth/2 - margin || 
+                    enemy.x > screenWidth/2 + margin ||
+                    enemy.y < -screenHeight/2 - margin || 
+                    enemy.y > screenHeight/2 + margin) {
+                    
+                    // Remove inimigo que saiu da tela
+                    this.elements.enemies.splice(i, 1);
+                    enemy.destroy();
                 }
             }
-        });
+        }
+        // Remove meteoros que saíram dos limites da tela
+        for (let i = this.elements.meteors.length - 1; i >= 0; i--) {
+            const meteor = this.elements.meteors[i];
+            if (meteor.active) {
+                const screenWidth = this.scale.width;
+                const screenHeight = this.scale.height;
+                const margin = 100; // Margem para remoção
+                
+                // Verifica se saiu dos limites visíveis
+                if (meteor.x < -screenWidth/2 - margin || 
+                    meteor.x > screenWidth/2 + margin ||
+                    meteor.y < -screenHeight/2 - margin || 
+                    meteor.y > screenHeight/2 + margin) {
+                    
+                    // Remove meteoro que saiu da tela
+                    this.elements.meteors.splice(i, 1);
+                    meteor.destroy();
+                } else {
+                    // Atualiza a rotação baseada na direção do movimento
+                    const velocity = meteor.body.velocity;
+                    if (velocity.x !== 0 || velocity.y !== 0) {
+                        const movementAngle = Math.atan2(velocity.y, velocity.x);
+                        // Adiciona Math.PI/2 para corrigir a orientação do sprite
+                        meteor.rotation = movementAngle + Math.PI/2;
+                    }
+                }
+            }
+        }
         this.elements.bullets.forEach(bullet => {
             if (bullet.active) {
                 // if (bullet.debugGraphics) {

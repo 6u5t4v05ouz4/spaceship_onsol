@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Space Crypto Miner - Coming Soon</title>
+    <title>Space Ship On Sol - Coming Soon</title>
     <link rel="icon" href="/assets/icones/icone.png" />
     <style>
         * {
@@ -211,6 +211,8 @@
             font-size: 16px;
             outline: none;
             transition: all 0.3s ease;
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .email-input:focus {
@@ -233,6 +235,8 @@
             cursor: pointer;
             transition: all 0.3s ease;
             white-space: nowrap;
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .notify-btn:hover {
@@ -371,7 +375,7 @@
     <div class="container">
         <!-- Logo e título -->
         <div class="logo-section">
-            <h1 class="title">SPACE CRYPTO MINER</h1>
+            <h1 class="title">SPACE SHIP ON SOL</h1>
             <p class="subtitle">Mine Crypto in the Stars</p>
         </div>
         
@@ -392,11 +396,11 @@
                 <input 
                     type="email" 
                     class="email-input" 
-                    placeholder="Your best email"
-                    required
+                    placeholder="Coming soon..."
+                    disabled
                 >
-                <button type="submit" class="notify-btn">
-                    Notify Me
+                <button type="button" class="notify-btn" disabled>
+                    Coming Soon
                 </button>
             </form>
         </div>
@@ -502,16 +506,11 @@
             }
         }
         
-        // Newsletter form
+        // Newsletter form (disabled for now)
         function handleNewsletter(e) {
             e.preventDefault();
-            const email = e.target.querySelector('.email-input').value;
-            
-            if (email) {
-                // Simulate registration
-                alert(`Thank you! You will be notified at ${email} when the game launches! 🚀`);
-                e.target.querySelector('.email-input').value = '';
-            }
+            // Newsletter temporarily disabled
+            alert('Newsletter signup coming soon! 🚀');
         }
         
         // Inicializa quando a página carrega
@@ -545,7 +544,7 @@
         });
         
         // Simple analytics
-        console.log('🚀 Space Crypto Miner - Coming Soon Page Loaded');
+        console.log('🚀 Space Ship On Sol - Coming Soon Page Loaded');
         console.log('📧 Newsletter form ready');
         console.log('⭐ Stars animation active');
         console.log('🎮 Gameplay simulation background active');

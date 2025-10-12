@@ -259,7 +259,9 @@ export default class GameplaySimulation extends Phaser.Scene {
             Math.cos(angle) * speed,
             Math.sin(angle) * speed
         );
-        meteor.rotation = 0;
+        // Define a rotação baseada na direção do movimento
+        // Adiciona Math.PI/2 para corrigir a orientação do sprite
+        meteor.rotation = angle + Math.PI/2;
         this.elements.meteors.push(meteor);
     }
 
@@ -273,15 +275,34 @@ export default class GameplaySimulation extends Phaser.Scene {
         const frameNames = this.textures.get('planets').getFrameNames()
             .filter(n => n !== '__BASE');
         
-        // Sistema de posicionamento aleatório priorizando laterais
+        // Sistema de posicionamento aleatório priorizando laterais com detecção de colisão
         const planetPositions = [];
         const minDistanceFromCenter = 150; // Distância mínima do centro
+        const minDistanceBetweenPlanets = 200; // Distância mínima entre planetas
         const edgePreference = 0.7; // 70% de chance de aparecer nas laterais
+        
+        // Função para verificar se uma posição é válida
+        const isValidPosition = (newX, newY) => {
+            // Verifica distância do centro
+            if (Phaser.Math.Distance.Between(0, 0, newX, newY) < minDistanceFromCenter) {
+                return false;
+            }
+            
+            // Verifica distância de outros planetas já posicionados
+            for (const existingPos of planetPositions) {
+                const distance = Phaser.Math.Distance.Between(newX, newY, existingPos.x, existingPos.y);
+                if (distance < minDistanceBetweenPlanets) {
+                    return false;
+                }
+            }
+            
+            return true;
+        };
         
         for (let i = 0; i < Math.min(4, frameNames.length); i++) {
             let x, y;
             let attempts = 0;
-            const maxAttempts = 50;
+            const maxAttempts = 100; // Aumentado para dar mais chances
             
             do {
                 // Decide se vai para as laterais ou área central
@@ -317,11 +338,12 @@ export default class GameplaySimulation extends Phaser.Scene {
                 attempts++;
             } while (
                 attempts < maxAttempts && 
-                Phaser.Math.Distance.Between(0, 0, x, y) < minDistanceFromCenter
+                !isValidPosition(x, y)
             );
             
-            // Se não conseguiu posição válida após muitas tentativas, usa posição padrão
+            // Se não conseguiu posição válida após muitas tentativas, usa posição padrão nas laterais
             if (attempts >= maxAttempts) {
+                console.log(`Planeta ${i}: Tentativas esgotadas, usando posição padrão`);
                 const side = Phaser.Math.Between(0, 3);
                 switch(side) {
                     case 0:
@@ -344,6 +366,7 @@ export default class GameplaySimulation extends Phaser.Scene {
             }
             
             planetPositions.push({ x, y });
+            console.log(`Planeta ${i} posicionado em (${x.toFixed(1)}, ${y.toFixed(1)}) após ${attempts} tentativas`);
         }
         
         for (let i = 0; i < planetPositions.length; i++) {
@@ -734,7 +757,13 @@ export default class GameplaySimulation extends Phaser.Scene {
         });
         this.elements.meteors.forEach(meteor => {
             if (meteor.active) {
-                meteor.rotation += 0.05;
+                // Atualiza a rotação baseada na direção do movimento
+                const velocity = meteor.body.velocity;
+                if (velocity.x !== 0 || velocity.y !== 0) {
+                    const movementAngle = Math.atan2(velocity.y, velocity.x);
+                    // Adiciona Math.PI/2 para corrigir a orientação do sprite
+                    meteor.rotation = movementAngle + Math.PI/2;
+                }
             }
         });
         this.elements.bullets.forEach(bullet => {

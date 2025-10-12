@@ -1,16 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/soon.html"
-    },
-    {
       "source": "/game",
       "destination": "/game.html"
     },
     {
-      "source": "/(.*)",
-      "destination": "/$1"
+      "source": "/original",
+      "destination": "/index-backup.html"
     }
   ],
   "headers": [
@@ -42,7 +38,7 @@
       ]
     },
     {
-      "source": "/soon.html",
+      "source": "/index-backup.html",
       "headers": [
         {
           "key": "Cache-Control",

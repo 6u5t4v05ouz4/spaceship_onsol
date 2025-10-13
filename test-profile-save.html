@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Salvar Perfil</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .debug {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teste - Salvar Perfil</h1>
+        <p>Esta página testa o salvamento de perfil com debug detalhado.</p>
+        
+        <div class="form-group">
+            <label for="displayName">Nome de Exibição:</label>
+            <input type="text" id="displayName" value="Teste Usuário" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="userEmail">Email (readonly):</label>
+            <input type="email" id="userEmail" readonly>
+        </div>
+        
+        <button onclick="checkAuth()">Verificar Autenticação</button>
+        <button onclick="saveProfile()">Salvar Perfil</button>
+        <button onclick="testRlsPolicies()">Testar Políticas RLS</button>
+        <button onclick="clearDebug()">Limpar Debug</button>
+        
+        <div id="debug" class="debug"></div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="/src/config-legacy.js"></script>
+    
+    <script>
+        // Supabase configuration
+        const supabaseConfig = window.appConfig.getSupabaseConfig();
+        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true
+            }
+        });
+        
+        let currentUser = null;
+        
+        // Debug logging
+        function log(message, type = 'info') {
+            const debugDiv = document.getElementById('debug');
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}\n`;
+            
+            if (type === 'error') {
+                debugDiv.innerHTML += `<span style="color: red;">${logMessage}</span>`;
+            } else if (type === 'success') {
+                debugDiv.innerHTML += `<span style="color: green;">${logMessage}</span>`;
+            } else {
+                debugDiv.innerHTML += logMessage;
+            }
+            
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+        
+        function clearDebug() {
+            document.getElementById('debug').innerHTML = '';
+        }
+        
+        // Check authentication
+        async function checkAuth() {
+            try {
+                log('🔍 Verificando autenticação...');
+                
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    log(`❌ Erro na sessão: ${error.message}`, 'error');
+                    return;
+                }
+                
+                if (!session) {
+                    log('❌ Nenhuma sessão ativa encontrada', 'error');
+                    log('💡 Redirecione para login.html para autenticar');
+                    return;
+                }
+                
+                log('✅ Sessão ativa encontrada', 'success');
+                currentUser = session.user;
+                
+                // Populate form
+                document.getElementById('userEmail').value = currentUser.email;
+                
+                // Debug JWT
+                const jwt = session.access_token;
+                if (jwt) {
+                    try {
+                        const payload = JSON.parse(atob(jwt.split('.')[1]));
+                        log(`🔍 JWT Payload: ${JSON.stringify(payload, null, 2)}`);
+                        log(`🔍 JWT Email: ${payload.email}`);
+                        log(`🔍 JWT Role: ${payload.role}`);
+                        log(`🔍 JWT Sub: ${payload.sub}`);
+                    } catch (e) {
+                        log(`⚠️ Erro ao decodificar JWT: ${e.message}`, 'error');
+                    }
+                }
+                
+                log(`👤 Usuário: ${currentUser.email}`);
+                log(`🆔 User ID: ${currentUser.id}`);
+                
+            } catch (error) {
+                log(`❌ Erro ao verificar autenticação: ${error.message}`, 'error');
+            }
+        }
+        
+        // Save profile
+        async function saveProfile() {
+            try {
+                if (!currentUser) {
+                    log('❌ Usuário não autenticado', 'error');
+                    return;
+                }
+                
+                const displayName = document.getElementById('displayName').value;
+                if (!displayName) {
+                    log('❌ Nome de exibição é obrigatório', 'error');
+                    return;
+                }
+                
+                log('💾 Salvando perfil...');
+                
+                const profileData = {
+                    google_email: currentUser.email,
+                    display_name: displayName,
+                    updated_at: new Date().toISOString()
+                };
+                
+                log(`📝 Dados do perfil: ${JSON.stringify(profileData, null, 2)}`);
+                
+                // Test INSERT first
+                log('🔄 Testando INSERT...');
+                const { data: insertData, error: insertError } = await supabase
+                    .from('user_profiles')
+                    .insert(profileData);
+                
+                if (insertError) {
+                    log(`❌ Erro no INSERT: ${insertError.message}`, 'error');
+                    log(`❌ Código: ${insertError.code}`);
+                    log(`❌ Detalhes: ${insertError.details}`);
+                    log(`❌ Hint: ${insertError.hint}`);
+                    
+                    // Try UPSERT instead
+                    log('🔄 Tentando UPSERT...');
+                    const { data: upsertData, error: upsertError } = await supabase
+                        .from('user_profiles')
+                        .upsert(profileData, {
+                            onConflict: 'google_email'
+                        });
+                    
+                    if (upsertError) {
+                        log(`❌ Erro no UPSERT: ${upsertError.message}`, 'error');
+                        log(`❌ Código: ${upsertError.code}`);
+                        log(`❌ Detalhes: ${upsertError.details}`);
+                        log(`❌ Hint: ${upsertError.hint}`);
+                        return;
+                    }
+                    
+                    log('✅ Perfil salvo via UPSERT', 'success');
+                    log(`📊 Dados retornados: ${JSON.stringify(upsertData, null, 2)}`);
+                } else {
+                    log('✅ Perfil salvo via INSERT', 'success');
+                    log(`📊 Dados retornados: ${JSON.stringify(insertData, null, 2)}`);
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao salvar perfil: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test RLS policies
+        async function testRlsPolicies() {
+            try {
+                log('🔍 Testando políticas RLS...');
+                
+                // Test SELECT
+                log('🔄 Testando SELECT...');
+                const { data: selectData, error: selectError } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('google_email', currentUser?.email);
+                
+                if (selectError) {
+                    log(`❌ Erro no SELECT: ${selectError.message}`, 'error');
+                } else {
+                    log(`✅ SELECT funcionou: ${selectData.length} registros encontrados`, 'success');
+                }
+                
+                // Test if we can see our own profile
+                if (currentUser) {
+                    log('🔄 Verificando se podemos ver nosso próprio perfil...');
+                    const { data: ownProfile, error: ownError } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('google_email', currentUser.email)
+                        .single();
+                    
+                    if (ownError) {
+                        log(`❌ Não conseguimos ver nosso próprio perfil: ${ownError.message}`, 'error');
+                    } else {
+                        log('✅ Conseguimos ver nosso próprio perfil', 'success');
+                        log(`📊 Perfil: ${JSON.stringify(ownProfile, null, 2)}`);
+                    }
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao testar políticas RLS: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Página de teste carregada');
+            log('💡 Clique em "Verificar Autenticação" para começar');
+        });
+    </script>
+</body>
+</html>

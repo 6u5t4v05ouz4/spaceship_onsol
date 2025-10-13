@@ -65,10 +65,28 @@ const server = http.createServer((req, res) => {
         filePath = './login.html';
     } else if (req.url === '/game') {
         filePath = './game.html';
-    } else if (req.url === '/soon') {
-        filePath = './soon.html';
-    } else if (req.url === '/original') {
-        filePath = './index-backup.html';
+        } else if (req.url === '/soon') {
+            filePath = './soon.html';
+    } else if (req.url === '/profile') {
+        filePath = './profile.html';
+    } else if (req.url === '/dashboard') {
+        filePath = './dashboard.html';
+    } else if (req.url === '/test-auth') {
+        filePath = './test-auth.html';
+    } else if (req.url === '/debug-auth') {
+        filePath = './debug-auth.html';
+    } else if (req.url === '/test-profile-save') {
+        filePath = './test-profile-save.html';
+        } else if (req.url === '/test-auth-session') {
+            filePath = './test-auth-session.html';
+        } else if (req.url === '/debug-session') {
+            filePath = './debug-session.html';
+        } else if (req.url === '/auth-callback') {
+            filePath = './auth-callback.html';
+    } else if (req.url === '/test-supabase') {
+        filePath = './test-supabase.html';
+        } else if (req.url === '/original') {
+            filePath = './index-backup.html';
     } else if (req.url.startsWith('/assets/')) {
         // Servir arquivos da pasta public/assets
         filePath = './public' + req.url;

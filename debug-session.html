@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Session - Space Crypto Miner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #0a0a0a;
+            color: #fff;
+        }
+        .debug-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .debug-title {
+            color: #4CAF50;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .debug-content {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: #f44336;
+        }
+        .success {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Session - Space Crypto Miner</h1>
+    
+    <div class="debug-section">
+        <div class="debug-title">Current URL & Parameters</div>
+        <div class="debug-content" id="urlInfo"></div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">Supabase Client Status</div>
+        <div class="debug-content" id="supabaseStatus"></div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">Authentication Session</div>
+        <div class="debug-content" id="sessionInfo"></div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">JWT Token Details</div>
+        <div class="debug-content" id="jwtInfo"></div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">User Profile Test</div>
+        <div class="debug-content" id="profileTest"></div>
+        <button onclick="testProfileSave()">Test Profile Save</button>
+        <button onclick="testProfileRead()">Test Profile Read</button>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">Actions</div>
+        <button onclick="refreshDebug()">Refresh Debug Info</button>
+        <button onclick="clearSession()">Clear Session</button>
+        <button onclick="goToLogin()">Go to Login</button>
+        <button onclick="goToProfile()">Go to Profile</button>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="/src/config-legacy.js"></script>
+    
+    <script>
+        // Supabase configuration
+        const supabaseConfig = window.appConfig.getSupabaseConfig();
+        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+        
+        // Debug functions
+        function updateUrlInfo() {
+            const url = window.location.href;
+            const params = new URLSearchParams(window.location.search);
+            const urlInfo = {
+                url: url,
+                search: window.location.search,
+                hash: window.location.hash,
+                params: Object.fromEntries(params.entries())
+            };
+            document.getElementById('urlInfo').textContent = JSON.stringify(urlInfo, null, 2);
+        }
+        
+        function updateSupabaseStatus() {
+            const status = {
+                clientCreated: !!supabase,
+                config: supabaseConfig,
+                authAvailable: !!supabase.auth,
+                authMethods: {
+                    signInWithOAuth: typeof supabase.auth.signInWithOAuth,
+                    getSession: typeof supabase.auth.getSession,
+                    onAuthStateChange: typeof supabase.auth.onAuthStateChange
+                }
+            };
+            document.getElementById('supabaseStatus').textContent = JSON.stringify(status, null, 2);
+        }
+        
+        async function updateSessionInfo() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                const sessionInfo = {
+                    error: error,
+                    hasSession: !!session,
+                    user: session?.user ? {
+                        id: session.user.id,
+                        email: session.user.email,
+                        created_at: session.user.created_at,
+                        user_metadata: session.user.user_metadata,
+                        app_metadata: session.user.app_metadata
+                    } : null,
+                    access_token: session?.access_token ? 'Present (length: ' + session.access_token.length + ')' : 'Missing',
+                    refresh_token: session?.refresh_token ? 'Present (length: ' + session.refresh_token.length + ')' : 'Missing',
+                    expires_at: session?.expires_at,
+                    token_type: session?.token_type
+                };
+                
+                document.getElementById('sessionInfo').textContent = JSON.stringify(sessionInfo, null, 2);
+                
+                // Update JWT info
+                if (session?.access_token) {
+                    try {
+                        const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+                        document.getElementById('jwtInfo').textContent = JSON.stringify(payload, null, 2);
+                    } catch (e) {
+                        document.getElementById('jwtInfo').textContent = 'Error parsing JWT: ' + e.message;
+                    }
+                } else {
+                    document.getElementById('jwtInfo').textContent = 'No JWT token available';
+                }
+                
+            } catch (error) {
+                document.getElementById('sessionInfo').textContent = 'Error getting session: ' + error.message;
+                document.getElementById('jwtInfo').textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        async function testProfileSave() {
+            try {
+                const testData = {
+                    google_email: 'test-debug@example.com',
+                    display_name: 'Debug Test User',
+                    updated_at: new Date().toISOString()
+                };
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .upsert(testData, {
+                        onConflict: 'google_email'
+                    });
+                
+                const result = {
+                    success: !error,
+                    error: error,
+                    data: data
+                };
+                
+                document.getElementById('profileTest').textContent = JSON.stringify(result, null, 2);
+                
+            } catch (error) {
+                document.getElementById('profileTest').textContent = 'Test save error: ' + error.message;
+            }
+        }
+        
+        async function testProfileRead() {
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .limit(5);
+                
+                const result = {
+                    success: !error,
+                    error: error,
+                    data: data
+                };
+                
+                document.getElementById('profileTest').textContent = JSON.stringify(result, null, 2);
+                
+            } catch (error) {
+                document.getElementById('profileTest').textContent = 'Test read error: ' + error.message;
+            }
+        }
+        
+        function refreshDebug() {
+            updateUrlInfo();
+            updateSupabaseStatus();
+            updateSessionInfo();
+        }
+        
+        async function clearSession() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                alert('Session cleared successfully');
+                refreshDebug();
+            } catch (error) {
+                alert('Error clearing session: ' + error.message);
+            }
+        }
+        
+        function goToLogin() {
+            window.location.href = '/login.html';
+        }
+        
+        function goToProfile() {
+            window.location.href = '/profile.html';
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Debug session page initialized');
+            refreshDebug();
+            
+            // Listen for auth state changes
+            supabase.auth.onAuthStateChange((event, session) => {
+                console.log('🔄 Auth state changed:', event, session?.user?.email);
+                updateSessionInfo();
+            });
+        });
+    </script>
+</body>
+</html>

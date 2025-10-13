@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth Session</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px 15px; margin: 5px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test Auth Session</h1>
+    
+    <div class="section">
+        <h3>1. Check Session</h3>
+        <button id="checkSession">Check Session</button>
+        <div id="sessionResult"></div>
+    </div>
+    
+    <div class="section">
+        <h3>2. Test Profile Save</h3>
+        <button id="testSave">Test Save Profile</button>
+        <div id="saveResult"></div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="/src/config-legacy.js"></script>
+    
+    <script>
+        // Supabase configuration
+        const supabaseConfig = window.appConfig.getSupabaseConfig();
+        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+        
+        // Check session
+        document.getElementById('checkSession').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('sessionResult');
+            resultDiv.innerHTML = 'Checking session...';
+            
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">Session Error: ${error.message}</div>`;
+                    return;
+                }
+                
+                if (!session) {
+                    resultDiv.innerHTML = '<div class="error">No active session</div>';
+                    return;
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="success">Session Found!</div>
+                    <pre>User: ${session.user.email}
+ID: ${session.user.id}
+Role: ${session.user.role}
+Access Token: ${session.access_token.substring(0, 50)}...</pre>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Exception: ${error.message}</div>`;
+            }
+        });
+        
+        // Test profile save
+        document.getElementById('testSave').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('saveResult');
+            resultDiv.innerHTML = 'Testing profile save...';
+            
+            try {
+                // Check session first
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    resultDiv.innerHTML = `<div class="error">Session Error: ${sessionError.message}</div>`;
+                    return;
+                }
+                
+                if (!session) {
+                    resultDiv.innerHTML = '<div class="error">No active session. Please login first.</div>';
+                    return;
+                }
+                
+                // Test profile save
+                const testProfile = {
+                    google_email: session.user.email,
+                    display_name: 'Test User',
+                    wallet_address: null,
+                    avatar_url: null
+                };
+                
+                console.log('Testing profile save with:', testProfile);
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .upsert(testProfile, { on_conflict: 'google_email' })
+                    .select();
+                
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <div class="error">Error: ${error.message}</div>
+                        <pre>Code: ${error.code}
+Details: ${error.details || 'None'}
+Hint: ${error.hint || 'None'}</pre>
+                    `;
+                    console.error('Profile save error:', error);
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="success">Success: Profile saved!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    console.log('Profile saved successfully:', data);
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Exception: ${error.message}</div>`;
+                console.error('Exception:', error);
+            }
+        });
+    </script>
+</body>
+</html>

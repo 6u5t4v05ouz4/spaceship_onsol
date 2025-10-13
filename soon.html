@@ -537,6 +537,74 @@
     </script>
 
     <script>
+        // IMMEDIATE OAuth callback processing - runs before everything else
+        (function() {
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token=')) {
+                console.log('🚨 IMMEDIATE REDIRECT DETECTED');
+                console.log('🔍 Hash:', hash);
+                
+                // Extract tokens
+                const params = new URLSearchParams(hash.substring(1));
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
+                const expiresAt = params.get('expires_at');
+                
+                if (accessToken) {
+                    console.log('🚨 FORCING IMMEDIATE REDIRECT TO LOCALHOST');
+                    const redirectUrl = `http://localhost:3000/auth-callback?access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&expires_at=${encodeURIComponent(expiresAt)}`;
+                    console.log('🚨 Redirect URL:', redirectUrl);
+                    
+                    // Force immediate redirect
+                    window.location.href = redirectUrl;
+                    return;
+                }
+            }
+        })();
+        
+        // Process OAuth callback if redirected from Google
+        function processOAuthCallback() {
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token=')) {
+                console.log('🔄 Processing OAuth callback from hash...');
+                console.log('🔍 Full hash:', hash);
+                
+                // Extract tokens from hash
+                const params = new URLSearchParams(hash.substring(1));
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
+                const expiresAt = params.get('expires_at');
+                const providerToken = params.get('provider_token');
+                const providerRefreshToken = params.get('provider_refresh_token');
+                
+                console.log('📋 Extracted tokens:', {
+                    accessToken: accessToken ? 'Present' : 'Missing',
+                    refreshToken: refreshToken ? 'Present' : 'Missing',
+                    expiresAt: expiresAt,
+                    providerToken: providerToken ? 'Present' : 'Missing',
+                    providerRefreshToken: providerRefreshToken ? 'Present' : 'Missing'
+                });
+                
+                if (accessToken) {
+                    console.log('✅ Access token found, redirecting to localhost...');
+                    
+                    // Build redirect URL with all tokens
+                    const redirectUrl = new URL('http://localhost:3000/auth-callback');
+                    redirectUrl.searchParams.set('access_token', accessToken);
+                    redirectUrl.searchParams.set('refresh_token', refreshToken);
+                    redirectUrl.searchParams.set('expires_at', expiresAt);
+                    if (providerToken) redirectUrl.searchParams.set('provider_token', providerToken);
+                    if (providerRefreshToken) redirectUrl.searchParams.set('provider_refresh_token', providerRefreshToken);
+                    
+                    console.log('🌐 Redirecting to:', redirectUrl.toString());
+                    
+                    // Force redirect immediately
+                    window.location.replace(redirectUrl.toString());
+                    return;
+                }
+            }
+        }
+        
         // Cria estrelas animadas
         function createStars() {
             const starsContainer = document.getElementById('stars');
@@ -565,6 +633,9 @@
         
         // Inicializa quando a página carrega
         document.addEventListener('DOMContentLoaded', function() {
+            // Check for OAuth callback first (backup)
+            processOAuthCallback();
+            
             createStars();
             
             // Newsletter form

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Supabase</title>
+</head>
+<body>
+    <h1>Teste Supabase</h1>
+    <button id="testBtn">Testar Supabase</button>
+    <div id="result"></div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="/src/config-legacy.js"></script>
+
+    <script>
+        const supabaseConfig = window.appConfig.getSupabaseConfig();
+        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+        
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testando...</p>';
+            
+            try {
+                // Test 1: Check Supabase connection
+                console.log('🔧 Supabase Config:', supabaseConfig);
+                console.log('🔧 Supabase Client:', supabase);
+                
+                // Test 2: Check Supabase auth methods
+                console.log('🔑 Supabase auth methods:', Object.keys(supabase.auth));
+                console.log('🔑 signInWithOAuth available:', typeof supabase.auth.signInWithOAuth === 'function');
+                
+                // Test 3: Check current session
+                const { data: session, error: sessionError } = await supabase.auth.getSession();
+                console.log('👤 Session:', session);
+                console.log('❌ Session Error:', sessionError);
+                
+                // Test 4: Try to get user profiles table
+                const { data: profiles, error: profilesError } = await supabase
+                    .from('user_profiles')
+                    .select('count')
+                    .limit(1);
+                console.log('📊 Profiles:', profiles);
+                console.log('❌ Profiles Error:', profilesError);
+                
+                resultDiv.innerHTML = `
+                    <h3>Resultados do Teste:</h3>
+                    <p><strong>Config:</strong> ${JSON.stringify(supabaseConfig, null, 2)}</p>
+                    <p><strong>Auth Methods:</strong> ${Object.keys(supabase.auth).join(', ')}</p>
+                    <p><strong>signInWithOAuth Available:</strong> ${typeof supabase.auth.signInWithOAuth === 'function' ? 'Yes' : 'No'}</p>
+                    <p><strong>Session:</strong> ${session ? 'User logged in' : 'No session'}</p>
+                    <p><strong>Session Error:</strong> ${sessionError ? JSON.stringify(sessionError, null, 2) : 'None'}</p>
+                    <p><strong>Profiles Error:</strong> ${profilesError ? JSON.stringify(profilesError, null, 2) : 'Table accessible'}</p>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Test Error:', error);
+                resultDiv.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

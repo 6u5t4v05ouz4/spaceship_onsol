@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth</title>
+</head>
+<body>
+    <h1>Test Supabase Auth</h1>
+    <button id="testBtn">Test Profile Save</button>
+    <div id="result"></div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="/src/config-legacy.js"></script>
+    
+    <script>
+        // Supabase configuration
+        const supabaseConfig = window.appConfig.getSupabaseConfig();
+        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+        
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Check current session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    resultDiv.innerHTML = `Session Error: ${sessionError.message}`;
+                    return;
+                }
+                
+                if (!session) {
+                    resultDiv.innerHTML = 'No active session. Please login first.';
+                    return;
+                }
+                
+                resultDiv.innerHTML = `Session found: ${session.user.email}<br>`;
+                
+                // Test profile save
+                const testProfile = {
+                    google_email: session.user.email,
+                    display_name: 'Test User',
+                    wallet_address: null,
+                    avatar_url: null
+                };
+                
+                console.log('Testing profile save with:', testProfile);
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .upsert(testProfile, { on_conflict: 'google_email' })
+                    .select();
+                
+                if (error) {
+                    resultDiv.innerHTML += `Error: ${error.message}<br>Code: ${error.code}`;
+                    console.error('Profile save error:', error);
+                } else {
+                    resultDiv.innerHTML += `Success: Profile saved!<br>Data: ${JSON.stringify(data)}`;
+                    console.log('Profile saved successfully:', data);
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `Exception: ${error.message}`;
+                console.error('Exception:', error);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Autenticação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .debug {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .warning {
+            color: #856404;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug - Autenticação Supabase</h1>
+        <p>Esta página ajuda a diagnosticar problemas de autenticação e políticas RLS.</p>
+        
+        <div class="section">
+            <h3>Controles</h3>
+            <button onclick="checkAuth()">Verificar Autenticação</button>
+            <button onclick="testRlsPolicies()">Testar Políticas RLS</button>
+            <button onclick="testDirectQuery()">Testar Query Direta</button>
+            <button onclick="clearDebug()">Limpar Debug</button>
+        </div>
+        
+        <div class="section">
+            <h3>Debug Log</h3>
+            <div id="debug" class="debug"></div>
+        </div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="/src/config-legacy.js"></script>
+    
+    <script>
+        // Supabase configuration
+        const supabaseConfig = window.appConfig.getSupabaseConfig();
+        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true
+            }
+        });
+        
+        let currentUser = null;
+        let currentSession = null;
+        
+        // Debug logging
+        function log(message, type = 'info') {
+            const debugDiv = document.getElementById('debug');
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}\n`;
+            
+            if (type === 'error') {
+                debugDiv.innerHTML += `<span style="color: red;">${logMessage}</span>`;
+            } else if (type === 'success') {
+                debugDiv.innerHTML += `<span style="color: green;">${logMessage}</span>`;
+            } else if (type === 'warning') {
+                debugDiv.innerHTML += `<span style="color: orange;">${logMessage}</span>`;
+            } else {
+                debugDiv.innerHTML += logMessage;
+            }
+            
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+        
+        function clearDebug() {
+            document.getElementById('debug').innerHTML = '';
+        }
+        
+        // Check authentication
+        async function checkAuth() {
+            try {
+                log('🔍 Verificando autenticação...');
+                
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    log(`❌ Erro na sessão: ${error.message}`, 'error');
+                    return;
+                }
+                
+                if (!session) {
+                    log('❌ Nenhuma sessão ativa encontrada', 'error');
+                    log('💡 Redirecione para login.html para autenticar');
+                    return;
+                }
+                
+                log('✅ Sessão ativa encontrada', 'success');
+                currentSession = session;
+                currentUser = session.user;
+                
+                // Debug session details
+                log(`👤 Usuário: ${currentUser.email}`);
+                log(`🆔 User ID: ${currentUser.id}`);
+                log(`📧 Email: ${currentUser.email}`);
+                log(`🔑 Role: ${currentUser.role}`);
+                log(`⏰ Expires: ${new Date(session.expires_at * 1000).toLocaleString()}`);
+                
+                // Debug JWT
+                const jwt = session.access_token;
+                if (jwt) {
+                    try {
+                        const payload = JSON.parse(atob(jwt.split('.')[1]));
+                        log(`🔍 JWT Payload: ${JSON.stringify(payload, null, 2)}`);
+                        log(`🔍 JWT Email: ${payload.email}`);
+                        log(`🔍 JWT Role: ${payload.role}`);
+                        log(`🔍 JWT Sub: ${payload.sub}`);
+                        log(`🔍 JWT Issuer: ${payload.iss}`);
+                        log(`🔍 JWT Audience: ${payload.aud}`);
+                    } catch (e) {
+                        log(`⚠️ Erro ao decodificar JWT: ${e.message}`, 'error');
+                    }
+                } else {
+                    log('⚠️ JWT token não encontrado', 'warning');
+                }
+                
+                // Test auth context
+                await testAuthContext();
+                
+            } catch (error) {
+                log(`❌ Erro ao verificar autenticação: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test auth context
+        async function testAuthContext() {
+            try {
+                log('🔍 Testando contexto de autenticação...');
+                
+                const { data, error } = await supabase.rpc('debug_auth_context');
+                
+                if (error) {
+                    log(`❌ Erro ao testar contexto: ${error.message}`, 'error');
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    const context = data[0];
+                    log('✅ Contexto de autenticação:', 'success');
+                    log(`🔍 JWT Email: ${context.jwt_email}`);
+                    log(`🔍 JWT Sub: ${context.jwt_sub}`);
+                    log(`🔍 JWT Role: ${context.jwt_role}`);
+                    log(`🔍 Current User Role: ${context.current_user_role}`);
+                    log(`🔍 Current User Name: ${context.current_user_name}`);
+                    log(`🔍 Auth UID: ${context.auth_uid}`);
+                } else {
+                    log('⚠️ Nenhum contexto de autenticação retornado', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao testar contexto: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test RLS policies
+        async function testRlsPolicies() {
+            try {
+                if (!currentUser) {
+                    log('❌ Usuário não autenticado', 'error');
+                    return;
+                }
+                
+                log('🔍 Testando políticas RLS...');
+                
+                // Test SELECT
+                log('🔄 Testando SELECT...');
+                const { data: selectData, error: selectError } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('google_email', currentUser.email);
+                
+                if (selectError) {
+                    log(`❌ Erro no SELECT: ${selectError.message}`, 'error');
+                    log(`❌ Código: ${selectError.code}`);
+                    log(`❌ Detalhes: ${selectError.details}`);
+                } else {
+                    log(`✅ SELECT funcionou: ${selectData.length} registros encontrados`, 'success');
+                    if (selectData.length > 0) {
+                        log(`📊 Dados: ${JSON.stringify(selectData[0], null, 2)}`);
+                    }
+                }
+                
+                // Test INSERT
+                log('🔄 Testando INSERT...');
+                const testData = {
+                    google_email: currentUser.email,
+                    display_name: 'Teste Debug',
+                    updated_at: new Date().toISOString()
+                };
+                
+                const { data: insertData, error: insertError } = await supabase
+                    .from('user_profiles')
+                    .insert(testData);
+                
+                if (insertError) {
+                    log(`❌ Erro no INSERT: ${insertError.message}`, 'error');
+                    log(`❌ Código: ${insertError.code}`);
+                    log(`❌ Detalhes: ${insertError.details}`);
+                    log(`❌ Hint: ${insertError.hint}`);
+                } else {
+                    log('✅ INSERT funcionou', 'success');
+                    log(`📊 Dados inseridos: ${JSON.stringify(insertData, null, 2)}`);
+                }
+                
+                // Test UPSERT
+                log('🔄 Testando UPSERT...');
+                const upsertData = {
+                    google_email: currentUser.email,
+                    display_name: 'Teste UPSERT Debug',
+                    updated_at: new Date().toISOString()
+                };
+                
+                const { data: upsertResult, error: upsertError } = await supabase
+                    .from('user_profiles')
+                    .upsert(upsertData, {
+                        onConflict: 'google_email'
+                    });
+                
+                if (upsertError) {
+                    log(`❌ Erro no UPSERT: ${upsertError.message}`, 'error');
+                    log(`❌ Código: ${upsertError.code}`);
+                    log(`❌ Detalhes: ${upsertError.details}`);
+                    log(`❌ Hint: ${upsertError.hint}`);
+                } else {
+                    log('✅ UPSERT funcionou', 'success');
+                    log(`📊 Dados UPSERT: ${JSON.stringify(upsertResult, null, 2)}`);
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao testar políticas RLS: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test direct query
+        async function testDirectQuery() {
+            try {
+                if (!currentUser) {
+                    log('❌ Usuário não autenticado', 'error');
+                    return;
+                }
+                
+                log('🔍 Testando query direta...');
+                
+                const { data, error } = await supabase.rpc('test_user_profiles_access');
+                
+                if (error) {
+                    log(`❌ Erro na query direta: ${error.message}`, 'error');
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    log('✅ Query direta funcionou', 'success');
+                    log(`🔍 Pode SELECT: ${result.can_select}`);
+                    log(`🔍 Pode INSERT: ${result.can_insert}`);
+                    log(`🔍 Pode UPDATE: ${result.can_update}`);
+                    log(`🔍 Pode DELETE: ${result.can_delete}`);
+                    log(`🔍 JWT Email: ${result.jwt_email}`);
+                    log(`🔍 Auth UID: ${result.auth_uid}`);
+                } else {
+                    log('⚠️ Nenhum resultado da query direta', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao testar query direta: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Página de debug carregada');
+            log('💡 Clique em "Verificar Autenticação" para começar');
+        });
+    </script>
+</body>
+</html>

@@ -538,6 +538,46 @@
             background-size: contain;
         }
         
+        .nav-section {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 20;
+            animation: fadeInUp 1s ease-out 2s both;
+        }
+        
+        .nav-link {
+            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
+            padding: 12px 25px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            color: #00ffcc;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: normal;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+        }
+        
+        .nav-link:hover {
+            background: rgba(0, 255, 204, 0.2);
+            border-color: #00ffcc;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0, 255, 204, 0.4);
+        }
+        
         
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -606,6 +646,13 @@
 
     <!-- Phaser.js -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="/src/config-legacy.js"></script>
+    
     
     <!-- Gameplay Simulation -->
     <script type="module">
@@ -708,15 +755,159 @@
             <h3>🚀 Entrar no Jogo</h3>
             <p>Faça login com sua conta Google para começar sua aventura espacial!</p>
             <div class="login-form">
-                <button class="btn-google" onclick="loginWithGoogle()">
+                <button class="btn-google" id="googleLoginBtn">
                     <div class="google-icon"></div>
                     Entrar com Google
                 </button>
             </div>
         </div>
+        
+        <!-- Navigation Links -->
+        <div class="nav-section">
+            <a href="/roadmap.html" class="nav-link">
+                ROADMAP
+            </a>
+            <a href="/docs.html" class="nav-link">
+                DOCS
+            </a>
+        </div>
             </div>
 
     <script>
+                // Supabase configuration
+                const supabaseConfig = window.appConfig.getSupabaseConfig();
+                const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+        
+        // DOM elements
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Login page initialized');
+            
+            // Setup auth state listener
+            setupAuthListener();
+            
+            // Check if user is already authenticated
+            await checkAuth();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Create stars
+            createStars();
+        });
+        
+        // Setup auth state listener
+        function setupAuthListener() {
+            supabase.auth.onAuthStateChange(async (event, session) => {
+                console.log('🔄 Auth state changed:', event, session?.user?.email);
+                
+                if (event === 'SIGNED_IN' && session?.user) {
+                    console.log('✅ User signed in via callback:', session.user.email);
+                    // Check if user has profile
+                    await checkUserProfile(session.user);
+                }
+            });
+        }
+        
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('❌ Auth error:', error);
+                    return;
+                }
+                
+                if (session?.user) {
+                    console.log('✅ User already authenticated:', session.user.email);
+                    // Check if user has profile
+                    await checkUserProfile(session.user);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error checking auth:', error);
+            }
+        }
+        
+        // Check user profile
+        async function checkUserProfile(user) {
+            try {
+                const { data: profile, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('google_email', user.email)
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+                    console.error('❌ Error checking profile:', error);
+                    return;
+                }
+                
+                   if (profile) {
+                       console.log('✅ User profile found:', profile);
+                       // User has profile, redirect to dashboard
+                       window.location.href = '/dashboard.html';
+                } else {
+                    console.log('❌ No profile found, redirecting to profile setup');
+                    // User needs to setup profile
+                    window.location.href = '/profile.html';
+                }
+                
+            } catch (error) {
+                console.error('❌ Error checking user profile:', error);
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            googleLoginBtn.addEventListener('click', handleGoogleLogin);
+        }
+        
+        // Handle Google login
+        async function handleGoogleLogin() {
+            try {
+                googleLoginBtn.disabled = true;
+                googleLoginBtn.innerHTML = '<div class="google-icon"></div>Conectando...';
+                
+                console.log('🔐 Starting Google login...');
+                console.log('📦 Supabase client:', supabase);
+                
+                // Sign in with Google
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/profile.html',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
+                    }
+                });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                console.log('✅ Google login initiated:', data);
+                
+            } catch (error) {
+                console.error('❌ Google login error:', error);
+                console.error('❌ Error details:', {
+                    message: error.message,
+                    status: error.status,
+                    statusText: error.statusText
+                });
+                
+                alert('Erro ao fazer login: ' + error.message);
+                
+                googleLoginBtn.disabled = false;
+                googleLoginBtn.innerHTML = '<div class="google-icon"></div>Entrar com Google';
+            }
+        }
+        
         // Cria estrelas animadas
         function createStars() {
             const starsContainer = document.getElementById('stars');
@@ -735,52 +926,6 @@
             }
         }
         
-        // Login com Google
-        function loginWithGoogle() {
-            // Implementar autenticação Google
-            console.log('Google login clicked');
-            // Por enquanto, redireciona para o jogo
-            window.location.href = 'game.html';
-        }
-        
-        // Inicializa quando a página carrega
-        document.addEventListener('DOMContentLoaded', function() {
-            createStars();
-            
-            // Adiciona efeito de hover nos elementos do gameplay
-            document.querySelectorAll('.ship, .enemy, .meteor').forEach(element => {
-                element.addEventListener('mouseenter', function() {
-                    this.style.transform += ' scale(1.2)';
-                    this.style.filter = 'brightness(1.5)';
-                });
-                
-                element.addEventListener('mouseleave', function() {
-                    this.style.transform = this.style.transform.replace(' scale(1.2)', '');
-                    this.style.filter = 'brightness(1)';
-                });
-            });
-            
-            // Adiciona efeito de hover nos planetas de fundo
-            document.querySelectorAll('.planet-bg').forEach(planet => {
-                planet.addEventListener('mouseenter', function() {
-                    this.style.transform += ' scale(1.3)';
-                    this.style.opacity = '0.8';
-                });
-                
-                planet.addEventListener('mouseleave', function() {
-                    this.style.transform = this.style.transform.replace(' scale(1.3)', '');
-                    this.style.opacity = '0.4';
-                });
-            });
-        });
-        
-        // Efeito de parallax no scroll (se houver)
-        window.addEventListener('scroll', function() {
-            const scrolled = window.pageYOffset;
-            const parallax = document.querySelector('.stars-bg');
-            const speed = scrolled * 0.5;
-            parallax.style.transform = `translateY(${speed}px)`;
-        });
     </script>
 </body>
 </html>

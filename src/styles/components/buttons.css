@@ -1,0 +1,384 @@
+/* =====================================================
+   SPACE CRYPTO MINER - SISTEMA DE BOTÕES
+   ===================================================== */
+
+/* =====================================================
+   BOTÃO BASE
+   ===================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-family: var(--font-secondary);
+    font-size: var(--text-body);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    user-select: none;
+    outline: none;
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--primary-cyan);
+    outline-offset: 2px;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* =====================================================
+   BOTÃO PRIMÁRIO
+   ===================================================== */
+.btn-primary {
+    background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+    color: #000;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
+    background: linear-gradient(45deg, var(--secondary-blue), var(--primary-cyan));
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 255, 204, 0.3);
+}
+
+/* =====================================================
+   BOTÃO SECUNDÁRIO
+   ===================================================== */
+.btn-secondary {
+    background: var(--primary-cyan-dark);
+    border: 2px solid var(--primary-cyan-light);
+    color: var(--primary-cyan);
+    box-shadow: 0 4px 15px rgba(0, 255, 204, 0.1);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--primary-cyan-light);
+    border-color: var(--primary-cyan);
+    color: var(--text-primary);
+    box-shadow: 0 6px 20px rgba(0, 255, 204, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-secondary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(0, 255, 204, 0.2);
+}
+
+/* =====================================================
+   BOTÃO GHOST
+   ===================================================== */
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--primary-cyan-light);
+    color: var(--primary-cyan);
+    box-shadow: none;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background: var(--primary-cyan-dark);
+    border-color: var(--primary-cyan);
+    box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-ghost:active:not(:disabled) {
+    transform: translateY(0);
+    background: var(--primary-cyan-light);
+}
+
+/* =====================================================
+   BOTÃO DE SUCESSO
+   ===================================================== */
+.btn-success {
+    background: linear-gradient(45deg, var(--success), #00cc88);
+    color: #000;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 15px rgba(0, 255, 0, 0.2);
+}
+
+.btn-success:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 255, 0, 0.4);
+    background: linear-gradient(45deg, #00cc88, var(--success));
+}
+
+/* =====================================================
+   BOTÃO DE AVISO
+   ===================================================== */
+.btn-warning {
+    background: linear-gradient(45deg, var(--warning), #ff8800);
+    color: #000;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 15px rgba(255, 170, 0, 0.2);
+}
+
+.btn-warning:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 170, 0, 0.4);
+    background: linear-gradient(45deg, #ff8800, var(--warning));
+}
+
+/* =====================================================
+   BOTÃO DE ERRO
+   ===================================================== */
+.btn-error {
+    background: linear-gradient(45deg, var(--error), #cc3333);
+    color: #fff;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 15px rgba(255, 68, 68, 0.2);
+}
+
+.btn-error:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+    background: linear-gradient(45deg, #cc3333, var(--error));
+}
+
+/* =====================================================
+   TAMANHOS DE BOTÕES
+   ===================================================== */
+.btn-sm {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--text-body-sm);
+    border-radius: var(--border-radius-xs);
+}
+
+.btn-md {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--text-body);
+    border-radius: var(--border-radius-sm);
+}
+
+.btn-lg {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--text-body-lg);
+    border-radius: var(--border-radius-md);
+}
+
+.btn-xl {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-size: var(--text-sm);
+    border-radius: var(--border-radius-lg);
+}
+
+/* =====================================================
+   BOTÕES ESPECIAIS
+   ===================================================== */
+
+/* Botão de Login */
+.btn-login {
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--text-body-lg);
+    font-weight: 600;
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-login:hover:not(:disabled)::before {
+    left: 100%;
+}
+
+.btn-login:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+}
+
+/* Botão Solana */
+.btn-solana {
+    background: linear-gradient(135deg, #9945ff, #14f195);
+    color: white;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--text-body-lg);
+    font-weight: 600;
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-solana::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-solana:hover:not(:disabled)::before {
+    left: 100%;
+}
+
+.btn-solana:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(153, 69, 255, 0.3);
+}
+
+/* Botão Play */
+.btn-play {
+    background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+    color: #000;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--text-body-lg);
+    font-weight: 700;
+    border-radius: var(--border-radius-md);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-sm);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-play::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-play:hover:not(:disabled)::before {
+    left: 100%;
+}
+
+.btn-play:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 255, 204, 0.5);
+}
+
+/* =====================================================
+   GRUPOS DE BOTÕES
+   ===================================================== */
+.btn-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+}
+
+.btn-group-full {
+    display: flex;
+    gap: var(--spacing-sm);
+    width: 100%;
+}
+
+.btn-group-full .btn {
+    flex: 1;
+}
+
+/* =====================================================
+   ESTADOS DE LOADING
+   ===================================================== */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* =====================================================
+   RESPONSIVIDADE
+   ===================================================== */
+@media (max-width: 768px) {
+    .btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--text-body-sm);
+    }
+    
+    .btn-lg {
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: var(--text-body);
+    }
+    
+    .btn-xl {
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: var(--text-body-lg);
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: var(--text-body-sm);
+    }
+    
+    .btn-lg,
+    .btn-xl {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--text-body);
+    }
+}

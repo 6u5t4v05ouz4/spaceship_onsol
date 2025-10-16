@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Space Crypto Miner - Portal Principal</title>
+    <link rel="icon" href="/assets/icones/icone.png" />
+    
+    <!-- Novo Sistema CSS Modular -->
+    <link rel="stylesheet" href="/src/styles/main.css">
+    
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Phaser.js para simulação -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
+    <style>
+        /* CSS específico da página (mínimo necessário) */
+        .page-specific {
+            /* Estilos específicos que não estão no sistema modular */
+        }
+        
+        /* Override para elementos únicos desta página */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: var(--spacing-xl);
+        }
+        
+        .logo-section {
+            margin-bottom: var(--spacing-xxxl);
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .newsletter-section {
+            max-width: 500px;
+            width: 100%;
+            animation: fadeInUp 1s ease-out 1.5s both;
+        }
+        
+        .social-section {
+            margin-top: var(--spacing-xxl);
+            animation: fadeInUp 1s ease-out 2s both;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: var(--spacing-xs);
+        }
+        
+        .status-indicator.connected {
+            background: var(--success);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        
+        .status-indicator.disconnected {
+            background: var(--error);
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+        }
+        
+        /* Responsividade específica */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .logo-section {
+                margin-bottom: var(--spacing-xxl);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-container {
+                padding: var(--spacing-md);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background System -->
+    <div class="background-primary"></div>
+    <div class="stars-background"></div>
+    <div class="particles-container" id="particles"></div>
+    <div class="simulation-container" id="simulation-container"></div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <h1 class="title-primary text-glow-animate">SPACE CRYPTO MINER</h1>
+            <p class="subtitle-primary">A Nova Era da Mineração Espacial</p>
+            <div class="coming-soon text-gradient">EM BREVE</div>
+            <p class="text-body-large text-fade-in-delay-1">
+                Prepare-se para a experiência mais imersiva de mineração criptográfica no espaço. 
+                Conecte sua carteira, colete recursos e construa seu império intergaláctico.
+            </p>
+        </div>
+        
+        <!-- Newsletter Section -->
+        <div class="newsletter-section">
+            <div class="card card-profile">
+                <div class="card-header">
+                    <h3 class="card-title">🚀 Fique por Dentro</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-body">
+                        Seja notificado sobre o lançamento e receba acesso antecipado ao beta.
+                    </p>
+                    <div class="flex flex-col gap-3 mt-4">
+                        <input 
+                            type="email" 
+                            class="form-input" 
+                            placeholder="seu@email.com"
+                            disabled
+                        >
+                        <button class="btn btn-primary" disabled>
+                            🔔 Notificar-me
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Social Section -->
+        <div class="social-section">
+            <h4 class="text-body-large text-cyan mb-4">Siga-nos nas Redes Sociais</h4>
+            <div class="flex justify-center gap-4 flex-wrap">
+                <a href="#" class="btn btn-ghost">
+                    <span>🐦</span> Twitter
+                </a>
+                <a href="#" class="btn btn-ghost">
+                    <span>📺</span> YouTube
+                </a>
+                <a href="#" class="btn btn-ghost">
+                    <span>💬</span> Discord
+                </a>
+                <a href="#" class="btn btn-ghost">
+                    <span>📱</span> Telegram
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">🚀 SPACE CRYPTO MINER</h2>
+                <button class="modal-close" onclick="hideLoginOverlay()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-body mb-4">Faça login para continuar sua jornada espacial</p>
+                <div class="flex flex-col gap-3">
+                    <button id="loginGoogleBtn" class="btn btn-login">
+                        <span>🔍</span> Login com Google
+                    </button>
+                    <button id="loginSolanaBtn" class="btn btn-solana">
+                        <span>👻</span> Conectar Phantom Wallet
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <p class="text-body-small text-muted">Escolha uma opção para começar</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/src/supabase-dev.js"></script>
+    <script type="module" src="/src/simulation/background-simulation.js"></script>
+    <script>
+        // Configuração do Supabase
+        const supabaseConfig = {
+            url: "https://cjrbhqlwfjebnjoyfjnc.supabase.co",
+            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4"
+        };
+
+        // Inicializar Supabase
+        let supabase = null;
+        if (window.supabase) {
+            try {
+                supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+                console.log('✅ Supabase inicializado com sucesso');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Supabase:', error);
+            }
+        }
+
+        // Criar partículas flutuantes
+        function createFloatingParticles() {
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 3 + 1 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Funções de login
+        function showLoginOverlay() {
+            const overlay = document.getElementById('login-overlay');
+            if (overlay) {
+                overlay.classList.add('show');
+            }
+        }
+
+        function hideLoginOverlay() {
+            const overlay = document.getElementById('login-overlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+            }
+        }
+
+        // Login com Google
+        async function loginWithGoogle() {
+            try {
+                console.log('🔄 Iniciando login com Google...');
+                
+                if (!supabase) {
+                    throw new Error('Supabase não inicializado');
+                }
+
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/auth-callback.html'
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                console.log('✅ Login iniciado:', data);
+                
+            } catch (error) {
+                console.error('❌ Erro no login:', error);
+                alert('Erro no login: ' + error.message);
+            }
+        }
+
+        // Login com Solana
+        async function loginWithSolana() {
+            try {
+                console.log('🔄 Iniciando login com Solana...');
+                
+                if (!window.solana || !window.solana.isPhantom) {
+                    alert('Instale a extensão Phantom Wallet para continuar');
+                    return;
+                }
+
+                const response = await window.solana.connect();
+                const publicKey = response.publicKey.toString();
+                
+                console.log('✅ Carteira conectada:', publicKey);
+                
+                // Redirecionar para o jogo
+                window.location.href = '/game.html';
+                
+            } catch (error) {
+                console.error('❌ Erro ao conectar carteira:', error);
+                alert('Erro ao conectar carteira: ' + error.message);
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Página carregada - Inicializando...');
+            
+            // Criar partículas
+            createFloatingParticles();
+            
+            // Configurar botões de login
+            const loginGoogleBtn = document.getElementById('loginGoogleBtn');
+            const loginSolanaBtn = document.getElementById('loginSolanaBtn');
+            
+            if (loginGoogleBtn) {
+                loginGoogleBtn.addEventListener('click', loginWithGoogle);
+            }
+            
+            if (loginSolanaBtn) {
+                loginSolanaBtn.addEventListener('click', loginWithSolana);
+            }
+            
+            // Mostrar overlay de login após 3 segundos
+            setTimeout(() => {
+                showLoginOverlay();
+            }, 3000);
+            
+            console.log('✅ Inicialização concluída');
+        });
+
+        // Verificar estado de autenticação
+        if (supabase && supabase.auth) {
+            supabase.auth.onAuthStateChange((event, session) => {
+                console.log('🔄 Estado de autenticação:', event, session);
+                
+                if (event === 'SIGNED_IN' && session) {
+                    console.log('✅ Usuário logado:', session.user);
+                    hideLoginOverlay();
+                    // Redirecionar para dashboard ou jogo
+                    window.location.href = '/dashboard.html';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

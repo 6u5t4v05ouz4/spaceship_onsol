@@ -3,21 +3,18 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Space Crypto Miner - Portal Principal</title>
+    <title>Space Crypto Miner - Em Breve</title>
     <link rel="icon" href="/assets/icones/icone.png" />
     
     <!-- Novo Sistema CSS Modular -->
     <link rel="stylesheet" href="/src/styles/main.css">
     
-    <!-- Supabase SDK -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
     <!-- Phaser.js para simulação -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
     
     <style>
-        /* CSS específico da página unificada */
-        .hero-section {
+        /* CSS específico da página "Em Breve" */
+        .soon-container {
             position: relative;
             width: 100%;
             height: 100vh;
@@ -30,13 +27,13 @@
             padding: var(--spacing-xl);
         }
         
-        .hero-content {
-            max-width: 1000px;
+        .soon-content {
+            max-width: 800px;
             width: 100%;
             animation: fadeInUp 1s ease-out;
         }
         
-        .hero-title {
+        .soon-title {
             font-family: var(--font-primary);
             font-size: var(--text-xxl);
             color: var(--primary-cyan);
@@ -47,112 +44,47 @@
             animation: titleGlow 2s ease-in-out infinite alternate;
         }
         
-        .hero-subtitle {
+        .soon-subtitle {
             font-family: var(--font-secondary);
             font-size: var(--text-md);
             color: var(--text-secondary);
             letter-spacing: var(--letter-spacing-lg);
             text-transform: uppercase;
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
             opacity: 0.8;
             animation: fadeInUp 1s ease-out 0.5s both;
         }
         
-        .hero-description {
+        .coming-soon {
+            font-family: var(--font-primary);
+            background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: var(--text-xl);
+            font-weight: normal;
+            margin-bottom: var(--spacing-lg);
+            letter-spacing: var(--letter-spacing-lg);
+            text-transform: uppercase;
+            animation: fadeInUp 1s ease-out 1s both;
+            text-shadow: none;
+        }
+        
+        .soon-description {
             font-size: var(--text-body-lg);
             color: var(--text-secondary);
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto var(--spacing-xxl);
             line-height: 1.6;
-            animation: fadeInUp 1s ease-out 1s both;
-        }
-        
-        .cta-section {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-lg);
-            align-items: center;
-            margin-bottom: var(--spacing-xxl);
             animation: fadeInUp 1s ease-out 1.5s both;
-        }
-        
-        .cta-buttons {
-            display: flex;
-            gap: var(--spacing-md);
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .cta-primary {
-            background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
-            color: #000;
-            border: none;
-            border-radius: var(--border-radius-md);
-            padding: var(--spacing-lg) var(--spacing-xl);
-            font-size: var(--text-body-lg);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: var(--letter-spacing-sm);
-            cursor: pointer;
-            transition: var(--transition-normal);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-        
-        .cta-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.5);
-        }
-        
-        .cta-secondary {
-            background: var(--primary-cyan-dark);
-            border: 2px solid var(--primary-cyan-light);
-            color: var(--primary-cyan);
-            border-radius: var(--border-radius-md);
-            padding: var(--spacing-lg) var(--spacing-xl);
-            font-size: var(--text-body-lg);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: var(--letter-spacing-sm);
-            cursor: pointer;
-            transition: var(--transition-normal);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-        
-        .cta-secondary:hover {
-            background: var(--primary-cyan-light);
-            border-color: var(--primary-cyan);
-            color: var(--text-primary);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.3);
-        }
-        
-        .features-section {
-            max-width: 1200px;
-            margin: 0 auto var(--spacing-xxl);
-            animation: fadeInUp 1s ease-out 2s both;
-        }
-        
-        .features-title {
-            font-family: var(--font-primary);
-            font-size: var(--text-xl);
-            color: var(--primary-cyan);
-            text-shadow: var(--text-glow-secondary);
-            text-align: center;
-            margin-bottom: var(--spacing-xl);
-            text-transform: uppercase;
-            letter-spacing: var(--letter-spacing-md);
         }
         
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xxl);
+            animation: fadeInUp 1s ease-out 2s both;
         }
         
         .feature-card {
@@ -161,7 +93,7 @@
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--primary-cyan-light);
             border-radius: var(--border-radius-md);
-            padding: var(--spacing-xl);
+            padding: var(--spacing-lg);
             text-align: center;
             transition: var(--transition-normal);
         }
@@ -179,9 +111,9 @@
         
         .feature-title {
             font-family: var(--font-primary);
-            font-size: var(--text-lg);
+            font-size: var(--text-md);
             color: var(--primary-cyan);
-            margin-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
             text-transform: uppercase;
             letter-spacing: var(--letter-spacing-sm);
         }
@@ -190,7 +122,7 @@
             font-family: var(--font-secondary);
             font-size: var(--text-body);
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.5;
         }
         
         .newsletter-section {
@@ -198,9 +130,8 @@
             border: 2px solid var(--primary-cyan-light);
             border-radius: var(--border-radius-lg);
             padding: var(--spacing-xl);
-            max-width: 600px;
-            margin: 0 auto var(--spacing-xxl);
-            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
             animation: fadeInUp 1s ease-out 2.5s both;
         }
         
@@ -224,7 +155,6 @@
             display: flex;
             gap: var(--spacing-sm);
             flex-wrap: wrap;
-            justify-content: center;
         }
         
         .email-input {
@@ -272,7 +202,7 @@
         }
         
         .social-section {
-            text-align: center;
+            margin-top: var(--spacing-xxl);
             animation: fadeInUp 1s ease-out 3s both;
         }
         
@@ -318,29 +248,22 @@
         
         /* Responsividade */
         @media (max-width: 768px) {
-            .hero-section {
+            .soon-container {
                 padding: var(--spacing-lg);
             }
             
-            .hero-title {
+            .soon-title {
                 font-size: var(--text-xl);
                 letter-spacing: var(--letter-spacing-lg);
             }
             
-            .hero-subtitle {
+            .soon-subtitle {
                 font-size: var(--text-body-lg);
                 letter-spacing: var(--letter-spacing-md);
             }
             
-            .cta-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-            
-            .cta-primary,
-            .cta-secondary {
-                width: 100%;
-                justify-content: center;
+            .coming-soon {
+                font-size: var(--text-lg);
             }
             
             .features-grid {
@@ -358,18 +281,22 @@
         }
         
         @media (max-width: 480px) {
-            .hero-section {
+            .soon-container {
                 padding: var(--spacing-md);
             }
             
-            .hero-title {
+            .soon-title {
                 font-size: var(--text-lg);
                 letter-spacing: var(--letter-spacing-md);
             }
             
-            .hero-subtitle {
+            .soon-subtitle {
                 font-size: var(--text-body);
                 letter-spacing: var(--letter-spacing-sm);
+            }
+            
+            .coming-soon {
+                font-size: var(--text-md);
             }
             
             .newsletter-section {
@@ -385,67 +312,53 @@
     <div class="stars-background"></div>
     <div class="particles-container" id="particles"></div>
     
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <!-- Hero Content -->
-        <div class="hero-content">
+    <!-- Main Container -->
+    <div class="soon-container">
+        <!-- Content -->
+        <div class="soon-content">
             <!-- Title Section -->
-            <div class="hero-header">
-                <h1 class="hero-title">SPACE CRYPTO MINER</h1>
-                <p class="hero-subtitle">A Nova Era da Mineração Espacial</p>
-                <p class="hero-description">
+            <div class="soon-header">
+                <h1 class="soon-title">SPACE CRYPTO MINER</h1>
+                <p class="soon-subtitle">A Nova Era da Mineração Espacial</p>
+                <div class="coming-soon">EM BREVE</div>
+                <p class="soon-description">
                     Prepare-se para a experiência mais imersiva de mineração criptográfica no espaço. 
                     Conecte sua carteira, colete recursos e construa seu império intergaláctico.
                 </p>
             </div>
             
-            <!-- CTA Section -->
-            <div class="cta-section">
-                <div class="cta-buttons">
-                    <a href="/login.html" class="cta-primary">
-                        🚀 Começar Jornada
-                    </a>
-                    <a href="/game.html" class="cta-secondary">
-                        🎮 Jogar Demo
-                    </a>
+            <!-- Features Grid -->
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3 class="feature-title">Exploração Espacial</h3>
+                    <p class="feature-description">
+                        Navegue por galáxias infinitas, descubra novos planetas e colete recursos únicos.
+                    </p>
                 </div>
-            </div>
-            
-            <!-- Features Section -->
-            <div class="features-section">
-                <h2 class="features-title">Recursos Principais</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">🚀</div>
-                        <h3 class="feature-title">Exploração Espacial</h3>
-                        <p class="feature-description">
-                            Navegue por galáxias infinitas, descubra novos planetas e colete recursos únicos em cada sistema solar.
-                        </p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">💰</div>
-                        <h3 class="feature-title">Mineração Cripto</h3>
-                        <p class="feature-description">
-                            Extraia criptomoedas reais enquanto explora o universo e completa missões épicas.
-                        </p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">🎮</div>
-                        <h3 class="feature-title">Gameplay Imersivo</h3>
-                        <p class="feature-description">
-                            Experiência de jogo única com gráficos 3D, física realista e mecânicas inovadoras.
-                        </p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">🏆</div>
-                        <h3 class="feature-title">NFTs Únicos</h3>
-                        <p class="feature-description">
-                            Colete naves, equipamentos e artefatos únicos como NFTs na blockchain Solana.
-                        </p>
-                    </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3 class="feature-title">Mineração Cripto</h3>
+                    <p class="feature-description">
+                        Extraia criptomoedas reais enquanto explora o universo e completa missões.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎮</div>
+                    <h3 class="feature-title">Gameplay Imersivo</h3>
+                    <p class="feature-description">
+                        Experiência de jogo única com gráficos 3D, física realista e mecânicas inovadoras.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🏆</div>
+                    <h3 class="feature-title">NFTs Únicos</h3>
+                    <p class="feature-description">
+                        Colete naves, equipamentos e artefatos únicos como NFTs na blockchain Solana.
+                    </p>
                 </div>
             </div>
             
@@ -453,7 +366,7 @@
             <div class="newsletter-section">
                 <h3 class="newsletter-title">🚀 Fique por Dentro</h3>
                 <p class="newsletter-description">
-                    Seja notificado sobre o lançamento oficial e receba acesso antecipado ao beta.
+                    Seja notificado sobre o lançamento e receba acesso antecipado ao beta.
                 </p>
                 <div class="email-form">
                     <input 
@@ -493,7 +406,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/src/supabase-dev.js"></script>
     <script type="module" src="/src/simulation/background-simulation.js"></script>
     <script>
         // Criar partículas
@@ -515,12 +427,12 @@
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Portal principal carregado');
+            console.log('🚀 Página "Em Breve" carregada');
             
             // Criar partículas
             createParticles();
             
-            console.log('✅ Portal principal inicializado');
+            console.log('✅ Página "Em Breve" inicializada');
         });
     </script>
 </body>

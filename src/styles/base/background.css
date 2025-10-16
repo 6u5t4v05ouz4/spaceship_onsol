@@ -1,0 +1,291 @@
+/* =====================================================
+   SPACE CRYPTO MINER - SISTEMA DE BACKGROUND
+   ===================================================== */
+
+/* =====================================================
+   BACKGROUND PRINCIPAL
+   ===================================================== */
+.background-primary {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    z-index: var(--z-bg-primary);
+    pointer-events: none;
+}
+
+/* =====================================================
+   SISTEMA DE ESTRELAS
+   ===================================================== */
+.stars-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+        radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+        radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+    background-repeat: repeat;
+    background-size: 200px 100px;
+    opacity: 0.4;
+    z-index: var(--z-bg-stars);
+    animation: parallax 20s linear infinite;
+    pointer-events: none;
+}
+
+/* =====================================================
+   PARTÍCULAS FLUTUANTES
+   ===================================================== */
+.particles-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-bg-particles);
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s infinite;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+.particle:nth-child(odd) {
+    animation-delay: 1s;
+}
+
+.particle:nth-child(even) {
+    animation-delay: 2s;
+}
+
+/* =====================================================
+   SIMULAÇÃO DE GAMEPLAY
+   ===================================================== */
+.simulation-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--z-bg-simulation);
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 1;
+}
+
+.simulation-container canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    display: block !important;
+}
+
+/* Controles da simulação */
+.simulation-controls {
+    position: fixed;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+    z-index: var(--z-content);
+    display: flex;
+    gap: var(--spacing-sm);
+    opacity: 0;
+    transition: var(--transition-normal);
+}
+
+.simulation-controls:hover {
+    opacity: 1;
+}
+
+.simulation-control-btn {
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--primary-cyan-light);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+    color: var(--text-primary);
+    font-size: var(--text-body);
+    cursor: pointer;
+    transition: var(--transition-normal);
+}
+
+.simulation-control-btn:hover {
+    border-color: var(--primary-cyan);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    transform: translateY(-2px);
+}
+
+/* =====================================================
+   CONTAINER PRINCIPAL
+   ===================================================== */
+.main-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: var(--z-content);
+    text-align: center;
+    padding: var(--container-padding);
+}
+
+/* =====================================================
+   ANIMAÇÕES
+   ===================================================== */
+
+/* Parallax das estrelas */
+@keyframes parallax {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50px); }
+}
+
+/* Twinkle das partículas */
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* Fade In Up */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Title Glow */
+@keyframes titleGlow {
+    0%, 100% { 
+        text-shadow: var(--text-glow-secondary);
+    }
+    50% { 
+        text-shadow: 
+            0 0 25px rgba(0, 255, 204, 1.2),
+            0 0 50px rgba(0, 255, 204, 1),
+            0 0 75px rgba(0, 255, 204, 0.8);
+    }
+}
+
+/* =====================================================
+   UTILITÁRIOS DE BACKGROUND
+   ===================================================== */
+
+/* Background Glass */
+.bg-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Background Card */
+.bg-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.bg-card-hover {
+    background: var(--card-bg-hover);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+/* Background Panel */
+.bg-panel {
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.bg-panel-hover {
+    background: var(--panel-bg-hover);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+/* =====================================================
+   GRADIENTES
+   ===================================================== */
+.bg-gradient-primary {
+    background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+}
+
+.bg-gradient-secondary {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+}
+
+.bg-gradient-accent {
+    background: linear-gradient(45deg, var(--accent-blue), var(--primary-cyan));
+}
+
+.bg-gradient-space {
+    background: radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+}
+
+/* =====================================================
+   RESPONSIVIDADE
+   ===================================================== */
+@media (max-width: 768px) {
+    .main-container {
+        padding: var(--spacing-md);
+    }
+    
+    .simulation-container {
+        opacity: 0.8;
+    }
+    
+    .stars-background {
+        opacity: 0.3;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .simulation-container {
+        opacity: 0.6;
+    }
+    
+    .stars-background {
+        opacity: 0.2;
+    }
+}
+
+/* =====================================================
+   REDUÇÃO DE MOVIMENTO
+   ===================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .stars-background {
+        animation: none;
+    }
+    
+    .particle {
+        animation: none;
+        opacity: 0.6;
+    }
+    
+    .simulation-container {
+        opacity: 0.3;
+    }
+}

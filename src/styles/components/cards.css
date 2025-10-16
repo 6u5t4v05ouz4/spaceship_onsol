@@ -1,0 +1,419 @@
+/* =====================================================
+   SPACE CRYPTO MINER - SISTEMA DE CARDS
+   ===================================================== */
+
+/* =====================================================
+   CARD BASE
+   ===================================================== */
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--primary-cyan-light);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary-cyan), transparent);
+    opacity: 0.5;
+}
+
+.card:hover {
+    border-color: var(--primary-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+    transform: translateY(-5px);
+    background: var(--card-bg-hover);
+}
+
+/* =====================================================
+   CARD DE PERFIL
+   ===================================================== */
+.card-profile {
+    background: var(--primary-cyan-dark);
+    border: 2px solid var(--primary-cyan-light);
+    border-radius: var(--border-radius-xl);
+    padding: var(--spacing-xxl);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    animation: fadeInUp 1s ease-out;
+}
+
+.card-profile:hover {
+    border-color: var(--primary-cyan);
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.4);
+    transform: translateY(-8px);
+}
+
+/* =====================================================
+   CARD DE DASHBOARD
+   ===================================================== */
+.card-dashboard {
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--primary-cyan);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-lg);
+    transition: var(--transition-normal);
+    position: relative;
+}
+
+.card-dashboard:hover {
+    border-color: var(--primary-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    transform: translateY(-5px);
+    background: var(--panel-bg-hover);
+}
+
+/* =====================================================
+   CARD DE GAME
+   ===================================================== */
+.card-game {
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--accent-blue-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-game::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+    animation: rotate 4s linear infinite;
+    border-radius: var(--border-radius-md);
+    z-index: -1;
+}
+
+.card-game:hover {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
+    transform: translateY(-6px);
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* =====================================================
+   CARD DE NFT
+   ===================================================== */
+.card-nft {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--primary-cyan-light);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    text-align: center;
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-nft:hover {
+    background: var(--card-bg-hover);
+    border-color: var(--primary-cyan);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+}
+
+/* =====================================================
+   CARD DE INVENTÁRIO
+   ===================================================== */
+.card-inventory {
+    background: var(--primary-cyan-dark);
+    border: 1px solid var(--primary-cyan-light);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+    text-align: center;
+    transition: var(--transition-normal);
+    position: relative;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-inventory:hover {
+    background: var(--primary-cyan-light);
+    border-color: var(--primary-cyan);
+    transform: translateY(-2px);
+}
+
+/* =====================================================
+   CARD DE ESTATÍSTICAS
+   ===================================================== */
+.card-stats {
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--primary-cyan-light);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+    transition: var(--transition-normal);
+    position: relative;
+}
+
+.card-stats:hover {
+    border-color: var(--primary-cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+    transform: translateY(-3px);
+}
+
+/* =====================================================
+   HEADERS DE CARD
+   ===================================================== */
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--primary-cyan-light);
+}
+
+.card-title {
+    font-family: var(--font-primary);
+    font-size: var(--text-md);
+    font-weight: normal;
+    color: var(--primary-cyan);
+    text-shadow: var(--text-glow-secondary);
+    letter-spacing: var(--letter-spacing-sm);
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.card-subtitle {
+    font-family: var(--font-secondary);
+    font-size: var(--text-body);
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* =====================================================
+   CORPO DO CARD
+   ===================================================== */
+.card-body {
+    margin-bottom: var(--spacing-md);
+}
+
+.card-body:last-child {
+    margin-bottom: 0;
+}
+
+/* =====================================================
+   FOOTER DO CARD
+   ===================================================== */
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--primary-cyan-light);
+}
+
+/* =====================================================
+   GRID DE CARDS
+   ===================================================== */
+.cards-grid {
+    display: grid;
+    gap: var(--spacing-lg);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.cards-grid-sm {
+    display: grid;
+    gap: var(--spacing-md);
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.cards-grid-lg {
+    display: grid;
+    gap: var(--spacing-xl);
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+/* Grid de Inventário */
+.cards-inventory {
+    display: grid;
+    gap: var(--spacing-sm);
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+}
+
+/* Grid de NFTs */
+.cards-nft {
+    display: grid;
+    gap: var(--spacing-md);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+/* =====================================================
+   RARIDADE DE CARDS
+   ===================================================== */
+.card-rarity-comum {
+    border-color: var(--rarity-common-border);
+    background: var(--rarity-common-bg);
+}
+
+.card-rarity-comum::before {
+    background: conic-gradient(from 0deg, transparent, rgba(102, 102, 102, 0.15), transparent);
+}
+
+.card-rarity-incomum {
+    border-color: var(--rarity-uncommon-border);
+    background: var(--rarity-uncommon-bg);
+}
+
+.card-rarity-incomum::before {
+    background: conic-gradient(from 0deg, transparent, rgba(30, 255, 0, 0.15), transparent);
+}
+
+.card-rarity-raro {
+    border-color: var(--rarity-rare-border);
+    background: var(--rarity-rare-bg);
+}
+
+.card-rarity-raro::before {
+    background: conic-gradient(from 0deg, transparent, rgba(0, 112, 221, 0.15), transparent);
+}
+
+.card-rarity-epico {
+    border-color: var(--rarity-epic-border);
+    background: var(--rarity-epic-bg);
+}
+
+.card-rarity-epico::before {
+    background: conic-gradient(from 0deg, transparent, rgba(163, 53, 238, 0.15), transparent);
+}
+
+.card-rarity-lendario {
+    border-color: var(--rarity-legendary-border);
+    background: var(--rarity-legendary-bg);
+    box-shadow: 0 0 20px rgba(255, 128, 0, 0.2);
+}
+
+.card-rarity-lendario::before {
+    background: conic-gradient(from 0deg, transparent, rgba(255, 128, 0, 0.15), transparent);
+}
+
+.card-rarity-lendario:hover {
+    box-shadow: 0 0 30px rgba(255, 128, 0, 0.4);
+}
+
+/* =====================================================
+   ESTADOS DE CARD
+   ===================================================== */
+.card-selected {
+    border-color: var(--primary-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+    background: var(--primary-cyan-dark);
+}
+
+.card-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+.card-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.1), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* =====================================================
+   RESPONSIVIDADE
+   ===================================================== */
+@media (max-width: 768px) {
+    .card {
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius-sm);
+    }
+    
+    .card-profile {
+        padding: var(--spacing-lg);
+        margin: var(--spacing-md);
+    }
+    
+    .cards-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .cards-grid-sm {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .cards-inventory {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    }
+    
+    .cards-nft {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: var(--spacing-sm);
+    }
+    
+    .card-profile {
+        padding: var(--spacing-md);
+        margin: var(--spacing-sm);
+    }
+    
+    .cards-grid-sm {
+        grid-template-columns: 1fr;
+    }
+    
+    .cards-inventory {
+        grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    }
+    
+    .cards-nft {
+        grid-template-columns: 1fr;
+    }
+}

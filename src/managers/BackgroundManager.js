@@ -1,318 +1,189 @@
 /**
- * BackgroundManager - Gerencia o fundo do espaço com múltiplas camadas de estrelas
+ * BackgroundManager - Gerencia o fundo do espaço usando sistema simples e eficiente
+ * Baseado no sistema do GameplaySimulation.js
  * Responsabilidades:
- * - Criação de múltiplas camadas de estrelas com diferentes profundidades
- * - Estrelas com cores variadas (branco, azul, amarelo)
- * - Efeito parallax para simular profundidade
- * - Estrelas pulsantes e cintilantes
- * - Nebulosas e efeitos atmosféricos
- * - Otimização de performance com culling
+ * - Background sólido preto
+ * - TileSprite das estrelas com parallax
+ * - Estrelas procedurais individuais
+ * - Animação suave de movimento
  */
 export default class BackgroundManager {
     constructor(scene) {
         this.scene = scene;
         
-        // Configurações do espaço
-        this.spaceSize = 8000; // Tamanho do espaço (8x maior que a tela)
-        this.starLayers = [];
-        this.nebulas = [];
-        
-        // Configurações de estrelas por camada
-        this.starConfigs = [
-            {
-                name: 'distant',
-                count: 200,
-                size: { min: 0.5, max: 1 },
-                colors: [0xffffff, 0xf0f8ff, 0xe6f3ff], // Brancos e azuis claros
-                depth: -15,
-                parallaxSpeed: 0.05,
-                twinkleSpeed: 0.02,
-                alpha: { min: 0.3, max: 0.8 }
-            },
-            {
-                name: 'medium',
-                count: 150,
-                size: { min: 1, max: 2 },
-                colors: [0xffffff, 0xffffcc, 0xfff8dc], // Brancos e amarelos claros
-                depth: -12,
-                parallaxSpeed: 0.15,
-                twinkleSpeed: 0.05,
-                alpha: { min: 0.5, max: 1.0 }
-            },
-            {
-                name: 'bright',
-                count: 100,
-                size: { min: 1.5, max: 3 },
-                colors: [0xffffff, 0x87ceeb, 0xffd700], // Branco, azul céu, dourado
-                depth: -9,
-                parallaxSpeed: 0.25,
-                twinkleSpeed: 0.08,
-                alpha: { min: 0.7, max: 1.0 }
-            },
-            {
-                name: 'foreground',
-                count: 50,
-                size: { min: 2, max: 4 },
-                colors: [0xffffff, 0x00bfff, 0xffa500], // Branco, azul profundo, laranja
-                depth: -6,
-                parallaxSpeed: 0.4,
-                twinkleSpeed: 0.12,
-                alpha: { min: 0.8, max: 1.0 }
-            }
-        ];
-        
-        // Configurações de nebulosas
-        this.nebulaConfigs = [
-            {
-                count: 3,
-                colors: [0x4a0080, 0x8b008b, 0x483d8b], // Roxos e azuis escuros
-                size: { min: 300, max: 600 },
-                alpha: { min: 0.1, max: 0.3 },
-                depth: -18
-            }
-        ];
+        // Elementos do background
+        this.starsBg = null;
+        this.stars = []; // Armazenar estrelas para protegê-las do culling
+        this.starTiles = []; // Múltiplos TileSprites para cobertura infinita
         
         // Referências
         this.playerShip = null;
-        this.lastUpdateTime = 0;
-        this.updateInterval = 16; // ~60fps
+        this.lastShipPosition = { x: 0, y: 0 };
         
-        console.log('🌌 BackgroundManager inicializado');
+        console.log('🌌 BackgroundManager inicializado (sistema infinito)');
     }
     
     /**
      * Inicializa o sistema de background
      */
-    initialize(playerShip) {
+    initialize(playerShip = null) {
         this.playerShip = playerShip;
         
-        console.log('🌌 BackgroundManager: Criando espaço imenso...');
+        console.log('🌌 BackgroundManager: Criando background simples...');
         
-        // Cria o fundo base do espaço
-        this.createSpaceBackground();
+        // Cria o background usando o sistema do GameplaySimulation
+        this.createBackground();
         
-        // Cria todas as camadas de estrelas
-        this.createStarLayers();
-        
-        // Cria nebulosas
-        this.createNebulas();
-        
-        console.log('✅ BackgroundManager: Espaço imenso criado com sucesso!');
+        console.log('✅ BackgroundManager: Background simples criado com sucesso!');
     }
     
     /**
-     * Cria o fundo base do espaço
+     * Cria o background com sistema infinito
      */
-    createSpaceBackground() {
-        // Fundo principal do espaço (preto profundo)
-        const spaceBg = this.scene.add.rectangle(0, 0, this.spaceSize, this.spaceSize, 0x000011);
-        spaceBg.setOrigin(0.5, 0.5);
-        spaceBg.setDepth(-20);
+    createBackground() {
+        const screenWidth = this.scene.scale.width;
+        const screenHeight = this.scene.scale.height;
         
-        // Gradiente sutil para simular profundidade
-        const gradientBg = this.scene.add.rectangle(0, 0, this.spaceSize * 0.8, this.spaceSize * 0.8, 0x000022);
-        gradientBg.setOrigin(0.5, 0.5);
-        gradientBg.setDepth(-19);
-        gradientBg.setAlpha(0.3);
+        console.log(`🌌 Criando background infinito para tela ${screenWidth}x${screenHeight}`);
         
-        console.log('🌌 Fundo do espaço criado');
+        // Fundo sólido preto
+        this.scene.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000)
+            .setOrigin(0.5).setDepth(-10);
+        console.log('✅ Fundo preto criado');
+        
+        // Criar múltiplos TileSprites para cobertura infinita
+        this.createInfiniteStarTiles();
+        console.log('✅ Sistema de TileSprites infinitos criado');
+        
+        // Estrelas procedurais individuais
+        const starCount = Math.floor((screenWidth * screenHeight) / 10000);
+        console.log(`🌌 Criando ${starCount} estrelas procedurais...`);
+        
+        for (let i = 0; i < starCount; i++) {
+            const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+            const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+            const star = this.scene.add.rectangle(x, y, 1, 1, 0xffffff);
+            star.setDepth(-8);
+            star.setAlpha(Phaser.Math.FloatBetween(0.3, 1));
+            
+            // Armazenar para proteger do culling
+            this.stars.push(star);
+        }
+        
+        console.log(`✅ Background infinito criado: ${starCount} estrelas procedurais`);
     }
     
     /**
-     * Cria todas as camadas de estrelas
+     * Cria múltiplos TileSprites para cobertura infinita
      */
-    createStarLayers() {
-        this.starConfigs.forEach((config, layerIndex) => {
-            console.log(`🌌 Criando camada ${config.name} com ${config.count} estrelas...`);
-            
-            const layer = {
-                name: config.name,
-                group: this.scene.add.group(),
-                config: config,
-                stars: []
-            };
-            
-            // Cria estrelas para esta camada
-            for (let i = 0; i < config.count; i++) {
-                const star = this.createStar(config, layerIndex);
-                layer.group.add(star);
-                layer.stars.push(star);
+    createInfiniteStarTiles() {
+        const screenWidth = this.scene.scale.width;
+        const screenHeight = this.scene.scale.height;
+        const tileSize = Math.max(screenWidth, screenHeight) * 2; // Tamanho maior que a tela
+        
+        // Criar uma grade de TileSprites (3x3 para cobertura completa)
+        for (let x = -1; x <= 1; x++) {
+            for (let y = -1; y <= 1; y++) {
+                const tileX = x * tileSize;
+                const tileY = y * tileSize;
+                
+                const starTile = this.scene.add.tileSprite(tileX, tileY, tileSize, tileSize, 'stars');
+                starTile.setOrigin(0.5).setDepth(-9).setAlpha(0.8);
+                
+                // Armazenar informações do tile
+                starTile.tileX = tileX;
+                starTile.tileY = tileY;
+                starTile.gridX = x;
+                starTile.gridY = y;
+                
+                this.starTiles.push(starTile);
             }
-            
-            this.starLayers.push(layer);
-            console.log(`✅ Camada ${config.name} criada com ${layer.stars.length} estrelas`);
-        });
+        }
         
-        console.log(`🌌 Total: ${this.starLayers.length} camadas de estrelas criadas`);
+        console.log(`✅ Criados ${this.starTiles.length} TileSprites para cobertura infinita`);
     }
     
     /**
-     * Cria uma estrela individual
-     */
-    createStar(config, layerIndex) {
-        // Posição aleatória no espaço
-        const x = Phaser.Math.Between(-this.spaceSize/2, this.spaceSize/2);
-        const y = Phaser.Math.Between(-this.spaceSize/2, this.spaceSize/2);
-        
-        // Tamanho aleatório
-        const size = Phaser.Math.FloatBetween(config.size.min, config.size.max);
-        
-        // Cor aleatória
-        const color = Phaser.Utils.Array.GetRandom(config.colors);
-        
-        // Cria a estrela como círculo
-        const star = this.scene.add.circle(x, y, size, color);
-        star.setDepth(config.depth);
-        
-        // Propriedades da estrela
-        star.initialX = x;
-        star.initialY = y;
-        star.baseAlpha = Phaser.Math.FloatBetween(config.alpha.min, config.alpha.max);
-        star.twinklePhase = Phaser.Math.FloatBetween(0, Math.PI * 2);
-        star.twinkleSpeed = config.twinkleSpeed;
-        star.layerIndex = layerIndex;
-        
-        // Aplica alpha inicial
-        star.setAlpha(star.baseAlpha);
-        
-        return star;
-    }
-    
-    /**
-     * Cria nebulosas para adicionar atmosfera
-     */
-    createNebulas() {
-        this.nebulaConfigs.forEach(config => {
-            for (let i = 0; i < config.count; i++) {
-                const nebula = this.createNebula(config);
-                this.nebulas.push(nebula);
-            }
-        });
-        
-        console.log(`🌌 ${this.nebulas.length} nebulosas criadas`);
-    }
-    
-    /**
-     * Cria uma nebulosa individual
-     */
-    createNebula(config) {
-        const x = Phaser.Math.Between(-this.spaceSize/2, this.spaceSize/2);
-        const y = Phaser.Math.Between(-this.spaceSize/2, this.spaceSize/2);
-        const size = Phaser.Math.Between(config.size.min, config.size.max);
-        const color = Phaser.Utils.Array.GetRandom(config.colors);
-        const alpha = Phaser.Math.FloatBetween(config.alpha.min, config.alpha.max);
-        
-        const nebula = this.scene.add.circle(x, y, size, color);
-        nebula.setDepth(config.depth);
-        nebula.setAlpha(alpha);
-        nebula.initialX = x;
-        nebula.initialY = y;
-        
-        return nebula;
-    }
-    
-    /**
-     * Atualiza o background (parallax e efeitos)
+     * Atualiza o background com sistema infinito
      */
     update(time, delta) {
         if (!this.playerShip || !this.playerShip.ship) return;
         
-        // Limita atualização para performance
-        if (time - this.lastUpdateTime < this.updateInterval) return;
-        this.lastUpdateTime = time;
+        const ship = this.playerShip.ship;
+        const shipX = ship.x;
+        const shipY = ship.y;
         
-        const camera = this.scene.cameras.main;
-        const scrollX = camera.scrollX;
-        const scrollY = camera.scrollY;
-        
-        // Atualiza parallax das estrelas
-        this.updateStarParallax(scrollX, scrollY);
-        
-        // Atualiza efeitos de cintilação
-        this.updateStarTwinkle(time);
-        
-        // Atualiza parallax das nebulosas
-        this.updateNebulaParallax(scrollX, scrollY);
-        
-        // Aplica culling para otimização
-        this.cullDistantStars(scrollX, scrollY);
-    }
-    
-    /**
-     * Atualiza o efeito parallax das estrelas
-     */
-    updateStarParallax(scrollX, scrollY) {
-        this.starLayers.forEach(layer => {
-            const parallaxSpeed = layer.config.parallaxSpeed;
-            
-            layer.stars.forEach(star => {
-                if (star.active) {
-                    star.x = star.initialX - scrollX * parallaxSpeed;
-                    star.y = star.initialY - scrollY * parallaxSpeed;
-                }
-            });
+        // Animação de todos os TileSprites
+        this.starTiles.forEach(tile => {
+            if (tile && tile.active) {
+                tile.tilePositionX += 0.1;
+                tile.tilePositionY += 0.05;
+            }
         });
+        
+        // Reposicionar tiles conforme a nave se move
+        this.repositionTiles(shipX, shipY);
+        
+        // Proteger estrelas do culling
+        this.protectStarsFromCulling();
+        
+        // Atualizar posição da nave
+        this.lastShipPosition.x = shipX;
+        this.lastShipPosition.y = shipY;
     }
     
     /**
-     * Atualiza o efeito de cintilação das estrelas
+     * Reposiciona os tiles conforme a nave se move
      */
-    updateStarTwinkle(time) {
-        this.starLayers.forEach(layer => {
-            layer.stars.forEach(star => {
-                if (star.active) {
-                    // Atualiza fase da cintilação
-                    star.twinklePhase += star.twinkleSpeed;
+    repositionTiles(shipX, shipY) {
+        const screenWidth = this.scene.scale.width;
+        const screenHeight = this.scene.scale.height;
+        const tileSize = Math.max(screenWidth, screenHeight) * 2;
+        
+        // Verificar se precisa reposicionar tiles
+        const threshold = tileSize * 0.5; // Metade do tamanho do tile
+        
+        this.starTiles.forEach(tile => {
+            if (tile && tile.active) {
+                const dx = shipX - tile.tileX;
+                const dy = shipY - tile.tileY;
+                
+                // Se o tile está muito longe, reposicionar
+                if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+                    // Calcular nova posição baseada na posição da nave
+                    const newGridX = Math.round(shipX / tileSize);
+                    const newGridY = Math.round(shipY / tileSize);
                     
-                    // Calcula alpha com cintilação
-                    const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7;
-                    const currentAlpha = star.baseAlpha * twinkle;
+                    // Reposicionar tile
+                    tile.tileX = newGridX * tileSize;
+                    tile.tileY = newGridY * tileSize;
+                    tile.x = tile.tileX;
+                    tile.y = tile.tileY;
                     
-                    star.setAlpha(currentAlpha);
+                    // Atualizar grid
+                    tile.gridX = newGridX;
+                    tile.gridY = newGridY;
                 }
-            });
-        });
-    }
-    
-    /**
-     * Atualiza parallax das nebulosas
-     */
-    updateNebulaParallax(scrollX, scrollY) {
-        this.nebulas.forEach(nebula => {
-            if (nebula.active) {
-                nebula.x = nebula.initialX - scrollX * 0.02; // Movimento muito lento
-                nebula.y = nebula.initialY - scrollY * 0.02;
             }
         });
     }
     
     /**
-     * Aplica culling para otimização
+     * Protege as estrelas do sistema de culling
      */
-    cullDistantStars(scrollX, scrollY) {
-        const cullRadius = 2000; // Raio de culling
-        
-        this.starLayers.forEach(layer => {
-            layer.stars.forEach(star => {
-                if (star.active) {
-                    const dx = star.x - scrollX;
-                    const dy = star.y - scrollY;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // Mostra/esconde estrelas baseado na distância
-                    star.setVisible(distance < cullRadius);
+    protectStarsFromCulling() {
+        this.stars.forEach(star => {
+            if (star && star.active) {
+                // Garantir que as estrelas sempre estejam visíveis
+                star.setVisible(true);
+                // Resetar posição se necessário (proteção extra)
+                if (star.x === 0 && star.y === 0) {
+                    // Estrela foi resetada, reposicionar
+                    const screenWidth = this.scene.scale.width;
+                    const screenHeight = this.scene.scale.height;
+                    star.x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+                    star.y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
                 }
-            });
-        });
-        
-        // Culling para nebulosas
-        this.nebulas.forEach(nebula => {
-            if (nebula.active) {
-                const dx = nebula.x - scrollX;
-                const dy = nebula.y - scrollY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                nebula.setVisible(distance < cullRadius * 1.5); // Nebulosas têm raio maior
             }
         });
     }
@@ -321,54 +192,13 @@ export default class BackgroundManager {
      * Obtém estatísticas do background
      */
     getBackgroundStats() {
-        let totalStars = 0;
-        let visibleStars = 0;
-        
-        this.starLayers.forEach(layer => {
-            totalStars += layer.stars.length;
-            visibleStars += layer.stars.filter(star => star.visible).length;
-        });
-        
-        const visibleNebulas = this.nebulas.filter(nebula => nebula.visible).length;
-        
         return {
-            layers: this.starLayers.length,
-            totalStars: totalStars,
-            visibleStars: visibleStars,
-            totalNebulas: this.nebulas.length,
-            visibleNebulas: visibleNebulas,
-            spaceSize: this.spaceSize
+            starTiles: this.starTiles.length,
+            activeTiles: this.starTiles.filter(tile => tile && tile.active).length,
+            starsCount: this.stars.length,
+            visibleStars: this.stars.filter(star => star && star.visible).length,
+            system: 'Infinite Background System'
         };
-    }
-    
-    /**
-     * Configura parâmetros do background
-     */
-    setBackgroundParameters(params) {
-        if (params.spaceSize !== undefined) this.spaceSize = params.spaceSize;
-        if (params.updateInterval !== undefined) this.updateInterval = params.updateInterval;
-        
-        console.log('🌌 Parâmetros do background atualizados:', params);
-    }
-    
-    /**
-     * Adiciona estrelas extras a uma camada específica
-     */
-    addStarsToLayer(layerName, count) {
-        const layer = this.starLayers.find(l => l.name === layerName);
-        if (!layer) {
-            console.warn(`⚠️ Camada ${layerName} não encontrada`);
-            return;
-        }
-        
-        const config = layer.config;
-        for (let i = 0; i < count; i++) {
-            const star = this.createStar(config, layer.layerIndex);
-            layer.group.add(star);
-            layer.stars.push(star);
-        }
-        
-        console.log(`🌌 ${count} estrelas adicionadas à camada ${layerName}`);
     }
     
     /**
@@ -377,26 +207,23 @@ export default class BackgroundManager {
     destroy() {
         console.log('🌌 BackgroundManager: Destruindo...');
         
-        // Destrói todas as camadas de estrelas
-        this.starLayers.forEach(layer => {
-            layer.stars.forEach(star => {
-                if (star.active) {
-                    star.destroy();
-                }
-            });
-            layer.group.destroy();
+        // Destrói todos os TileSprites
+        this.starTiles.forEach(tile => {
+            if (tile && tile.active) {
+                tile.destroy();
+            }
         });
         
-        // Destrói nebulosas
-        this.nebulas.forEach(nebula => {
-            if (nebula.active) {
-                nebula.destroy();
+        // Destrói estrelas procedurais
+        this.stars.forEach(star => {
+            if (star && star.active) {
+                star.destroy();
             }
         });
         
         // Limpa arrays
-        this.starLayers = [];
-        this.nebulas = [];
+        this.starTiles = [];
+        this.stars = [];
         
         console.log('✅ BackgroundManager: Destruído');
     }

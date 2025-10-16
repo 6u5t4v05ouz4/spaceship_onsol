@@ -5,932 +5,469 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Space Crypto Miner - Documentação</title>
     <link rel="icon" href="/assets/icones/icone.png" />
+    
+    <!-- Novo Sistema CSS Modular -->
+    <link rel="stylesheet" href="/src/styles/main.css">
+    
+    <!-- Phaser.js para simulação -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background: #000011;
-            overflow-x: hidden;
-            font-family: 'Arial', sans-serif;
-            min-height: 100vh;
+        /* CSS específico da página de documentação */
+        .docs-container {
             position: relative;
-            margin: 0;
-            padding: 0;
-        }
-        
-        /* Fonte personalizada SD Glitch Robot */
-        @font-face {
-            font-family: 'SD Glitch Robot';
-            src: url('/assets/fonts/Sdglitchrobotdemo-GOPdO.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
-        /* Background do jogo */
-        .game-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            background: radial-gradient(ellipse at center, #001122 0%, #000011 100%);
-            z-index: -3;
+            min-height: 100vh;
+            padding: var(--spacing-xl);
+            z-index: var(--z-content);
         }
         
-        .stars-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('/assets/background/stars.png');
-            background-size: cover;
-            background-position: center;
-            opacity: 0.3;
-            z-index: -2;
-            animation: parallax 20s linear infinite;
+        .docs-header {
+            text-align: center;
+            margin-bottom: var(--spacing-xxl);
+            animation: fadeInUp 1s ease-out;
         }
         
-        .stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+        .docs-title {
+            font-family: var(--font-primary);
+            font-size: var(--text-xxl);
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow-primary);
+            letter-spacing: var(--letter-spacing-xl);
+            text-transform: uppercase;
+            margin-bottom: var(--spacing-md);
         }
         
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 3s infinite;
+        .docs-subtitle {
+            font-family: var(--font-secondary);
+            font-size: var(--text-md);
+            color: var(--text-secondary);
+            letter-spacing: var(--letter-spacing-lg);
+            text-transform: uppercase;
+            margin-bottom: var(--spacing-lg);
+            opacity: 0.8;
         }
         
-        .star:nth-child(odd) {
-            animation-delay: 1s;
+        .docs-description {
+            font-size: var(--text-body-lg);
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
         }
         
-        .star:nth-child(even) {
-            animation-delay: 2s;
-        }
-        
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-        
-        @keyframes parallax {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50px); }
-        }
-        
-        /* Simulation Container */
-        #simulation-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        
-        #simulation-container canvas {
-            width: 100vw !important;
-            height: 100vh !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            opacity: 0.6;
-        }
-        
-        /* Header */
-        .header {
-            position: sticky;
-            top: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 2px solid rgba(0, 255, 204, 0.3);
-            padding: 1rem 2rem;
-            z-index: 100;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--spacing-xl);
             max-width: 1200px;
             margin: 0 auto;
         }
         
-        .logo {
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            font-size: 1.5rem;
-            font-weight: normal;
-            color: #00ffcc;
-            text-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        
-        .back-btn {
-            background: rgba(0, 255, 204, 0.1);
-            border: 2px solid rgba(0, 255, 204, 0.3);
-            color: #00ffcc;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            font-size: 14px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-        }
-        
-        .back-btn:hover {
-            background: rgba(0, 255, 204, 0.2);
-            border-color: #00ffcc;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        /* Container principal */
-        .container {
-            position: relative;
-            display: flex;
-            min-height: calc(100vh - 80px);
-            z-index: 10;
-        }
-        
-        /* Sidebar de navegação */
-        .sidebar {
-            width: 250px;
-            background: rgba(0, 0, 0, 0.8);
+        .docs-section {
+            background: var(--card-bg);
             backdrop-filter: blur(10px);
-            border-right: 2px solid rgba(0, 255, 204, 0.3);
-            padding: 2rem 1rem;
-            position: sticky;
-            top: 80px;
-            height: calc(100vh - 80px);
-            overflow-y: auto;
-        }
-        
-        .sidebar-title {
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            color: #00ffcc;
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            text-align: center;
-        }
-        
-        .nav-button {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            background: rgba(0, 255, 204, 0.1);
-            border: 1px solid rgba(0, 255, 204, 0.3);
-            color: #aef7ee;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-        
-        .nav-button:hover {
-            background: rgba(0, 255, 204, 0.2);
-            border-color: #00ffcc;
-            color: #00ffcc;
-            transform: translateX(5px);
-        }
-        
-        .nav-button.active {
-            background: rgba(0, 255, 204, 0.3);
-            border-color: #00ffcc;
-            color: #00ffcc;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
-        }
-        
-        /* Conteúdo principal */
-        .content {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-        }
-        
-        .content-section {
-            display: none;
-            animation: fadeInUp 0.5s ease-out;
-        }
-        
-        .content-section.active {
-            display: block;
-        }
-        
-        /* Título */
-        .title-section {
-            text-align: center;
-            margin-bottom: 3rem;
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-xl);
+            transition: var(--transition-normal);
             animation: fadeInUp 1s ease-out;
         }
         
-        .title {
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            font-size: 48px;
-            font-weight: normal;
-            color: #00ffcc;
-            text-shadow: 
-                0 0 10px rgba(0, 255, 204, 1),
-                0 0 20px rgba(0, 255, 204, 0.8),
-                0 0 30px rgba(0, 255, 204, 0.6),
-                0 0 40px rgba(0, 255, 204, 0.4);
-            margin-bottom: 10px;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            animation: titleGlow 2s ease-in-out infinite alternate;
+        .docs-section:hover {
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            transform: translateY(-5px);
         }
         
-        .subtitle {
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            font-size: 18px;
-            font-weight: normal;
-            color: #aef7ee;
-            opacity: 0.8;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        
-        /* Conteúdo das seções */
-        .section-content {
-            background: rgba(0, 255, 204, 0.2);
-            border: 2px solid rgba(0, 255, 204, 0.5);
-            border-radius: 15px;
-            padding: 2rem;
-            color: #aef7ee;
-            line-height: 1.6;
-        }
-        
-        .section-content h3 {
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            color: #00ffcc;
-            font-size: 1.3rem;
-            margin: 2rem 0 1rem 0;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-        
-        .section-content h3:first-child {
-            margin-top: 0;
-        }
-        
-        .section-content p {
-            margin-bottom: 1rem;
-        }
-        
-        .section-content ul {
-            margin: 1rem 0;
-            padding-left: 1.5rem;
-        }
-        
-        .section-content li {
-            margin-bottom: 0.5rem;
-            position: relative;
-        }
-        
-        .section-content li::marker {
-            color: #00ffcc;
-        }
-        
-        .section-content strong {
-            color: #00ffcc;
-        }
-        
-        /* Seção de Tecnologias */
-        .tech-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .tech-item {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(0, 255, 204, 0.5);
-            border-radius: 8px;
-            padding: 1rem;
+        .section-icon {
+            font-size: var(--text-4xl);
+            margin-bottom: var(--spacing-md);
             text-align: center;
-            transition: all 0.3s ease;
         }
         
-        .tech-item:hover {
-            background: rgba(0, 255, 204, 0.1);
-            border-color: #00ffcc;
-        }
-        
-        .tech-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .tech-name {
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            color: #00ffcc;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
+        .section-title {
+            font-family: var(--font-primary);
+            font-size: var(--text-lg);
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow-secondary);
+            margin-bottom: var(--spacing-md);
             text-transform: uppercase;
+            letter-spacing: var(--letter-spacing-sm);
+            text-align: center;
         }
         
-        .tech-desc {
-            color: #aef7ee;
-            font-size: 0.8rem;
-            margin-top: 0.25rem;
+        .section-description {
+            font-family: var(--font-secondary);
+            font-size: var(--text-body);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--spacing-lg);
         }
         
-        /* Seção de Mecânicas */
-        .mechanics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
+        .section-features {
+            list-style: none;
+            padding: 0;
         }
         
-        .mechanic-item {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(0, 255, 204, 0.5);
-            border-radius: 10px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        
-        .mechanic-item:hover {
-            background: rgba(0, 255, 204, 0.1);
-            border-color: #00ffcc;
-        }
-        
-        .mechanic-title {
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            color: #00ffcc;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-        
-        .mechanic-desc {
-            color: #aef7ee;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-        
-        /* Seção de História */
-        .story-timeline {
-            margin-top: 1rem;
-        }
-        
-        .story-item {
-            background: rgba(0, 0, 0, 0.6);
-            border-left: 3px solid #00ffcc;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1rem;
+        .section-features li {
+            font-family: var(--font-secondary);
+            font-size: var(--text-body);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+            padding-left: var(--spacing-md);
             position: relative;
         }
         
-        .story-item::before {
-            content: '';
+        .section-features li::before {
+            content: '→';
             position: absolute;
-            left: -6px;
-            top: 1rem;
-            width: 9px;
-            height: 9px;
-            background: #00ffcc;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #00ffcc;
-        }
-        
-        .story-period {
-            font-family: 'SD Glitch Robot', 'Arial', sans-serif;
-            color: #00ffcc;
-            font-size: 0.9rem;
+            left: 0;
+            color: var(--primary-cyan);
             font-weight: bold;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
         }
         
-        .story-content {
-            color: #aef7ee;
-            font-size: 0.9rem;
-            line-height: 1.5;
+        .docs-links {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-lg);
         }
         
-        /* Animações */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .docs-link {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--primary-cyan-dark);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-sm);
+            color: var(--primary-cyan);
+            text-decoration: none;
+            font-family: var(--font-secondary);
+            font-size: var(--text-body);
+            transition: var(--transition-normal);
         }
         
-        @keyframes titleGlow {
-            0% {
-                text-shadow: 
-                    0 0 10px rgba(0, 255, 204, 1),
-                    0 0 20px rgba(0, 255, 204, 0.8),
-                    0 0 30px rgba(0, 255, 204, 0.6),
-                    0 0 40px rgba(0, 255, 204, 0.4);
-            }
-            100% {
-                text-shadow: 
-                    0 0 15px rgba(0, 255, 204, 1),
-                    0 0 30px rgba(0, 255, 204, 0.9),
-                    0 0 45px rgba(0, 255, 204, 0.7),
-                    0 0 60px rgba(0, 255, 204, 0.5);
-            }
+        .docs-link:hover {
+            background: var(--primary-cyan-light);
+            border-color: var(--primary-cyan);
+            color: var(--text-primary);
+            transform: translateX(5px);
         }
         
-        /* Responsivo */
+        .docs-link-icon {
+            font-size: var(--text-body-lg);
+        }
+        
+        /* Responsividade */
         @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
+            .docs-container {
+                padding: var(--spacing-lg);
             }
             
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                top: 0;
-                padding: 1rem;
+            .docs-title {
+                font-size: var(--text-xl);
+                letter-spacing: var(--letter-spacing-lg);
             }
             
-            .content {
-                padding: 1rem;
+            .docs-subtitle {
+                font-size: var(--text-body-lg);
+                letter-spacing: var(--letter-spacing-md);
             }
             
-            .title {
-                font-size: 36px;
-            }
-            
-            .tech-grid,
-            .mechanics-grid {
+            .docs-grid {
                 grid-template-columns: 1fr;
+                gap: var(--spacing-lg);
             }
             
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
+            .docs-section {
+                padding: var(--spacing-lg);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .docs-container {
+                padding: var(--spacing-md);
+            }
+            
+            .docs-title {
+                font-size: var(--text-lg);
+                letter-spacing: var(--letter-spacing-md);
+            }
+            
+            .docs-subtitle {
+                font-size: var(--text-body);
+                letter-spacing: var(--letter-spacing-sm);
+            }
+            
+            .docs-section {
+                padding: var(--spacing-md);
             }
         }
     </style>
 </head>
 <body>
-    <!-- Background do jogo -->
-    <div class="game-bg"></div>
-    <div class="stars-bg"></div>
-    <div class="stars" id="stars"></div>
+    <!-- Background System -->
+    <div class="background-primary"></div>
+    <div class="stars-background"></div>
+    <div class="particles-container" id="particles"></div>
     
-    <!-- Gameplay Simulation Background -->
-    <div id="simulation-container"></div>
-
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">SPACE CRYPTO MINER</div>
-            <a href="/login.html" class="back-btn">← Voltar ao Login</a>
-        </div>
-    </header>
-
-    <!-- Container principal -->
-    <div class="container">
-        <!-- Sidebar de navegação -->
-        <div class="sidebar">
-            <div class="sidebar-title">📚 Documentação</div>
-            <button class="nav-button active" data-section="historia">🌌 História</button>
-            <button class="nav-button" data-section="mecanicas">🎮 Mecânicas</button>
-            <button class="nav-button" data-section="tecnologias">⚡ Tecnologias</button>
-            <button class="nav-button" data-section="economia">💰 Economia</button>
-            <button class="nav-button" data-section="controles">🎯 Controles</button>
-            <button class="nav-button" data-section="objetivos">🏆 Objetivos</button>
-        </div>
-
-        <!-- Conteúdo principal -->
-        <div class="content">
-            <!-- Título -->
-            <div class="title-section">
-                <h1 class="title">📚 DOCUMENTAÇÃO</h1>
-                <p class="subtitle">História, Mecânicas e Tecnologias</p>
+    <!-- Layout Principal -->
+    <div class="layout">
+        <!-- Header -->
+        <header class="header layout-header">
+            <div class="header-content">
+                <a href="/" class="header-logo">
+                    🚀 SPACE CRYPTO MINER
+                </a>
+                <nav class="header-nav">
+                    <a href="/dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="/profile.html" class="nav-link">Perfil</a>
+                    <a href="/game.html" class="nav-link">Jogar</a>
+                    <a href="/roadmap.html" class="nav-link">Roadmap</a>
+                    <a href="/docs.html" class="nav-link active">Docs</a>
+                </nav>
+                <div class="header-actions">
+                    <a href="/login.html" class="btn btn-primary">Login</a>
+                </div>
             </div>
-
-            <!-- Seções de conteúdo -->
-            <!-- História -->
-            <div class="content-section active" id="historia">
-                <div class="section-content">
-                    <h3>🌌 História do Universo</h3>
-                    <p>No ano de 2157, a humanidade expandiu-se além do Sistema Solar, descobrindo planetas ricos em recursos minerais e energéticos. Neste universo vasto, mineradores espaciais competem pela sobrevivência e pela riqueza.</p>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="main-content layout-main">
+            <div class="docs-container">
+                <!-- Docs Header -->
+                <div class="docs-header">
+                    <h1 class="docs-title">Documentação</h1>
+                    <p class="docs-subtitle">Guia Completo do Space Crypto Miner</p>
+                    <p class="docs-description">
+                        Explore nossa documentação completa para entender todos os aspectos do jogo, 
+                        desde a mecânica básica até as funcionalidades avançadas.
+                    </p>
+                </div>
+                
+                <!-- Docs Grid -->
+                <div class="docs-grid">
+                    <!-- Guia do Jogador -->
+                    <div class="docs-section">
+                        <div class="section-icon">🎮</div>
+                        <h3 class="section-title">Guia do Jogador</h3>
+                        <p class="section-description">
+                            Aprenda os fundamentos do jogo, controles e mecânicas básicas para começar sua jornada espacial.
+                        </p>
+                        <ul class="section-features">
+                            <li>Controles e navegação</li>
+                            <li>Mecânicas de mineração</li>
+                            <li>Sistema de combate</li>
+                            <li>Gerenciamento de recursos</li>
+                            <li>Progressão e níveis</li>
+                        </ul>
+                        <div class="docs-links">
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">📖</span>
+                                Guia Básico
+                            </a>
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">🎯</span>
+                                Dicas e Truques
+                            </a>
+                        </div>
+                    </div>
                     
-                    <div class="story-timeline">
-                        <div class="story-item">
-                            <div class="story-period">2157 - Descoberta</div>
-                            <div class="story-content">Primeiros planetas mineráveis são descobertos além do Sistema Solar, iniciando a corrida espacial por recursos.</div>
+                    <!-- Sistema de NFTs -->
+                    <div class="docs-section">
+                        <div class="section-icon">🖼️</div>
+                        <h3 class="section-title">Sistema de NFTs</h3>
+                        <p class="section-description">
+                            Entenda como funcionam os NFTs no jogo, desde naves até equipamentos e artefatos únicos.
+                        </p>
+                        <ul class="section-features">
+                            <li>Coleção de naves NFT</li>
+                            <li>Sistema de raridade</li>
+                            <li>Mercado de NFTs</li>
+                            <li>Upgrade e evolução</li>
+                            <li>Interoperabilidade</li>
+                        </ul>
+                        <div class="docs-links">
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">🚀</span>
+                                Guia de NFTs
+                            </a>
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">💰</span>
+                                Mercado NFT
+                            </a>
                         </div>
-                        <div class="story-item">
-                            <div class="story-period">2160 - Colonização</div>
-                            <div class="story-content">Estações espaciais são estabelecidas, criando uma rede de comércio interplanetário.</div>
+                    </div>
+                    
+                    <!-- Economia do Jogo -->
+                    <div class="docs-section">
+                        <div class="section-icon">💰</div>
+                        <h3 class="section-title">Economia do Jogo</h3>
+                        <p class="section-description">
+                            Explore o sistema econômico completo, incluindo tokens, staking e yield farming.
+                        </p>
+                        <ul class="section-features">
+                            <li>Token próprio (SCM)</li>
+                            <li>Sistema de staking</li>
+                            <li>Yield farming espacial</li>
+                            <li>Governança DAO</li>
+                            <li>Integração DeFi</li>
+                        </ul>
+                        <div class="docs-links">
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">🪙</span>
+                                Tokenomics
+                            </a>
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">🏦</span>
+                                DeFi Integration
+                            </a>
                         </div>
-                        <div class="story-item">
-                            <div class="story-period">2165 - Conflitos</div>
-                            <div class="story-content">Guerras espaciais eclodem entre corporações mineradoras, criando a necessidade de naves de combate.</div>
+                    </div>
+                    
+                    <!-- API e Desenvolvimento -->
+                    <div class="docs-section">
+                        <div class="section-icon">⚙️</div>
+                        <h3 class="section-title">API e Desenvolvimento</h3>
+                        <p class="section-description">
+                            Documentação técnica para desenvolvedores e integração com APIs externas.
+                        </p>
+                        <ul class="section-features">
+                            <li>API REST completa</li>
+                            <li>WebSocket para tempo real</li>
+                            <li>SDKs disponíveis</li>
+                            <li>Webhooks e eventos</li>
+                            <li>Rate limiting</li>
+                        </ul>
+                        <div class="docs-links">
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">🔌</span>
+                                API Reference
+                            </a>
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">📚</span>
+                                SDKs
+                            </a>
                         </div>
-                        <div class="story-item">
-                            <div class="story-period">2170 - Presente</div>
-                            <div class="story-content">Você é um minerador independente tentando sobreviver e prosperar neste universo perigoso.</div>
+                    </div>
+                    
+                    <!-- Segurança -->
+                    <div class="docs-section">
+                        <div class="section-icon">🔒</div>
+                        <h3 class="section-title">Segurança</h3>
+                        <p class="section-description">
+                            Informações sobre segurança, auditorias e melhores práticas para proteger seus ativos.
+                        </p>
+                        <ul class="section-features">
+                            <li>Auditorias de segurança</li>
+                            <li>Melhores práticas</li>
+                            <li>Proteção de carteira</li>
+                            <li>2FA e autenticação</li>
+                            <li>Relatório de bugs</li>
+                        </ul>
+                        <div class="docs-links">
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">🛡️</span>
+                                Guia de Segurança
+                            </a>
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">🐛</span>
+                                Reportar Bug
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Suporte -->
+                    <div class="docs-section">
+                        <div class="section-icon">🎧</div>
+                        <h3 class="section-title">Suporte</h3>
+                        <p class="section-description">
+                            Canais de suporte, FAQ e recursos para resolver problemas e dúvidas.
+                        </p>
+                        <ul class="section-features">
+                            <li>FAQ completo</li>
+                            <li>Suporte 24/7</li>
+                            <li>Comunidade Discord</li>
+                            <li>Tutoriais em vídeo</li>
+                            <li>Base de conhecimento</li>
+                        </ul>
+                        <div class="docs-links">
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">❓</span>
+                                FAQ
+                            </a>
+                            <a href="#" class="docs-link">
+                                <span class="docs-link-icon">💬</span>
+                                Discord
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Mecânicas de Jogo -->
-            <div class="content-section" id="mecanicas">
-                <div class="section-content">
-                    <h3>🎮 Mecânicas de Jogo</h3>
-                    
-                    <h3>Navegação Espacial</h3>
-                    <p>Controle sua nave através do espaço usando WASD ou setas direcionais. Evite asteroides e navegue por diferentes sistemas solares.</p>
-                    
-                    <h3>Sistema de Recursos</h3>
-                    <p>Colete diferentes tipos de recursos em planetas:</p>
-                    <ul>
-                        <li><strong>Metal:</strong> Usado para construir equipamentos</li>
-                        <li><strong>Combustível:</strong> Necessário para viagens espaciais</li>
-                        <li><strong>Oxigênio:</strong> Vital para sobrevivência da tripulação</li>
-                        <li><strong>Projéteis:</strong> Munição para combate</li>
-                        <li><strong>Recursos Especiais:</strong> Raros e valiosos</li>
-                    </ul>
-                    
-                    <div class="mechanics-grid">
-                        <div class="mechanic-item">
-                            <div class="mechanic-title">Mineração PvE</div>
-                            <div class="mechanic-desc">Explore planetas desabitados, colete recursos e evite perigos naturais.</div>
-                        </div>
-                        <div class="mechanic-item">
-                            <div class="mechanic-title">Combate PvP</div>
-                            <div class="mechanic-desc">Lute contra outros jogadores por territórios e recursos valiosos.</div>
-                        </div>
-                        <div class="mechanic-item">
-                            <div class="mechanic-title">Sistema de Craft</div>
-                            <div class="mechanic-desc">Combine recursos para criar equipamentos e melhorias para sua nave.</div>
-                        </div>
-                        <div class="mechanic-item">
-                            <div class="mechanic-title">Tripulação</div>
-                            <div class="mechanic-desc">Contrate especialistas que oferecem bônus únicos para sua nave.</div>
-                        </div>
-                    </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="footer layout-footer">
+            <div class="footer-content">
+                <p class="footer-text">© 2025 Space Crypto Miner. Documentação - Versão 1.0</p>
+                <div class="footer-links">
+                    <a href="/" class="footer-link">Início</a>
+                    <a href="/roadmap.html" class="footer-link">Roadmap</a>
+                    <a href="/game.html" class="footer-link">Jogar</a>
                 </div>
             </div>
-
-            <!-- Tecnologias -->
-            <div class="content-section" id="tecnologias">
-                <div class="section-content">
-                    <h3>⚡ Stack Tecnológico</h3>
-                    
-                    <h3>Frontend</h3>
-                    <div class="tech-grid">
-                        <div class="tech-item">
-                            <div class="tech-icon">🎮</div>
-                            <div class="tech-name">Phaser.js</div>
-                            <div class="tech-desc">Engine de jogos 2D</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">⚛️</div>
-                            <div class="tech-name">Vite</div>
-                            <div class="tech-desc">Build tool moderno</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">🎨</div>
-                            <div class="tech-name">CSS3</div>
-                            <div class="tech-desc">Estilização avançada</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">📱</div>
-                            <div class="tech-name">PWA</div>
-                            <div class="tech-desc">Progressive Web App</div>
-                        </div>
-                    </div>
-                    
-                    <h3>Backend & Blockchain</h3>
-                    <div class="tech-grid">
-                        <div class="tech-item">
-                            <div class="tech-icon">🔗</div>
-                            <div class="tech-name">Solana</div>
-                            <div class="tech-desc">Blockchain principal</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">👻</div>
-                            <div class="tech-name">Phantom</div>
-                            <div class="tech-desc">Wallet integration</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">🗄️</div>
-                            <div class="tech-name">Supabase</div>
-                            <div class="tech-desc">Backend as a Service</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">🌐</div>
-                            <div class="tech-name">IPFS</div>
-                            <div class="tech-desc">Armazenamento descentralizado</div>
-                        </div>
-                    </div>
-                    
-                    <h3>NFT & Tokens</h3>
-                    <div class="tech-grid">
-                        <div class="tech-item">
-                            <div class="tech-icon">🖼️</div>
-                            <div class="tech-name">NFTs</div>
-                            <div class="tech-desc">Naves e equipamentos únicos</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">🪙</div>
-                            <div class="tech-name">SPACE Token</div>
-                            <div class="tech-desc">Token in-game</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">💎</div>
-                            <div class="tech-name">SOL</div>
-                            <div class="tech-desc">Moeda principal</div>
-                        </div>
-                        <div class="tech-item">
-                            <div class="tech-icon">🏪</div>
-                            <div class="tech-name">Marketplace</div>
-                            <div class="tech-desc">Troca de itens</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Economia -->
-            <div class="content-section" id="economia">
-                <div class="section-content">
-                    <h3>💰 Economia do Jogo</h3>
-                    
-                    <h3>Sistema de Tokens</h3>
-                    <p>O jogo utiliza uma economia dual-token:</p>
-                    <ul>
-                        <li><strong>SPACE Token:</strong> Token in-game usado para compras internas</li>
-                        <li><strong>SOL:</strong> Moeda principal da blockchain Solana</li>
-                    </ul>
-                    
-                    <h3>Formas de Ganho</h3>
-                    <ul>
-                        <li><strong>Mineração:</strong> Colete recursos e venda no marketplace</li>
-                        <li><strong>Combate PvP:</strong> Derrote outros jogadores para ganhar recompensas</li>
-                        <li><strong>Missões:</strong> Complete objetivos para receber tokens</li>
-                        <li><strong>Trading:</strong> Compre e venda NFTs de naves e equipamentos</li>
-                    </ul>
-                    
-                    <h3>NFTs e Raridade</h3>
-                    <p>Cada nave NFT possui características únicas:</p>
-                    <ul>
-                        <li><strong>Velocidade:</strong> Afeta a mobilidade no espaço</li>
-                        <li><strong>Capacidade de Carga:</strong> Quantidade de recursos transportáveis</li>
-                        <li><strong>Combustível Máximo:</strong> Alcance de viagem</li>
-                        <li><strong>Raridade:</strong> Comum, Incomum, Raro, Épico, Lendário</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Controles -->
-            <div class="content-section" id="controles">
-                <div class="section-content">
-                    <h3>🎯 Controles</h3>
-                    
-                    <h3>Navegação</h3>
-                    <ul>
-                        <li><strong>WASD / Setas:</strong> Mover nave</li>
-                        <li><strong>Espaço:</strong> Acelerar</li>
-                        <li><strong>Shift:</strong> Frear</li>
-                        <li><strong>Mouse:</strong> Apontar direção</li>
-                    </ul>
-                    
-                    <h3>Combate</h3>
-                    <ul>
-                        <li><strong>Clique Esquerdo:</strong> Disparar projétil</li>
-                        <li><strong>Clique Direito:</strong> Disparar míssil</li>
-                        <li><strong>R:</strong> Recarregar</li>
-                        <li><strong>Tab:</strong> Alternar alvo</li>
-                    </ul>
-                    
-                    <h3>Interface</h3>
-                    <ul>
-                        <li><strong>I:</strong> Abrir inventário</li>
-                        <li><strong>M:</strong> Abrir mapa</li>
-                        <li><strong>C:</strong> Abrir craft</li>
-                        <li><strong>Esc:</strong> Menu principal</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Objetivos -->
-            <div class="content-section" id="objetivos">
-                <div class="section-content">
-                    <h3>🏆 Objetivos e Progressão</h3>
-                    
-                    <h3>Sistema de Níveis</h3>
-                    <p>Ganhe experiência através de:</p>
-                    <ul>
-                        <li>Mineração de recursos</li>
-                        <li>Combate bem-sucedido</li>
-                        <li>Exploração de novos planetas</li>
-                        <li>Completar missões</li>
-                    </ul>
-                    
-                    <h3>Achievements</h3>
-                    <ul>
-                        <li><strong>Explorador:</strong> Descubra 10 planetas diferentes</li>
-                        <li><strong>Minerador:</strong> Colete 1000 recursos</li>
-                        <li><strong>Guerreiro:</strong> Derrote 50 inimigos</li>
-                        <li><strong>Comerciante:</strong> Realize 100 transações</li>
-                        <li><strong>Colecionador:</strong> Possua 5 NFTs diferentes</li>
-                    </ul>
-                    
-                    <h3>Rankings</h3>
-                    <p>Compita com outros jogadores em:</p>
-                    <ul>
-                        <li>Leaderboard de riqueza</li>
-                        <li>Ranking de combate</li>
-                        <li>Classificação de exploração</li>
-                        <li>Top mineradores</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        </footer>
     </div>
 
-    <!-- Phaser.js -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
-    
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Config -->
-    <script src="/src/config-legacy.js"></script>
-    
-    <!-- Gameplay Simulation -->
-    <script type="module">
-        // Wait for Phaser to be available
-        function waitForPhaser() {
-            return new Promise((resolve) => {
-                if (typeof Phaser !== 'undefined') {
-                    resolve();
-                } else {
-                    setTimeout(() => waitForPhaser().then(resolve), 100);
-                }
-            });
-        }
-        
-        // Initialize simulation when page loads
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🎮 Starting gameplay simulation background...');
-            
-            try {
-                // Wait for Phaser to load
-                await waitForPhaser();
-                console.log('📦 Phaser loaded:', typeof Phaser !== 'undefined');
-                
-                // Import GameplaySimulation
-                const { default: GameplaySimulation } = await import('/src/simulation/GameplaySimulation.js');
-                console.log('📦 GameplaySimulation loaded:', typeof GameplaySimulation !== 'undefined');
-                
-                // Configuration for background simulation
-                const config = {
-                    type: Phaser.AUTO,
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    backgroundColor: '#000011',
-                    physics: {
-                        default: 'arcade',
-                        arcade: {
-                            gravity: { x: 0, y: 0 },
-                            debug: false
-                        }
-                    },
-                    scene: [GameplaySimulation],
-                    scale: {
-                        mode: Phaser.Scale.RESIZE,
-                        autoCenter: Phaser.Scale.CENTER_BOTH,
-                        fullscreenTarget: 'simulation-container'
-                    },
-                    parent: 'simulation-container'
-                };
-                
-                console.log('📦 Container element:', document.getElementById('simulation-container'));
-                
-                // Create Phaser game instance
-                const game = new Phaser.Game(config);
-                
-                // Store reference globally
-                window.gameplaySimulation = game;
-                
-                console.log('✅ Gameplay simulation background started!');
-                console.log('🎮 Game instance:', game);
-                
-                // Handle resize
-                window.addEventListener('resize', () => {
-                    game.scale.resize(window.innerWidth, window.innerHeight);
-                });
-                
-                // Ensure canvas styling
-                game.events.once('ready', () => {
-                    const canvas = game.canvas;
-                    console.log('🎨 Canvas ready:', canvas);
-                    if (canvas) {
-                        canvas.style.width = '100vw';
-                        canvas.style.height = '100vh';
-                        canvas.style.display = 'block';
-                        canvas.style.position = 'absolute';
-                        canvas.style.top = '0';
-                        canvas.style.left = '0';
-                        canvas.style.opacity = '0.6';
-                        canvas.style.pointerEvents = 'none';
-                        console.log('✅ Canvas styled successfully');
-                    }
-                });
-                
-            } catch (error) {
-                console.error('❌ Error initializing simulation:', error);
-                console.error('❌ Error stack:', error.stack);
-            }
-        });
-    </script>
-
+    <!-- Scripts -->
+    <script type="module" src="/src/simulation/background-simulation.js"></script>
     <script>
-        // Cria estrelas animadas
-        function createStars() {
-            const starsContainer = document.getElementById('stars');
-            const numStars = 100;
-            
-            for (let i = 0; i < numStars; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.width = Math.random() * 3 + 1 + 'px';
-                star.style.height = star.style.width;
-                star.style.animationDelay = Math.random() * 3 + 's';
-                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                starsContainer.appendChild(star);
+        // Criar partículas
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 2 + 1 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                particlesContainer.appendChild(particle);
             }
         }
-        
-        // Inicializa quando a página carrega
-        document.addEventListener('DOMContentLoaded', function() {
-            createStars();
-            
-            // Navegação entre seções
-            const navButtons = document.querySelectorAll('.nav-button');
-            const contentSections = document.querySelectorAll('.content-section');
-            
-            navButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const targetSection = this.getAttribute('data-section');
-                    
-                    // Remove active de todos os botões e seções
-                    navButtons.forEach(btn => btn.classList.remove('active'));
-                    contentSections.forEach(section => section.classList.remove('active'));
-                    
-                    // Adiciona active ao botão clicado e seção correspondente
-                    this.classList.add('active');
-                    const targetElement = document.getElementById(targetSection);
-                    if (targetElement) {
-                        targetElement.classList.add('active');
+
+        // Animação de entrada das seções
+        function animateSections() {
+            const sections = document.querySelectorAll('.docs-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animation = 'fadeInUp 1s ease-out';
                     }
                 });
-            });
+            }, { threshold: 0.1 });
+
+            sections.forEach(section => observer.observe(section));
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Página de documentação carregada');
             
-            // Efeito de parallax no scroll
-            window.addEventListener('scroll', function() {
-                const scrolled = window.pageYOffset;
-                const parallax = document.querySelector('.stars-bg');
-                const speed = scrolled * 0.5;
-                parallax.style.transform = `translateY(${speed}px)`;
-            });
+            // Criar partículas
+            createParticles();
+            
+            // Animar seções
+            animateSections();
+            
+            console.log('✅ Página de documentação inicializada');
         });
-        
-        console.log('📚 Documentation page loaded successfully');
     </script>
 </body>
 </html>

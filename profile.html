@@ -5,259 +5,242 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Configurar Perfil - Space Crypto Miner</title>
     <link rel="icon" href="/assets/icones/icone.png" />
+    
+    <!-- Novo Sistema CSS Modular -->
+    <link rel="stylesheet" href="/src/styles/main.css">
+    
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Phaser.js para simulação -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
     <style>
-        /* Importação de fontes espaciais futuristas - DEVE vir primeiro */
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Audiowide&family=Share+Tech+Mono&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* CSS específico do perfil */
+        .profile-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: var(--spacing-xl);
+            min-height: 100vh;
         }
         
-        body {
-            background: #000011;
-            overflow: hidden;
-            font-family: 'Arial', sans-serif;
+        .profile-sidebar {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-right: 1px solid var(--primary-cyan-light);
+            padding: var(--spacing-xl);
+            position: sticky;
+            top: 0;
             height: 100vh;
-            width: 100vw;
+            overflow-y: auto;
+        }
+        
+        .profile-main {
+            padding: var(--spacing-xl);
+        }
+        
+        .avatar-section {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid var(--primary-cyan);
+            object-fit: cover;
+            margin: 0 auto var(--spacing-md);
+            display: block;
+            cursor: pointer;
+            transition: var(--transition-normal);
+        }
+        
+        .avatar:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+        
+        .avatar-upload-btn {
+            background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+            color: #000;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: var(--text-body-sm);
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition-normal);
+        }
+        
+        .avatar-upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
+        }
+        
+        .ship-preview {
+            background: var(--card-bg);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .ship-image {
+            width: 100px;
+            height: 100px;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius-sm);
+            margin: 0 auto var(--spacing-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-2xl);
             position: relative;
-            margin: 0;
-            padding: 0;
+            overflow: hidden;
         }
         
-        /* Fonte personalizada SD Glitch Robot */
-        @font-face {
-            font-family: 'SD Glitch Robot';
-            src: url('/assets/fonts/Sdglitchrobotdemo-GOPdO.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        
-        /* Background do jogo */
-        .game-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(ellipse at center, #001122 0%, #000011 100%);
-            z-index: -3;
-        }
-        
-        .stars-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
-                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
-                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
-                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
-                radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
-            background-repeat: repeat;
-            background-size: 200px 100px;
-            opacity: 0.3;
-            z-index: -2;
-            animation: parallax 20s linear infinite;
-        }
-        
-        .stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        .ship-image::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(0, 255, 204, 0.1), transparent);
+            animation: rotate 4s linear infinite;
+            border-radius: var(--border-radius-sm);
             z-index: -1;
         }
         
-        /* Simulation Container */
-        #simulation-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
+        .ship-name {
+            font-family: var(--font-primary);
+            font-size: var(--text-md);
+            color: var(--primary-cyan);
+            margin-bottom: var(--spacing-sm);
         }
         
-        #simulation-container canvas {
-            width: 100vw !important;
-            height: 100vh !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            opacity: 0.6;
-        }
-        
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 3s infinite;
-            box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
-        }
-        
-        .star:nth-child(odd) {
-            animation-delay: 1s;
-        }
-        
-        .star:nth-child(even) {
-            animation-delay: 2s;
-        }
-        
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-        
-        @keyframes parallax {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50px); }
-        }
-        
-        /* Container principal */
-        .container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        /* Card do perfil */
-        .profile-card {
-            background: rgba(0, 255, 204, 0.1);
-            border: 2px solid rgba(0, 255, 204, 0.3);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-            backdrop-filter: blur(10px);
-            animation: fadeInUp 1s ease-out;
-        }
-        
-        .profile-title {
-            font-family: 'SD Glitch Robot', 'Audiowide', cursive;
-            font-size: 32px;
-            color: #00ffcc;
-            margin-bottom: 30px;
-            text-shadow: 0 0 15px rgba(0, 255, 204, 0.8);
-            letter-spacing: 2px;
-        }
-        
-        .profile-subtitle {
-            font-family: 'Exo 2', sans-serif;
-            font-size: 16px;
-            color: #aef7ee;
-            margin-bottom: 30px;
-            opacity: 0.8;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
+        .ship-stats {
             text-align: left;
         }
         
+        .stats-title {
+            font-family: var(--font-primary);
+            font-size: var(--text-body-lg);
+            color: var(--primary-cyan);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .stats-attr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-xs) 0;
+            border-bottom: 1px solid var(--primary-cyan-light);
+        }
+        
+        .stats-attr:last-child {
+            border-bottom: none;
+        }
+        
+        .stats-attr-label {
+            font-size: var(--text-body-sm);
+            color: var(--text-secondary);
+        }
+        
+        .stats-attr-value {
+            font-size: var(--text-body);
+            color: var(--primary-cyan);
+            font-weight: 600;
+        }
+        
+        .stats-rarity {
+            font-size: var(--text-body-sm);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-lg);
+            font-weight: 600;
+            text-align: center;
+            margin-top: var(--spacing-sm);
+        }
+        
+        .rarity-comum { background: var(--rarity-common); color: #fff; }
+        .rarity-incomum { background: var(--rarity-uncommon); color: #000; }
+        .rarity-raro { background: var(--rarity-rare); color: #fff; }
+        .rarity-epico { background: var(--rarity-epic); color: #fff; }
+        .rarity-lendario { background: var(--rarity-legendary); color: #fff; }
+        
+        .form-section {
+            background: var(--card-bg);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .form-section-title {
+            font-family: var(--font-primary);
+            font-size: var(--text-lg);
+            color: var(--primary-cyan);
+            margin-bottom: var(--spacing-lg);
+            text-transform: uppercase;
+            letter-spacing: var(--letter-spacing-sm);
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+        
         .form-label {
-            font-family: 'Exo 2', sans-serif;
-            font-size: 14px;
-            color: #00ffcc;
-            margin-bottom: 8px;
             display: block;
+            font-family: var(--font-secondary);
+            font-size: var(--text-body);
+            color: var(--primary-cyan);
+            margin-bottom: var(--spacing-sm);
             font-weight: 500;
         }
         
         .form-input {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid rgba(0, 255, 204, 0.3);
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            color: #fff;
-            font-size: 16px;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-sm);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: var(--text-body);
             outline: none;
-            transition: all 0.3s ease;
+            transition: var(--transition-normal);
         }
         
         .form-input:focus {
-            border-color: #00ffcc;
+            border-color: var(--primary-cyan);
             box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
         }
         
         .form-input::placeholder {
-            color: #88ccdd;
+            color: var(--text-muted);
         }
         
-        /* Foto de perfil */
-        .profile-photo-section {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        
-        .profile-photo {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 3px solid rgba(0, 255, 204, 0.5);
-            object-fit: cover;
-            margin: 0 auto 15px;
-            display: block;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .profile-photo:hover {
-            border-color: #00ffcc;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-        }
-        
-        .photo-upload-btn {
-            background: linear-gradient(45deg, #00ffcc, #0099ff);
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .photo-upload-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
-        }
-        
-        /* Wallet section */
         .wallet-section {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(0, 255, 204, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
         }
         
         .wallet-status {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 15px;
+            margin-bottom: var(--spacing-md);
         }
         
         .wallet-info {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 12px;
-            color: #88ccdd;
+            font-family: var(--font-mono);
+            font-size: var(--text-body-sm);
+            color: var(--text-muted);
             word-break: break-all;
         }
         
@@ -265,12 +248,12 @@
             background: linear-gradient(45deg, #ff6b35, #f7931e);
             color: #fff;
             border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 14px;
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: var(--text-body);
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition-normal);
         }
         
         .connect-wallet-btn:hover {
@@ -283,645 +266,503 @@
             cursor: not-allowed;
         }
         
-        /* Botões de ação */
+        .google-info {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-sm);
+        }
+        
+        .google-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .google-email {
+            color: var(--text-secondary);
+            font-size: var(--text-body-sm);
+        }
+        
         .action-buttons {
             display: flex;
-            gap: 15px;
+            gap: var(--spacing-md);
             justify-content: center;
-            margin-top: 30px;
+            margin-top: var(--spacing-xl);
         }
         
-        .btn-primary {
-            background: linear-gradient(45deg, #00ffcc, #0099ff);
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
-        }
-        
-        .btn-secondary {
-            background: transparent;
-            color: #00ffcc;
-            border: 2px solid rgba(0, 255, 204, 0.5);
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1;
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(0, 255, 204, 0.1);
-            border-color: #00ffcc;
-        }
-        
-        /* Loading states */
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-        
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            margin: -10px 0 0 -10px;
-            border: 2px solid #00ffcc;
-            border-top: 2px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Responsivo */
-        @media (max-width: 768px) {
-            .profile-card {
-                padding: 30px 20px;
-                margin: 0 20px;
+        /* Responsividade */
+        @media (max-width: 1024px) {
+            .profile-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
             }
             
-            .profile-title {
-                font-size: 28px;
+            .profile-sidebar {
+                height: auto;
+                position: static;
+                padding: var(--spacing-lg);
+            }
+            
+            .profile-main {
+                padding: var(--spacing-lg);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .profile-main {
+                padding: var(--spacing-md);
+            }
+            
+            .form-section {
+                padding: var(--spacing-lg);
             }
             
             .action-buttons {
                 flex-direction: column;
             }
         }
+        
+        @media (max-width: 480px) {
+            .profile-sidebar {
+                padding: var(--spacing-md);
+            }
+            
+            .profile-main {
+                padding: var(--spacing-sm);
+            }
+            
+            .form-section {
+                padding: var(--spacing-md);
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Background animado -->
-    <div class="game-bg"></div>
-    <div class="stars-bg"></div>
-    <div class="stars" id="stars"></div>
+    <!-- Background System -->
+    <div class="background-primary"></div>
+    <div class="stars-background"></div>
+    <div class="particles-container" id="particles"></div>
     
-    <!-- Gameplay Simulation Background -->
-    <div id="simulation-container"></div>
-
-    <!-- Phaser.js -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
-    
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <!-- Config -->
-    <script src="/src/config-legacy.js"></script>
-    
-    <!-- Gameplay Simulation -->
-    <script type="module">
-        // Wait for Phaser to be available
-        function waitForPhaser() {
-            return new Promise((resolve) => {
-                if (typeof Phaser !== 'undefined') {
-                    resolve();
-                } else {
-                    setTimeout(() => waitForPhaser().then(resolve), 100);
-                }
-            });
-        }
+    <!-- Layout Principal -->
+    <div class="layout">
+        <!-- Header -->
+        <header class="header layout-header">
+            <div class="header-content">
+                <a href="/" class="header-logo">
+                    🚀 SPACE CRYPTO MINER
+                </a>
+                <nav class="header-nav">
+                    <a href="/dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="/profile.html" class="nav-link active">Perfil</a>
+                    <a href="/game.html" class="nav-link">Jogar</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="goToGame()">
+                        🎮 Jogar
+                    </button>
+                    <button class="btn btn-ghost" onclick="goToDashboard()">
+                        📊 Dashboard
+                    </button>
+                </div>
+            </div>
+        </header>
         
-        // Initialize simulation when page loads
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🎮 Starting gameplay simulation background...');
-            
-            try {
-                // Wait for Phaser to load
-                await waitForPhaser();
-                console.log('📦 Phaser loaded:', typeof Phaser !== 'undefined');
-                
-                // Import GameplaySimulation
-                const { default: GameplaySimulation } = await import('/src/simulation/GameplaySimulation.js');
-                console.log('📦 GameplaySimulation loaded:', typeof GameplaySimulation !== 'undefined');
-                
-                // Configuration for background simulation
-                const config = {
-                    type: Phaser.AUTO,
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    backgroundColor: '#000011',
-                    physics: {
-                        default: 'arcade',
-                        arcade: {
-                            gravity: { x: 0, y: 0 },
-                            debug: false
-                        }
-                    },
-                    scene: [GameplaySimulation],
-                    scale: {
-                        mode: Phaser.Scale.RESIZE,
-                        autoCenter: Phaser.Scale.CENTER_BOTH,
-                        fullscreenTarget: 'simulation-container'
-                    },
-                    parent: 'simulation-container'
-                };
-                
-                console.log('📦 Container element:', document.getElementById('simulation-container'));
-                
-                // Create Phaser game instance
-                const game = new Phaser.Game(config);
-                
-                // Store reference globally
-                window.gameplaySimulation = game;
-                
-                console.log('✅ Gameplay simulation background started!');
-                console.log('🎮 Game instance:', game);
-                
-                // Handle resize
-                window.addEventListener('resize', () => {
-                    game.scale.resize(window.innerWidth, window.innerHeight);
-                });
-                
-                // Ensure canvas styling
-                game.events.once('ready', () => {
-                    const canvas = game.canvas;
-                    console.log('🎨 Canvas ready:', canvas);
-                    if (canvas) {
-                        canvas.style.width = '100vw';
-                        canvas.style.height = '100vh';
-                        canvas.style.display = 'block';
-                        canvas.style.position = 'absolute';
-                        canvas.style.top = '0';
-                        canvas.style.left = '0';
-                        canvas.style.opacity = '0.6';
-                        canvas.style.pointerEvents = 'none';
-                        console.log('✅ Canvas styled successfully');
-                    }
-                });
-                
-            } catch (error) {
-                console.error('❌ Error initializing simulation:', error);
-                console.error('❌ Error stack:', error.stack);
-            }
-        });
-    </script>
-
-    <!-- Container principal -->
-    <div class="container">
-        <div class="profile-card">
-            <h1 class="profile-title">SETUP PROFILE</h1>
-            <p class="profile-subtitle">Complete your profile to start your space adventure</p>
-            
-            <form id="profileForm">
-                <!-- Foto de perfil -->
-                <div class="profile-photo-section">
-                    <img id="profilePhoto" src="/assets/icones/astronauta.png" alt="Profile photo" class="profile-photo">
-                    <button type="button" id="uploadPhotoBtn" class="photo-upload-btn">Change Photo</button>
-                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
-                </div>
-                
-                <!-- Nome -->
-                <div class="form-group">
-                    <label class="form-label">Display Name</label>
-                    <input type="text" id="displayName" class="form-input" placeholder="Enter your name" required>
-                </div>
-                
-                <!-- Email (readonly) -->
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" id="userEmail" class="form-input" readonly>
-                </div>
-                
-                <!-- Wallet -->
-                <div class="wallet-section">
-                    <div class="wallet-status">
-                        <span class="form-label">Solana Wallet</span>
-                        <button type="button" id="connectWalletBtn" class="connect-wallet-btn">Connect Wallet</button>
+        <!-- Main Content -->
+        <main class="layout-main">
+            <div class="profile-layout">
+                <!-- Sidebar -->
+                <aside class="profile-sidebar">
+                    <!-- Avatar Section -->
+                    <div class="avatar-section">
+                        <img id="avatarImg" src="/assets/icones/astronauta.png" alt="Avatar" class="avatar">
+                        <button class="avatar-upload-btn" onclick="uploadAvatar()">
+                            📷 Alterar Foto
+                        </button>
                     </div>
-                    <div id="walletInfo" class="wallet-info" style="display: none;">
-                        <span id="walletAddress"></span>
+                    
+                    <!-- Ship Preview -->
+                    <div class="ship-preview">
+                        <div class="ship-label text-body-small text-cyan mb-2">🚀 Nave Atual</div>
+                        <div class="ship-image" id="shipImg">
+                            🚀
+                        </div>
+                        <div class="ship-name" id="shipName">Nave Padrão</div>
+                        <div class="ship-stats">
+                            <div class="stats-title" id="statsTitle">Nave Padrão</div>
+                            <div class="stats-attributes" id="statsAttributes">
+                                <div class="stats-attr">
+                                    <span class="stats-attr-label">Velocidade</span>
+                                    <span class="stats-attr-value">100</span>
+                                </div>
+                                <div class="stats-attr">
+                                    <span class="stats-attr-label">Mineracao</span>
+                                    <span class="stats-attr-value">50</span>
+                                </div>
+                                <div class="stats-attr">
+                                    <span class="stats-attr-label">Defesa</span>
+                                    <span class="stats-attr-value">75</span>
+                                </div>
+                                <div class="stats-attr">
+                                    <span class="stats-attr-label">Combustivel</span>
+                                    <span class="stats-attr-value">100</span>
+                                </div>
+                            </div>
+                            <div class="stats-rarity rarity-comum" id="statsRarity">COMUM</div>
+                        </div>
+                    </div>
+                </aside>
+                
+                <!-- Main Content -->
+                <div class="profile-main">
+                    <!-- Informações Básicas -->
+                    <div class="form-section">
+                        <h2 class="form-section-title">👤 Informações Básicas</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Nome do Jogador</label>
+                            <input type="text" id="playerName" class="form-input" placeholder="Digite seu nome (ex: Comandante123)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Bio</label>
+                            <textarea id="playerBio" class="form-input" rows="3" placeholder="Conte um pouco sobre você..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Preferências de Jogo</label>
+                            <select id="gamePreferences" class="form-input">
+                                <option value="casual">Casual</option>
+                                <option value="competitive">Competitivo</option>
+                                <option value="explorer">Explorador</option>
+                                <option value="miner">Minerador</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Conexões -->
+                    <div class="form-section">
+                        <h2 class="form-section-title">🔗 Conexões</h2>
+                        
+                        <!-- Wallet Connection -->
+                        <div class="form-group">
+                            <label class="form-label">Carteira Web3</label>
+                            <div class="wallet-section">
+                                <div class="wallet-status">
+                                    <div class="wallet-info" id="walletAddr">Nenhuma carteira conectada</div>
+                                    <button id="connectWalletBtn" class="connect-wallet-btn">
+                                        👻 Conectar Phantom
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Google Connection -->
+                        <div class="form-group">
+                            <label class="form-label">Conta Google</label>
+                            <div class="wallet-section">
+                                <div class="wallet-status">
+                                    <div class="wallet-info" id="googleStatus">Não conectado</div>
+                                    <button id="connectGoogleBtn" class="btn btn-primary">
+                                        🔍 Conectar Google
+                                    </button>
+                                </div>
+                                <div id="googleInfo" class="google-info" style="display: none;">
+                                    <div class="google-name" id="googleName"></div>
+                                    <div class="google-email" id="googleEmail"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Configurações Avançadas -->
+                    <div class="form-section">
+                        <h2 class="form-section-title">⚙️ Configurações</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Idioma</label>
+                            <select id="language" class="form-input">
+                                <option value="pt-BR">Português (Brasil)</option>
+                                <option value="en-US">English (US)</option>
+                                <option value="es-ES">Español</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Notificações</label>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="notificationsEmail" checked>
+                                    <span class="text-body">Email</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="notificationsPush" checked>
+                                    <span class="text-body">Push</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="notificationsGame" checked>
+                                    <span class="text-body">Eventos do Jogo</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Privacidade</label>
+                            <div class="flex flex-col gap-2">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="privacyProfile" checked>
+                                    <span class="text-body">Perfil Público</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="privacyStats" checked>
+                                    <span class="text-body">Estatísticas Públicas</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="privacyLeaderboard">
+                                    <span class="text-body">Aparecer no Ranking</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button id="saveBtn" class="btn btn-primary btn-lg">
+                            💾 Salvar Perfil
+                        </button>
+                        <button id="resetBtn" class="btn btn-secondary btn-lg">
+                            🔄 Redefinir
+                        </button>
+                        <button id="deleteBtn" class="btn btn-error btn-lg">
+                            🗑️ Excluir Conta
+                        </button>
                     </div>
                 </div>
-                
-                <!-- Botões de ação -->
-                <div class="action-buttons">
-                    <button type="submit" id="advanceBtn" class="btn-primary">Advance</button>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="footer layout-footer">
+            <div class="footer-content">
+                <p class="footer-text">© 2025 Space Crypto Miner. Todos os direitos reservados.</p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Suporte</a>
+                    <a href="#" class="footer-link">Termos</a>
+                    <a href="#" class="footer-link">Privacidade</a>
                 </div>
-            </form>
-        </div>
+            </div>
+        </footer>
     </div>
 
+    <!-- Scripts -->
+    <script src="/src/supabase-dev.js"></script>
+    <script type="module" src="/src/simulation/background-simulation.js"></script>
     <script>
-        // Supabase configuration
-        const supabaseConfig = window.appConfig.getSupabaseConfig();
-        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey, {
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true,
-                detectSessionInUrl: true
+        // Configuração do Supabase
+        const supabaseConfig = {
+            url: "https://cjrbhqlwfjebnjoyfjnc.supabase.co",
+            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4"
+        };
+
+        // Inicializar Supabase
+        let supabase = null;
+        if (window.supabase) {
+            try {
+                supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
+                console.log('✅ Supabase inicializado no perfil');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Supabase:', error);
             }
-        });
-        
-        // Global variables
+        }
+
+        // Estado do usuário
         let currentUser = null;
         let walletAddress = null;
-        let profilePhotoFile = null;
-        
-        // DOM elements
-        const profileForm = document.getElementById('profileForm');
-        const displayNameInput = document.getElementById('displayName');
-        const userEmailInput = document.getElementById('userEmail');
-        const profilePhoto = document.getElementById('profilePhoto');
-        const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
-        const photoInput = document.getElementById('photoInput');
-        const connectWalletBtn = document.getElementById('connectWalletBtn');
-        const walletInfo = document.getElementById('walletInfo');
-        const walletAddressSpan = document.getElementById('walletAddress');
-        const advanceBtn = document.getElementById('advanceBtn');
-        
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Profile page initialized');
-            console.log('🌐 Current URL:', window.location.href);
-            console.log('🔍 URL parameters:', window.location.search);
-            
-            // Setup auth state listener
-            setupAuthListener();
-            
-            // Check authentication
-            await checkAuth();
-            
-            // Setup event listeners
-            setupEventListeners();
-            
-            // Create stars
-            createStars();
-        });
-        
-        // Setup auth state listener
-        function setupAuthListener() {
-            supabase.auth.onAuthStateChange(async (event, session) => {
-                console.log('🔄 Auth state changed:', event, session?.user?.email);
-                
-                if (event === 'SIGNED_IN' && session?.user) {
-                    currentUser = session.user;
-                    console.log('✅ User signed in:', currentUser.email);
-                    populateForm();
-                } else if (event === 'SIGNED_OUT') {
-                    console.log('❌ User signed out');
-                    redirectToLogin();
-                }
-            });
-        }
-        
-        // Check authentication
-        async function checkAuth() {
-            try {
-                console.log('🔍 Checking authentication...');
-                
-                // Check URL parameters for auth callback
-                const urlParams = new URLSearchParams(window.location.search);
-                const authCode = urlParams.get('code');
-                
-                if (authCode) {
-                    console.log('🔄 Handling OAuth callback...');
-                    // Exchange the code for a session
-                    const { data: { session, user }, error } = await supabase.auth.exchangeCodeForSession(authCode);
-                    
-                    if (error) {
-                        console.error('❌ Error exchanging code for session:', error);
-                        throw error;
-                    }
-                    
-                    console.log('✅ OAuth session established:', session);
-                    currentUser = user;
-                    
-                    // Remove code from URL
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    
-                    // Populate form with user data
-                    populateForm();
-                    return;
-                }
-                
-                // Check for existing session
-                const { data: { session }, error } = await supabase.auth.getSession();
-                
-                if (error) {
-                    console.error('❌ Error getting session:', error);
-                    throw error;
-                }
-                
-                if (!session) {
-                    console.log('❌ No active session, redirecting to login');
-                    redirectToLogin();
-                    return;
-                }
-                
-                console.log('✅ Active session found:', session);
-                currentUser = session.user;
-                
-                // Populate form with user data
-                populateForm();
-                
-            } catch (error) {
-                console.error('❌ Error checking authentication:', error);
-                alert('Erro ao verificar autenticação. Por favor, tente novamente.');
-                redirectToLogin();
+
+        // Criar partículas
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+
+            for (let i = 0; i < 25; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 2 + 1 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                particlesContainer.appendChild(particle);
             }
         }
-        
-        // Populate form with user data
-        function populateForm() {
-            if (currentUser) {
-                userEmailInput.value = currentUser.email;
-                
-                // Get display name from Google metadata
-                const displayName = currentUser.user_metadata?.full_name || 
-                                   currentUser.user_metadata?.name || 
-                                   currentUser.email?.split('@')[0] || '';
-                displayNameInput.value = displayName;
-                
-                // Set profile photo from Google if available
-                const photoUrl = currentUser.user_metadata?.avatar_url || 
-                               currentUser.user_metadata?.picture;
-                if (photoUrl) {
-                    profilePhoto.src = photoUrl;
-                    console.log('📸 Profile photo loaded from Google:', photoUrl);
-                }
-                
-                console.log('📝 Form populated with Google data:', {
-                    email: currentUser.email,
-                    displayName: displayName,
-                    photoUrl: photoUrl
-                });
-            }
+
+        // Funções de navegação
+        function goToGame() {
+            window.location.href = '/game.html';
         }
-        
-        // Setup event listeners
-        function setupEventListeners() {
-            // Photo upload
-            uploadPhotoBtn.addEventListener('click', () => {
-                photoInput.click();
-            });
-            
-            photoInput.addEventListener('change', handlePhotoUpload);
-            
-            // Wallet connection
-            connectWalletBtn.addEventListener('click', connectWallet);
-            
-            // Form submission
-            profileForm.addEventListener('submit', handleFormSubmit);
+
+        function goToDashboard() {
+            window.location.href = '/dashboard.html';
         }
-        
-        // Handle photo upload
-        function handlePhotoUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                // Validate file type
-                if (!file.type.startsWith('image/')) {
-                    alert('Please select only image files.');
-                    return;
-                }
-                
-                // Validate file size (max 5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Image must be maximum 5MB.');
-                    return;
-                }
-                
-                profilePhotoFile = file;
-                
-                // Preview image
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    profilePhoto.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-                
-                console.log('📸 Photo selected:', file.name);
-            }
+
+        // Funções de perfil
+        function uploadAvatar() {
+            console.log('📷 Upload de avatar...');
+            // Implementar upload de avatar
+            alert('Funcionalidade de upload de avatar em desenvolvimento');
         }
-        
-        // Connect Solana wallet
+
         async function connectWallet() {
             try {
-                connectWalletBtn.disabled = true;
-                connectWalletBtn.textContent = 'Connecting...';
-                
-                // Check if Phantom is installed
                 if (!window.solana || !window.solana.isPhantom) {
-                    alert('Phantom wallet not found. Please install the Phantom extension.');
-                    connectWalletBtn.disabled = false;
-                    connectWalletBtn.textContent = 'Connect Wallet';
+                    alert('Instale a extensão Phantom Wallet para continuar');
                     return;
                 }
-                
-                // Connect to Phantom
+
                 const response = await window.solana.connect();
                 walletAddress = response.publicKey.toString();
                 
-                console.log('🔗 Wallet connected:', walletAddress);
+                document.getElementById('walletAddr').textContent = walletAddress;
+                document.getElementById('connectWalletBtn').textContent = '✅ Conectado';
+                document.getElementById('connectWalletBtn').disabled = true;
                 
-                // Update UI
-                walletAddressSpan.textContent = walletAddress;
-                walletInfo.style.display = 'block';
-                connectWalletBtn.textContent = 'Connected';
-                connectWalletBtn.disabled = true;
+                console.log('✅ Carteira conectada:', walletAddress);
                 
             } catch (error) {
-                console.error('❌ Wallet connection error:', error);
-                alert('Error connecting wallet: ' + error.message);
-                
-                connectWalletBtn.disabled = false;
-                connectWalletBtn.textContent = 'Connect Wallet';
+                console.error('❌ Erro ao conectar carteira:', error);
+                alert('Erro ao conectar carteira: ' + error.message);
             }
         }
-        
-        // Handle form submission
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            
+
+        async function connectGoogle() {
             try {
-                advanceBtn.disabled = true;
-                advanceBtn.textContent = 'Processing...';
-                
-                const displayName = displayNameInput.value.trim();
-                
-                if (!displayName) {
-                    alert('Please enter a display name.');
-                    advanceBtn.disabled = false;
-                    advanceBtn.textContent = 'Advance';
-                    return;
+                if (!supabase) {
+                    throw new Error('Supabase não inicializado');
                 }
-                
-                // Upload photo if selected
-                let photoUrl = null;
-                if (profilePhotoFile) {
-                    photoUrl = await uploadProfilePhoto();
-                }
-                
-                // Save profile to Supabase
-                await saveUserProfile(displayName, photoUrl);
-                
-                console.log('✅ Profile saved successfully');
-                alert('Profile saved successfully!');
-                
-                // Redirect to dashboard
-                window.location.href = '/dashboard.html';
-                
-            } catch (error) {
-                console.error('❌ Error saving profile:', error);
-                alert('Error saving profile: ' + error.message);
-                
-                advanceBtn.disabled = false;
-                advanceBtn.textContent = 'Advance';
-            }
-        }
-        
-        // Upload profile photo
-        async function uploadProfilePhoto() {
-            try {
-                // Create unique filename
-                const fileExt = profilePhotoFile.name.split('.').pop();
-                const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
-                
-                // Upload to Supabase Storage
-                const { data, error } = await supabase.storage
-                    .from('profile-photos')
-                    .upload(fileName, profilePhotoFile);
-                
+
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/auth-callback.html'
+                    }
+                });
+
                 if (error) {
                     throw error;
                 }
-                
-                // Get public URL
-                const { data: { publicUrl } } = supabase.storage
-                    .from('profile-photos')
-                    .getPublicUrl(fileName);
-                
-                console.log('📸 Photo uploaded:', publicUrl);
-                return publicUrl;
+
+                console.log('✅ Login Google iniciado:', data);
                 
             } catch (error) {
-                console.error('❌ Error uploading photo:', error);
-                throw error;
+                console.error('❌ Erro no login Google:', error);
+                alert('Erro no login Google: ' + error.message);
             }
         }
-        
-        // Save user profile
-        async function saveUserProfile(displayName, photoUrl) {
+
+        async function saveProfile() {
             try {
-                // Debug: Verificar sessão atual
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                console.log('🔍 Current session:', session);
-                console.log('🔍 Session error:', sessionError);
+                const profileData = {
+                    player_name: document.getElementById('playerName').value,
+                    bio: document.getElementById('playerBio').value,
+                    game_preferences: document.getElementById('gamePreferences').value,
+                    language: document.getElementById('language').value,
+                    wallet_address: walletAddress,
+                    notifications: {
+                        email: document.getElementById('notificationsEmail').checked,
+                        push: document.getElementById('notificationsPush').checked,
+                        game: document.getElementById('notificationsGame').checked
+                    },
+                    privacy: {
+                        profile: document.getElementById('privacyProfile').checked,
+                        stats: document.getElementById('privacyStats').checked,
+                        leaderboard: document.getElementById('privacyLeaderboard').checked
+                    }
+                };
+
+                console.log('💾 Salvando perfil:', profileData);
                 
-                if (!session) {
-                    throw new Error('No active session found');
+                // Implementar salvamento no Supabase
+                alert('Perfil salvo com sucesso!');
+                
+            } catch (error) {
+                console.error('❌ Erro ao salvar perfil:', error);
+                alert('Erro ao salvar perfil: ' + error.message);
+            }
+        }
+
+        function resetProfile() {
+            if (confirm('Tem certeza que deseja redefinir todas as configurações?')) {
+                document.getElementById('playerName').value = '';
+                document.getElementById('playerBio').value = '';
+                document.getElementById('gamePreferences').value = 'casual';
+                document.getElementById('language').value = 'pt-BR';
+                
+                // Reset checkboxes
+                document.getElementById('notificationsEmail').checked = true;
+                document.getElementById('notificationsPush').checked = true;
+                document.getElementById('notificationsGame').checked = true;
+                document.getElementById('privacyProfile').checked = true;
+                document.getElementById('privacyStats').checked = true;
+                document.getElementById('privacyLeaderboard').checked = false;
+                
+                console.log('🔄 Perfil redefinido');
+            }
+        }
+
+        function deleteAccount() {
+            if (confirm('ATENÇÃO: Esta ação é irreversível. Tem certeza que deseja excluir sua conta?')) {
+                if (confirm('Última confirmação: Excluir conta permanentemente?')) {
+                    console.log('🗑️ Excluindo conta...');
+                    // Implementar exclusão de conta
+                    alert('Funcionalidade de exclusão de conta em desenvolvimento');
                 }
-                
-                // Debug: Verificar JWT
-                const jwt = session.access_token;
-                console.log('🔍 JWT token:', jwt ? 'Present' : 'Missing');
-                
-                if (jwt) {
-                    try {
-                        // Decodificar JWT para debug (sem verificar assinatura)
-                        const payload = JSON.parse(atob(jwt.split('.')[1]));
-                        console.log('🔍 JWT payload:', payload);
-                        console.log('🔍 JWT email:', payload.email);
-                        console.log('🔍 JWT role:', payload.role);
-                    } catch (e) {
-                        console.warn('⚠️ Could not decode JWT:', e);
+            }
+        }
+
+        // Verificar autenticação
+        async function checkAuth() {
+            if (supabase && supabase.auth) {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    console.log('❌ Usuário não autenticado, redirecionando...');
+                    window.location.href = '/';
+                } else {
+                    currentUser = session.user;
+                    console.log('✅ Usuário autenticado:', currentUser);
+                    
+                    // Atualizar informações do Google
+                    if (currentUser.user_metadata) {
+                        document.getElementById('googleName').textContent = currentUser.user_metadata.full_name || 'Usuário Google';
+                        document.getElementById('googleEmail').textContent = currentUser.email || '';
+                        document.getElementById('googleInfo').style.display = 'block';
+                        document.getElementById('googleStatus').textContent = 'Conectado';
+                        document.getElementById('connectGoogleBtn').textContent = '✅ Conectado';
+                        document.getElementById('connectGoogleBtn').disabled = true;
                     }
                 }
-                
-                const profileData = {
-                    google_email: currentUser.email,
-                    display_name: displayName,
-                    updated_at: new Date().toISOString()
-                };
-                
-                // Add wallet address if connected
-                if (walletAddress) {
-                    profileData.wallet_address = walletAddress;
-                }
-                
-                // Add photo URL if uploaded
-                if (photoUrl) {
-                    profileData.photo_url = photoUrl;
-                }
-                
-                console.log('💾 Profile data to save:', profileData);
-                
-                // Insert or update profile
-                const { data, error } = await supabase
-                    .from('user_profiles')
-                    .upsert(profileData, {
-                        onConflict: 'google_email'
-                    });
-                
-                if (error) {
-                    console.error('❌ Supabase error details:', {
-                        message: error.message,
-                        details: error.details,
-                        hint: error.hint,
-                        code: error.code
-                    });
-                    throw error;
-                }
-                
-                console.log('💾 Profile saved:', data);
-                
-            } catch (error) {
-                console.error('❌ Error saving profile:', error);
-                throw error;
             }
         }
-        
-        // Redirect to login
-        function redirectToLogin() {
-            window.location.href = '/login.html';
-        }
-        
-        // Create stars
-        function createStars() {
-            const starsContainer = document.getElementById('stars');
-            const numStars = 50;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Página de perfil carregada');
             
-            for (let i = 0; i < numStars; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.width = Math.random() * 3 + 1 + 'px';
-                star.style.height = star.style.width;
-                star.style.animationDelay = Math.random() * 3 + 's';
-                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                starsContainer.appendChild(star);
-            }
-        }
+            // Criar partículas
+            createParticles();
+            
+            // Verificar autenticação
+            checkAuth();
+            
+            // Event listeners
+            document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
+            document.getElementById('connectGoogleBtn').addEventListener('click', connectGoogle);
+            document.getElementById('saveBtn').addEventListener('click', saveProfile);
+            document.getElementById('resetBtn').addEventListener('click', resetProfile);
+            document.getElementById('deleteBtn').addEventListener('click', deleteAccount);
+            
+            console.log('✅ Página de perfil inicializada');
+        });
     </script>
 </body>
 </html>

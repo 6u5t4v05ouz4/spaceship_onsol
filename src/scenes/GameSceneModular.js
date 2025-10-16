@@ -95,6 +95,7 @@ export default class GameSceneModular extends Phaser.Scene {
         this.load.atlas('explosion', '/assets/images/explosion.png', '/assets/images/explosion.json');
         this.load.image('crosshair', '/assets/aim/aim1.png');
         this.load.atlas('planets', '/assets/background/planets.png', '/assets/background/planets.json');
+        this.load.image('stars', '/assets/background/stars.jpeg');
         
         // Sons
         this.load.audio('rocket', '/assets/sounds_effects/rocket.mp3');
@@ -114,6 +115,15 @@ export default class GameSceneModular extends Phaser.Scene {
     async create(data) {
         console.log('🎬 GameSceneModular create() iniciado');
         console.log('🔍 Data recebida:', data);
+        
+        // Verificar se this.sys está disponível
+        if (!this.sys) {
+            console.error('❌ this.sys não está disponível no início do create()!');
+            return;
+        }
+        
+        console.log('✅ this.sys disponível:', this.sys);
+        console.log('✅ Scene key:', this.sys.settings.key);
         
         // Track game scene load
         // track('game_scene_loaded', {
@@ -158,11 +168,26 @@ export default class GameSceneModular extends Phaser.Scene {
         this.juiceManager.fadeIn(800);
         console.log('✅ Fade in iniciado');
         
+        // Esconder loading screen
+        console.log('🔍 Escondendo loading screen...');
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+            console.log('✅ Loading screen escondida');
+        } else {
+            console.log('⚠️ Loading screen não encontrada');
+        }
+        
         console.log('🎉 GameSceneModular create() concluído com sucesso!');
     }
 
     initializeEffectManagers() {
         console.log('🔍 Inicializando JuiceManager...');
+        // Verificar se this.sys está disponível
+        if (!this.sys) {
+            console.error('❌ this.sys não está disponível!');
+            return;
+        }
         // Inicializa os managers de Game Juice
         this.juiceManager = new JuiceManager(this);
         console.log('✅ JuiceManager inicializado');
@@ -186,6 +211,11 @@ export default class GameSceneModular extends Phaser.Scene {
 
     initializeSpecializedManagers(data) {
         console.log('🔍 Inicializando GameStateManager...');
+        // Verificar se this.sys está disponível
+        if (!this.sys) {
+            console.error('❌ this.sys não está disponível!');
+            return;
+        }
         // Inicializa GameStateManager
         this.gameState = new GameStateManager(this);
         console.log('✅ GameStateManager inicializado');
@@ -270,6 +300,11 @@ export default class GameSceneModular extends Phaser.Scene {
     }
 
     async createGameObjects() {
+        console.log('🔍 Inicializando sistema de background...');
+        // Inicializa BackgroundManager ANTES da nave (não depende da nave)
+        this.backgroundManager.initialize();
+        console.log('✅ Sistema de background inicializado');
+        
         console.log('🔍 Criando nave...');
         // Cria a nave usando ShipManager
         await this.shipManager.create();
@@ -317,10 +352,7 @@ export default class GameSceneModular extends Phaser.Scene {
         );
         console.log('✅ Sistema de mineração inicializado');
         
-        console.log('🔍 Inicializando sistema de background...');
-        // Inicializa BackgroundManager com a nave do jogador
-        this.backgroundManager.initialize(this.shipManager);
-        console.log('✅ Sistema de background inicializado');
+        // BackgroundManager já foi inicializado anteriormente
         
         console.log('🔍 Inicializando sistema de game over...');
         // Inicializa GameOverManager com todos os componentes necessários

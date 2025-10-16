@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Configurar Perfil - Space Crypto Miner</title>
+    <link rel="icon" href="/assets/icones/icone.png" />
+    <style>
+        /* Importação de fontes espaciais futuristas - DEVE vir primeiro */
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Audiowide&family=Share+Tech+Mono&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000011;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Fonte personalizada SD Glitch Robot */
+        @font-face {
+            font-family: 'SD Glitch Robot';
+            src: url('/assets/fonts/Sdglitchrobotdemo-GOPdO.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        /* Background do jogo */
+        .game-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #001122 0%, #000011 100%);
+            z-index: -3;
+        }
+        
+        .stars-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            opacity: 0.3;
+            z-index: -2;
+            animation: parallax 20s linear infinite;
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        /* Simulation Container */
+        #simulation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        #simulation-container canvas {
+            width: 100vw !important;
+            height: 100vh !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            opacity: 0.6;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+        }
+        
+        .star:nth-child(odd) {
+            animation-delay: 1s;
+        }
+        
+        .star:nth-child(even) {
+            animation-delay: 2s;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes parallax {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50px); }
+        }
+        
+        /* Container principal */
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* Card do perfil */
+        .profile-card {
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .profile-title {
+            font-family: 'SD Glitch Robot', 'Audiowide', cursive;
+            font-size: 32px;
+            color: #00ffcc;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.8);
+            letter-spacing: 2px;
+        }
+        
+        .profile-subtitle {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 16px;
+            color: #aef7ee;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .form-label {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 14px;
+            color: #00ffcc;
+            margin-bottom: 8px;
+            display: block;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            border-color: #00ffcc;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+        }
+        
+        .form-input::placeholder {
+            color: #88ccdd;
+        }
+        
+        /* Foto de perfil */
+        .profile-photo-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid rgba(0, 255, 204, 0.5);
+            object-fit: cover;
+            margin: 0 auto 15px;
+            display: block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .profile-photo:hover {
+            border-color: #00ffcc;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+        
+        .photo-upload-btn {
+            background: linear-gradient(45deg, #00ffcc, #0099ff);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .photo-upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
+        }
+        
+        /* Wallet section */
+        .wallet-section {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .wallet-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .wallet-info {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            color: #88ccdd;
+            word-break: break-all;
+        }
+        
+        .connect-wallet-btn {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .connect-wallet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+        
+        .connect-wallet-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Botões de ação */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #00ffcc, #0099ff);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #00ffcc;
+            border: 2px solid rgba(0, 255, 204, 0.5);
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(0, 255, 204, 0.1);
+            border-color: #00ffcc;
+        }
+        
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #00ffcc;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .profile-card {
+                padding: 30px 20px;
+                margin: 0 20px;
+            }
+            
+            .profile-title {
+                font-size: 28px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background animado -->
+    <div class="game-bg"></div>
+    <div class="stars-bg"></div>
+    <div class="stars" id="stars"></div>
+    
+    <!-- Gameplay Simulation Background -->
+    <div id="simulation-container"></div>
+
+    <!-- Phaser.js -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Config -->
+    <script src="/src/config-legacy.js"></script>
+    
+    <!-- Gameplay Simulation -->
+    <script type="module">
+        // Wait for Phaser to be available
+        function waitForPhaser() {
+            return new Promise((resolve) => {
+                if (typeof Phaser !== 'undefined') {
+                    resolve();
+                } else {
+                    setTimeout(() => waitForPhaser().then(resolve), 100);
+                }
+            });
+        }
+        
+        // Initialize simulation when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🎮 Starting gameplay simulation background...');
+            
+            try {
+                // Wait for Phaser to load
+                await waitForPhaser();
+                console.log('📦 Phaser loaded:', typeof Phaser !== 'undefined');
+                
+                // Import GameplaySimulation
+                const { default: GameplaySimulation } = await import('/src/simulation/GameplaySimulation.js');
+                console.log('📦 GameplaySimulation loaded:', typeof GameplaySimulation !== 'undefined');
+                
+                // Configuration for background simulation
+                const config = {
+                    type: Phaser.AUTO,
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    backgroundColor: '#000011',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { x: 0, y: 0 },
+                            debug: false
+                        }
+                    },
+                    scene: [GameplaySimulation],
+                    scale: {
+                        mode: Phaser.Scale.RESIZE,
+                        autoCenter: Phaser.Scale.CENTER_BOTH,
+                        fullscreenTarget: 'simulation-container'
+                    },
+                    parent: 'simulation-container'
+                };
+                
+                console.log('📦 Container element:', document.getElementById('simulation-container'));
+                
+                // Create Phaser game instance
+                const game = new Phaser.Game(config);
+                
+                // Store reference globally
+                window.gameplaySimulation = game;
+                
+                console.log('✅ Gameplay simulation background started!');
+                console.log('🎮 Game instance:', game);
+                
+                // Handle resize
+                window.addEventListener('resize', () => {
+                    game.scale.resize(window.innerWidth, window.innerHeight);
+                });
+                
+                // Ensure canvas styling
+                game.events.once('ready', () => {
+                    const canvas = game.canvas;
+                    console.log('🎨 Canvas ready:', canvas);
+                    if (canvas) {
+                        canvas.style.width = '100vw';
+                        canvas.style.height = '100vh';
+                        canvas.style.display = 'block';
+                        canvas.style.position = 'absolute';
+                        canvas.style.top = '0';
+                        canvas.style.left = '0';
+                        canvas.style.opacity = '0.6';
+                        canvas.style.pointerEvents = 'none';
+                        console.log('✅ Canvas styled successfully');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('❌ Error initializing simulation:', error);
+                console.error('❌ Error stack:', error.stack);
+            }
+        });
+    </script>
+
+    <!-- Container principal -->
+    <div class="container">
+        <div class="profile-card">
+            <h1 class="profile-title">SETUP PROFILE</h1>
+            <p class="profile-subtitle">Complete your profile to start your space adventure</p>
+            
+            <form id="profileForm">
+                <!-- Foto de perfil -->
+                <div class="profile-photo-section">
+                    <img id="profilePhoto" src="/assets/icones/astronauta.png" alt="Profile photo" class="profile-photo">
+                    <button type="button" id="uploadPhotoBtn" class="photo-upload-btn">Change Photo</button>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                </div>
+                
+                <!-- Nome -->
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" id="displayName" class="form-input" placeholder="Enter your name" required>
+                </div>
+                
+                <!-- Email (readonly) -->
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="userEmail" class="form-input" readonly>
+                </div>
+                
+                <!-- Wallet -->
+                <div class="wallet-section">
+                    <div class="wallet-status">
+                        <span class="form-label">Solana Wallet</span>
+                        <button type="button" id="connectWalletBtn" class="connect-wallet-btn">Connect Wallet</button>
+                    </div>
+                    <div id="walletInfo" class="wallet-info" style="display: none;">
+                        <span id="walletAddress"></span>
+                    </div>
+                </div>
+                
+                <!-- Botões de ação -->
+                <div class="action-buttons">
+                    <button type="submit" id="advanceBtn" class="btn-primary">Advance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const supabaseConfig = window.appConfig.getSupabaseConfig();
+        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true
+            }
+        });
+        
+        // Global variables
+        let currentUser = null;
+        let walletAddress = null;
+        let profilePhotoFile = null;
+        
+        // DOM elements
+        const profileForm = document.getElementById('profileForm');
+        const displayNameInput = document.getElementById('displayName');
+        const userEmailInput = document.getElementById('userEmail');
+        const profilePhoto = document.getElementById('profilePhoto');
+        const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+        const photoInput = document.getElementById('photoInput');
+        const connectWalletBtn = document.getElementById('connectWalletBtn');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletAddressSpan = document.getElementById('walletAddress');
+        const advanceBtn = document.getElementById('advanceBtn');
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Profile page initialized');
+            console.log('🌐 Current URL:', window.location.href);
+            console.log('🔍 URL parameters:', window.location.search);
+            
+            // Setup auth state listener
+            setupAuthListener();
+            
+            // Check authentication
+            await checkAuth();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Create stars
+            createStars();
+        });
+        
+        // Setup auth state listener
+        function setupAuthListener() {
+            supabase.auth.onAuthStateChange(async (event, session) => {
+                console.log('🔄 Auth state changed:', event, session?.user?.email);
+                
+                if (event === 'SIGNED_IN' && session?.user) {
+                    currentUser = session.user;
+                    console.log('✅ User signed in:', currentUser.email);
+                    populateForm();
+                } else if (event === 'SIGNED_OUT') {
+                    console.log('❌ User signed out');
+                    redirectToLogin();
+                }
+            });
+        }
+        
+        // Check authentication
+        async function checkAuth() {
+            try {
+                console.log('🔍 Checking authentication...');
+                
+                // Check URL parameters for auth callback
+                const urlParams = new URLSearchParams(window.location.search);
+                const authCode = urlParams.get('code');
+                
+                if (authCode) {
+                    console.log('🔄 Handling OAuth callback...');
+                    // Exchange the code for a session
+                    const { data: { session, user }, error } = await supabase.auth.exchangeCodeForSession(authCode);
+                    
+                    if (error) {
+                        console.error('❌ Error exchanging code for session:', error);
+                        throw error;
+                    }
+                    
+                    console.log('✅ OAuth session established:', session);
+                    currentUser = user;
+                    
+                    // Remove code from URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                    // Populate form with user data
+                    populateForm();
+                    return;
+                }
+                
+                // Check for existing session
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('❌ Error getting session:', error);
+                    throw error;
+                }
+                
+                if (!session) {
+                    console.log('❌ No active session, redirecting to login');
+                    redirectToLogin();
+                    return;
+                }
+                
+                console.log('✅ Active session found:', session);
+                currentUser = session.user;
+                
+                // Populate form with user data
+                populateForm();
+                
+            } catch (error) {
+                console.error('❌ Error checking authentication:', error);
+                alert('Erro ao verificar autenticação. Por favor, tente novamente.');
+                redirectToLogin();
+            }
+        }
+        
+        // Populate form with user data
+        function populateForm() {
+            if (currentUser) {
+                userEmailInput.value = currentUser.email;
+                
+                // Get display name from Google metadata
+                const displayName = currentUser.user_metadata?.full_name || 
+                                   currentUser.user_metadata?.name || 
+                                   currentUser.email?.split('@')[0] || '';
+                displayNameInput.value = displayName;
+                
+                // Set profile photo from Google if available
+                const photoUrl = currentUser.user_metadata?.avatar_url || 
+                               currentUser.user_metadata?.picture;
+                if (photoUrl) {
+                    profilePhoto.src = photoUrl;
+                    console.log('📸 Profile photo loaded from Google:', photoUrl);
+                }
+                
+                console.log('📝 Form populated with Google data:', {
+                    email: currentUser.email,
+                    displayName: displayName,
+                    photoUrl: photoUrl
+                });
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Photo upload
+            uploadPhotoBtn.addEventListener('click', () => {
+                photoInput.click();
+            });
+            
+            photoInput.addEventListener('change', handlePhotoUpload);
+            
+            // Wallet connection
+            connectWalletBtn.addEventListener('click', connectWallet);
+            
+            // Form submission
+            profileForm.addEventListener('submit', handleFormSubmit);
+        }
+        
+        // Handle photo upload
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select only image files.');
+                    return;
+                }
+                
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Image must be maximum 5MB.');
+                    return;
+                }
+                
+                profilePhotoFile = file;
+                
+                // Preview image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePhoto.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+                console.log('📸 Photo selected:', file.name);
+            }
+        }
+        
+        // Connect Solana wallet
+        async function connectWallet() {
+            try {
+                connectWalletBtn.disabled = true;
+                connectWalletBtn.textContent = 'Connecting...';
+                
+                // Check if Phantom is installed
+                if (!window.solana || !window.solana.isPhantom) {
+                    alert('Phantom wallet not found. Please install the Phantom extension.');
+                    connectWalletBtn.disabled = false;
+                    connectWalletBtn.textContent = 'Connect Wallet';
+                    return;
+                }
+                
+                // Connect to Phantom
+                const response = await window.solana.connect();
+                walletAddress = response.publicKey.toString();
+                
+                console.log('🔗 Wallet connected:', walletAddress);
+                
+                // Update UI
+                walletAddressSpan.textContent = walletAddress;
+                walletInfo.style.display = 'block';
+                connectWalletBtn.textContent = 'Connected';
+                connectWalletBtn.disabled = true;
+                
+            } catch (error) {
+                console.error('❌ Wallet connection error:', error);
+                alert('Error connecting wallet: ' + error.message);
+                
+                connectWalletBtn.disabled = false;
+                connectWalletBtn.textContent = 'Connect Wallet';
+            }
+        }
+        
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            try {
+                advanceBtn.disabled = true;
+                advanceBtn.textContent = 'Processing...';
+                
+                const displayName = displayNameInput.value.trim();
+                
+                if (!displayName) {
+                    alert('Please enter a display name.');
+                    advanceBtn.disabled = false;
+                    advanceBtn.textContent = 'Advance';
+                    return;
+                }
+                
+                // Upload photo if selected
+                let photoUrl = null;
+                if (profilePhotoFile) {
+                    photoUrl = await uploadProfilePhoto();
+                }
+                
+                // Save profile to Supabase
+                await saveUserProfile(displayName, photoUrl);
+                
+                console.log('✅ Profile saved successfully');
+                alert('Profile saved successfully!');
+                
+                // Redirect to dashboard
+                window.location.href = '/dashboard.html';
+                
+            } catch (error) {
+                console.error('❌ Error saving profile:', error);
+                alert('Error saving profile: ' + error.message);
+                
+                advanceBtn.disabled = false;
+                advanceBtn.textContent = 'Advance';
+            }
+        }
+        
+        // Upload profile photo
+        async function uploadProfilePhoto() {
+            try {
+                // Create unique filename
+                const fileExt = profilePhotoFile.name.split('.').pop();
+                const fileName = `${currentUser.id}_${Date.now()}.${fileExt}`;
+                
+                // Upload to Supabase Storage
+                const { data, error } = await supabase.storage
+                    .from('profile-photos')
+                    .upload(fileName, profilePhotoFile);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // Get public URL
+                const { data: { publicUrl } } = supabase.storage
+                    .from('profile-photos')
+                    .getPublicUrl(fileName);
+                
+                console.log('📸 Photo uploaded:', publicUrl);
+                return publicUrl;
+                
+            } catch (error) {
+                console.error('❌ Error uploading photo:', error);
+                throw error;
+            }
+        }
+        
+        // Save user profile
+        async function saveUserProfile(displayName, photoUrl) {
+            try {
+                // Debug: Verificar sessão atual
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                console.log('🔍 Current session:', session);
+                console.log('🔍 Session error:', sessionError);
+                
+                if (!session) {
+                    throw new Error('No active session found');
+                }
+                
+                // Debug: Verificar JWT
+                const jwt = session.access_token;
+                console.log('🔍 JWT token:', jwt ? 'Present' : 'Missing');
+                
+                if (jwt) {
+                    try {
+                        // Decodificar JWT para debug (sem verificar assinatura)
+                        const payload = JSON.parse(atob(jwt.split('.')[1]));
+                        console.log('🔍 JWT payload:', payload);
+                        console.log('🔍 JWT email:', payload.email);
+                        console.log('🔍 JWT role:', payload.role);
+                    } catch (e) {
+                        console.warn('⚠️ Could not decode JWT:', e);
+                    }
+                }
+                
+                const profileData = {
+                    google_email: currentUser.email,
+                    display_name: displayName,
+                    updated_at: new Date().toISOString()
+                };
+                
+                // Add wallet address if connected
+                if (walletAddress) {
+                    profileData.wallet_address = walletAddress;
+                }
+                
+                // Add photo URL if uploaded
+                if (photoUrl) {
+                    profileData.photo_url = photoUrl;
+                }
+                
+                console.log('💾 Profile data to save:', profileData);
+                
+                // Insert or update profile
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .upsert(profileData, {
+                        onConflict: 'google_email'
+                    });
+                
+                if (error) {
+                    console.error('❌ Supabase error details:', {
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint,
+                        code: error.code
+                    });
+                    throw error;
+                }
+                
+                console.log('💾 Profile saved:', data);
+                
+            } catch (error) {
+                console.error('❌ Error saving profile:', error);
+                throw error;
+            }
+        }
+        
+        // Redirect to login
+        function redirectToLogin() {
+            window.location.href = '/login.html';
+        }
+        
+        // Create stars
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 50;
+            
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+    </script>
+</body>
+</html>

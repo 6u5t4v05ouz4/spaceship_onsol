@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Space Crypto Miner - Game Only</title>
+    <link rel="icon" href="/assets/icones/icone.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* Desativa menu de contexto do botão direito */
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        canvas {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00d4ff;
+            font-size: 18px;
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        .error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff4444;
+            font-size: 16px;
+            text-align: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        🚀 Carregando Space Crypto Miner...
+    </div>
+    <div id="error" class="error" style="display: none;"></div>
+
+    <!-- Phaser.js -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+    
+    <!-- Game Script -->
+    <script>
+        // Desativa menu de contexto do botão direito
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Desativa seleção de texto
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+    </script>
+    <script type="module" src="/src/game-only.js"></script>
+</body>
+</html>

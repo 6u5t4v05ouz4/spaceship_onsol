@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,12 +57,18 @@
         <div id="status" style="display: none;"></div>
     </div>
 
+    <!-- Supabase SDK -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="/src/config-legacy.js"></script>
+    
+    <!-- Novo Sistema CSS Modular -->
+    <link rel="stylesheet" href="/src/styles/main.css">
     
     <script>
         // Supabase configuration
-        const supabaseConfig = window.appConfig.getSupabaseConfig();
+        const supabaseConfig = {
+            url: "https://cjrbhqlwfjebnjoyfjnc.supabase.co",
+            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4"
+        };
         const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
         
         // Process OAuth callback

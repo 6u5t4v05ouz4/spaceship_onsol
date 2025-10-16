@@ -1,5 +1,3 @@
-import Phaser from 'phaser';
-
 /**
  * AudioManager - Gerenciamento avançado de áudio com variações e camadas
  * 

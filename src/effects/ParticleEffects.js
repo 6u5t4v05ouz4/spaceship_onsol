@@ -1,5 +1,3 @@
-import Phaser from 'phaser';
-
 /**
  * ParticleEffects - Sistema de partículas para diversos efeitos visuais
  * 

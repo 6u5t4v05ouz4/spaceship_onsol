@@ -1,5 +1,3 @@
-import Phaser from 'phaser';
-
 /**
  * TrailEffects - Sistema de rastros e trilhas visuais
  * 

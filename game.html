@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Space Crypto Miner - Game Only</title>
     <link rel="icon" href="/assets/icones/icone.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
     <style>
         body {
             margin: 0;
@@ -12,6 +13,21 @@
             background: #000;
             overflow: hidden;
             font-family: Arial, sans-serif;
+        }
+        
+        /* Desativa menu de contexto do botão direito */
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        canvas {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
         .loading {
@@ -48,6 +64,19 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
     
     <!-- Game Script -->
+    <script>
+        // Desativa menu de contexto do botão direito
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Desativa seleção de texto
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+    </script>
     <script type="module" src="/src/game-only.js"></script>
 </body>
 </html>

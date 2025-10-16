@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import { track } from '@vercel/analytics';
 
 export default class MenuScene extends Phaser.Scene {

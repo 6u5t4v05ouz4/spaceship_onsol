@@ -1,11 +1,15 @@
 // Game-only entry point - Loads only the Phaser game without web interface
-import './styles.css';
-import { inject } from '@vercel/analytics';
+// CSS será carregado via link no HTML
+// import { inject } from '@vercel/analytics';
 
-// Import game scenes
-import GameScene from './scenes/GameScene.js';
-import MenuScene from './scenes/MenuScene.js';
-import ConfigScene from './scenes/ConfigScene.js';
+// Import game scenes - GAMEPLAY COMPLETO MODULARIZADO
+import GameSceneModular from './scenes/GameSceneModular.js';
+import MenuSceneSimple from './scenes/MenuSceneSimple.js';
+
+// Debug logging
+console.log('🔍 game-only.js carregado');
+console.log('🔍 GameSceneModular:', GameSceneModular);
+console.log('🔍 MenuSceneSimple:', MenuSceneSimple);
 
 // Game configuration
 const config = {
@@ -20,7 +24,7 @@ const config = {
             debug: false
         }
     },
-    scene: [MenuScene, GameScene, ConfigScene],
+    scene: [MenuSceneSimple, GameSceneModular],
     scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -63,9 +67,18 @@ function showError(message) {
 // Initialize game
 try {
     console.log('🚀 Iniciando Space Crypto Miner...');
+    console.log('🔍 Configuração:', config);
+    
+    // Teste cada import individualmente
+    console.log('🔍 Testando imports...');
+    console.log('🔍 GameSceneModular:', typeof GameSceneModular);
+    console.log('🔍 MenuScene:', typeof MenuScene);
+    console.log('🔍 ConfigScene:', typeof ConfigScene);
     
     // Create Phaser game instance
+    console.log('🔍 Criando instância do Phaser...');
     const game = new Phaser.Game(config);
+    console.log('🔍 Instância criada:', game);
     
     // Hide loading when game starts
     game.events.once('boot', () => {
@@ -100,7 +113,7 @@ try {
     window.game = game;
     
     // Initialize Vercel Analytics
-    inject();
+    // inject();
     
     // Initialize Vercel Speed Insights
     initializeSpeedInsights();
@@ -115,7 +128,8 @@ try {
     
 } catch (error) {
     console.error('❌ Erro ao inicializar o jogo:', error);
-    showError('Falha na inicialização do jogo');
+    console.error('❌ Stack trace:', error.stack);
+    showError('Falha na inicialização: ' + error.message);
 }
 
 // Handle uncaught errors

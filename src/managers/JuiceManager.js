@@ -1,5 +1,3 @@
-import Phaser from 'phaser';
-
 /**
  * JuiceManager - Sistema centralizado para gerenciar todos os efeitos de game feel
  * 

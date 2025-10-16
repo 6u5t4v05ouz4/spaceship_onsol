@@ -1,5 +1,3 @@
-import Phaser from 'phaser';
-
 /**
  * UIAnimations - Animações suaves e satisfatórias para elementos de UI
  * 

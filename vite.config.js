@@ -55,6 +55,8 @@ export default defineConfig({
 	define: {
 		'process.env.VITE_APP_REDIRECT_ORIGIN': JSON.stringify(process.env.RAILWAY_PUBLIC_DOMAIN || 'https://your-app.railway.app'),
 		'process.env.VITE_APP_REDIRECT_PATH': JSON.stringify('/auth-callback'),
+		// URL do servidor Railway para WebSocket
+		'import.meta.env.VITE_SERVER_URL': JSON.stringify(process.env.RAILWAY_PUBLIC_DOMAIN || 'https://your-app.railway.app'),
 		// Variáveis do Supabase para produção
 		'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
 		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),

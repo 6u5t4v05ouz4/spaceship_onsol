@@ -16,72 +16,16 @@ export default class GameplaySimulation extends Phaser.Scene {
 
     preload() {
         this.load.setPath('');
-        console.log('🔍 PRELOAD: Iniciando carregamento de assets...');
-        
-        try {
-            this.load.atlas('ship', '/assets/images/01.png', '/assets/images/01.json');
-            console.log('✅ Ship atlas adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar ship:', e); }
-        
-        try {
-            this.load.image('ship_idle', '/assets/images/idle.png');
-            console.log('✅ Ship idle adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar ship_idle:', e); }
-        
-        try {
-            this.load.atlas('enemy', '/assets/images/02.png', '/assets/images/02.json');
-            console.log('✅ Enemy atlas adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar enemy:', e); }
-        
-        try {
-            this.load.atlas('meteoro', '/assets/images/meteoro.png', '/assets/images/meteoro.json');
-            console.log('✅ Meteoro atlas adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar meteoro:', e); }
-        
-        try {
-            this.load.atlas('explosion', '/assets/images/explosion.png', '/assets/images/explosion.json');
-            console.log('✅ Explosion atlas adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar explosion:', e); }
-        
-        try {
-            this.load.atlas('minibullet', '/assets/images/minibullet.png', '/assets/images/minibullet.json');
-            console.log('✅ Minibullet atlas adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar minibullet:', e); }
-        
-        try {
-            this.load.atlas('planets', '/assets/background/planets.png', '/assets/background/planets.json');
-            console.log('✅ Planets atlas adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar planets:', e); }
-        
-        try {
-            this.load.image('stars', '/assets/background/stars.jpeg');
-            console.log('✅ Stars image adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar stars:', e); }
-        
-        try {
-            this.load.audio('bullet_sound', '/assets/sounds_effects/bullet.mp3');
-            console.log('✅ Bullet sound adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar bullet_sound:', e); }
-        
-        try {
-            this.load.audio('explosion_sound', '/assets/sounds_effects/explosion.mp3');
-            console.log('✅ Explosion sound adicionado ao preload');
-        } catch(e) { console.error('❌ Erro ao carregar explosion_sound:', e); }
-        
-        console.log('🔍 PRELOAD: Todos os assets adicionados à fila de carregamento');
-        
-        // Listeners de erro
-        this.load.on('loaderror', (file) => {
-            console.error('❌ ERRO AO CARREGAR ARQUIVO:', file.src);
-        });
-        
-        this.load.on('fileprogress', (file) => {
-            console.log('📦 Carregando:', file.src);
-        });
-        
-        this.load.on('complete', () => {
-            console.log('✅ PRELOAD COMPLETO! Todos os assets carregados com sucesso!');
-        });
+        this.load.atlas('ship', '/assets/images/01.png', '/assets/images/01.json');
+        this.load.image('ship_idle', '/assets/images/idle.png');
+        this.load.atlas('enemy', '/assets/images/02.png', '/assets/images/02.json');
+        this.load.atlas('meteoro', '/assets/images/meteoro.png', '/assets/images/meteoro.json');
+        this.load.atlas('explosion', '/assets/images/explosion.png', '/assets/images/explosion.json');
+        this.load.atlas('minibullet', '/assets/images/minibullet.png', '/assets/images/minibullet.json');
+        this.load.atlas('planets', '/assets/background/planets.png', '/assets/background/planets.json');
+        this.load.image('stars', '/assets/background/stars.jpeg');
+        this.load.audio('bullet_sound', '/assets/sounds_effects/bullet.mp3');
+        this.load.audio('explosion_sound', '/assets/sounds_effects/explosion.mp3');
     }
 
     create() {
@@ -100,21 +44,18 @@ export default class GameplaySimulation extends Phaser.Scene {
     createBackground() {
         const screenWidth = this.scale.width;
         const screenHeight = this.scale.height;
-        
-              
-        // Background de estrelas com alpha aumentado para melhor visibilidade
+        this.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000)
+            .setOrigin(0.5).setDepth(-10);
         const starsBg = this.add.tileSprite(0, 0, screenWidth * 2, screenHeight * 2, 'stars');
-        starsBg.setOrigin(0.5).setDepth(-9).setAlpha(0.6); // ✅ AUMENTADO de 0.3 para 0.6
+        starsBg.setOrigin(0.5).setDepth(-9).setAlpha(0.8);
         this.starsBg = starsBg;
-        
-        // Estrelas individuais mais brilhantes
-        const starCount = Math.floor((screenWidth * screenHeight) / 8000); // ✅ Mais estrelas
+        const starCount = Math.floor((screenWidth * screenHeight) / 10000);
         for (let i = 0; i < starCount; i++) {
             const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
             const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
-            const star = this.add.rectangle(x, y, 2, 2, 0xffffff); // ✅ Tamanho 2x2 (maior)
+            const star = this.add.rectangle(x, y, 1, 1, 0xffffff);
             star.setDepth(-8);
-            star.setAlpha(Phaser.Math.FloatBetween(0.3, 0.9)); // ✅ AUMENTADO para 0.3-0.9
+            star.setAlpha(Phaser.Math.FloatBetween(0.3, 1));
         }
     }
 
@@ -184,10 +125,8 @@ export default class GameplaySimulation extends Phaser.Scene {
 
     createShip() {
         this.elements.ship = this.physics.add.sprite(0, 0, 'ship_idle');
-        this.elements.ship.setScale(1.2); // ✅ AUMENTADO de 0.8 para 1.2 (50% maior)
+        this.elements.ship.setScale(0.8);
         this.elements.ship.setDepth(2);
-        this.elements.ship.setTint(0xffffff); // ✅ Tint branco para máximo brilho
-        this.elements.ship.setAlpha(1); // ✅ Alpha máximo
         this.elements.ship.play('ship_thrust');
         this.elements.ship.body.setCircle(20);
         this.elements.ship.setMaxVelocity(200);
@@ -196,7 +135,7 @@ export default class GameplaySimulation extends Phaser.Scene {
         this.cameras.main.setZoom(0.6);
         this.cameras.main.centerOn(0, 0);
         this.projectilesGroup = this.physics.add.group();
-        console.log('✅ Nave criada (MAIOR e MAIS BRILHANTE)');
+        console.log('Nave criada em (0, 0)');
     }
 
     createEnemies() {
@@ -239,20 +178,18 @@ export default class GameplaySimulation extends Phaser.Scene {
         }
         
         const enemy = this.physics.add.sprite(x, y, 'enemy');
-        enemy.setScale(Phaser.Math.FloatBetween(0.6, 0.9)); // ✅ AUMENTADO de 0.4-0.6 para 0.6-0.9
+        enemy.setScale(Phaser.Math.FloatBetween(0.4, 0.6));
         enemy.setDepth(1);
-        enemy.setTint(0xff6666); // ✅ Tint vermelho claro para destaque
-        enemy.setAlpha(1); // ✅ Alpha máximo
         enemy.play('enemy_thrust');
-        enemy.body.setCircle(40);
-        // ✅ REMOVIDO setMaxVelocity que estava limitando a velocidade!
-        enemy.body.setImmovable(true);
-        enemy.health = 10;
+        enemy.body.setCircle(40); // Aumentado para 40 para colisão mais confiável
+        enemy.setMaxVelocity(100);
+        enemy.body.setImmovable(true); // Inimigos não se movem por física
+        enemy.health = 10; // 10 tiros para destruir
         enemy.maxHealth = 10;
         
         // Direção aleatória em vez de sempre ir para o centro
         const randomAngle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-        const speed = Phaser.Math.Between(80, 150); // ✅ AUMENTADO de 5-10 para 80-150 (15x mais rápido!)
+        const speed = Phaser.Math.Between(5, 10);
         enemy.setVelocity(
             Math.cos(randomAngle) * speed,
             Math.sin(randomAngle) * speed
@@ -307,17 +244,15 @@ export default class GameplaySimulation extends Phaser.Scene {
         }
         
         const meteor = this.physics.add.sprite(x, y, 'meteoro', 'meteoro 0.aseprite');
-        meteor.setScale(Phaser.Math.FloatBetween(0.8, 1.2)); // ✅ AUMENTADO de 0.5-0.8 para 0.8-1.2
+        meteor.setScale(Phaser.Math.FloatBetween(0.5, 0.8));
         meteor.setDepth(1);
-        meteor.setTint(0xffaa66); // ✅ Tint laranja claro para destaque
-        meteor.setAlpha(1); // ✅ Alpha máximo
         meteor.play('meteoro_anim');
         meteor.body.setCircle(25);
         meteor.setMaxVelocity(300);
         const centerX = Phaser.Math.Between(-150, 150);
         const centerY = Phaser.Math.Between(-150, 150);
         const angle = Phaser.Math.Angle.Between(x, y, centerX, centerY);
-        const speed = Phaser.Math.Between(150, 250); // ✅ AUMENTADO de 100-200 para 150-250
+        const speed = Phaser.Math.Between(100, 200);
         meteor.setVelocity(
             Math.cos(angle) * speed,
             Math.sin(angle) * speed
@@ -616,10 +551,11 @@ export default class GameplaySimulation extends Phaser.Scene {
                     if (distance < 80) {
                         this.moveToNextPlanet();
                     } else {
-                        const speed = 12; // ✅ AUMENTADO de 12 para 150 (12x mais rápido!)
+                        const speed = 12;
                         const angle = Phaser.Math.Angle.Between(ship.x, ship.y, target.x, target.y);
-                        ship.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed); // ✅ Usando physics velocity
-                        ship.rotation = angle + Math.PI/2; // ✅ Rotacionar nave na direção do movimento
+                        const deltaTime = 0.016;
+                        ship.x += Math.cos(angle) * speed * deltaTime;
+                        ship.y += Math.sin(angle) * speed * deltaTime;
                         if (Math.random() < 0.01) {
                             console.log(`Nave: (${ship.x.toFixed(1)}, ${ship.y.toFixed(1)}) -> Planeta: (${target.x}, ${target.y}) | Distância: ${distance.toFixed(1)}`);
                         }
@@ -646,7 +582,9 @@ export default class GameplaySimulation extends Phaser.Scene {
         });
 
         this.time.addEvent({
-            delay: 3000, callback: () => { if (this.elements.enemies.length < 3) {
+            delay: 3000,
+            callback: () => {
+                if (this.elements.enemies.length < 3) {
                     this.spawnEnemy();
                 }
             },
@@ -654,7 +592,9 @@ export default class GameplaySimulation extends Phaser.Scene {
         });
 
         this.time.addEvent({
-            delay: 4000, callback: () => { if (this.elements.meteors.length < 2) {
+            delay: 4000,
+            callback: () => {
+                if (this.elements.meteors.length < 2) {
                     this.spawnMeteor();
                 }
             },
@@ -673,10 +613,8 @@ export default class GameplaySimulation extends Phaser.Scene {
             'minibullet',
             'minibullet 0.aseprite'
         );
-        bullet.setScale(1.0); // ✅ AUMENTADO de 0.6 para 1.0
+        bullet.setScale(0.6);
         bullet.setDepth(1);
-        bullet.setTint(0x00ffff); // ✅ Tint ciano brilhante
-        bullet.setAlpha(1); // ✅ Alpha máximo
         bullet.play('minibullet_anim');
         bullet.rotation = angle;
         bullet.body.setAllowGravity(false);

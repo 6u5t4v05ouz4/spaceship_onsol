@@ -492,13 +492,13 @@
 
     <!-- Scripts -->
     <script type="module">
-        // Importar Supabase PRIMEIRO
-        import { createClient } from '@supabase/supabase-js';
+        // Usar Supabase via CDN (mais confiável para arquivos HTML estáticos)
+        const { createClient } = window.supabase;
         
         // Criar cliente Supabase e disponibilizar globalmente
         const supabase = createClient(
-            import.meta.env.VITE_SUPABASE_URL,
-            import.meta.env.VITE_SUPABASE_ANON_KEY
+            'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4'
         );
         
         if (typeof window !== 'undefined') {

@@ -54,14 +54,16 @@ CREATE POLICY "authenticated_users_update_own_settings"
     )
   );
 
--- Grant permissions to authenticated and anon roles
+-- Grant permissions to all necessary roles
 -- This is crucial - RLS policies won't work without these grants
 GRANT ALL ON user_settings TO authenticated;
 GRANT ALL ON user_settings TO anon;
+GRANT ALL ON user_settings TO authenticator; -- PostgREST uses this role
 
 -- Also grant usage on sequences
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticator;
 
 -- Verify policies were created
 SELECT schemaname, tablename, policyname, permissive, roles, cmd

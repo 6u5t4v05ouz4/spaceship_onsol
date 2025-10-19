@@ -715,8 +715,6 @@ export default class GameplaySimulation extends Phaser.Scene {
         this.createExplosion(x, y);
     }
 
-    isShipPointingAtTarget(ship, target) { const shipAngle = ship.rotation; const targetAngle = Phaser.Math.Angle.Between(ship.x, ship.y, target.x, target.y) + Math.PI / 2; let diff = shipAngle - targetAngle; while (diff > Math.PI) diff -= 2 * Math.PI; while (diff < -Math.PI) diff += 2 * Math.PI; return Math.abs(diff) < 0.52; }
-
     updateDefenseSystem() {
         if (!this.elements.ship) return;
         const ship = this.elements.ship;
@@ -758,10 +756,8 @@ export default class GameplaySimulation extends Phaser.Scene {
         if (target) {
             const angle = Phaser.Math.Angle.Between(ship.x, ship.y, target.x, target.y);
             ship.rotation = angle + Math.PI / 2;
-            if (this.isShipPointingAtTarget(ship, target)) {
-                this.fireAtTarget(target);
-                this.lastFireTime = this.time.now;
-            }
+            this.fireAtTarget(target);
+            this.lastFireTime = this.time.now;
         } else if (this.targetPlanet) {
             const angle = Phaser.Math.Angle.Between(ship.x, ship.y, this.targetPlanet.x, this.targetPlanet.y);
             ship.rotation = angle + Math.PI / 2;

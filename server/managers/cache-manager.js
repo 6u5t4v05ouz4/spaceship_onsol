@@ -326,7 +326,13 @@ class CacheManager {
       });
 
       if (error) {
-        logger.error('❌ Erro ao processar batch updates:', error);
+        logger.error('❌ Erro ao processar batch updates:', {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          updates: updates.map(u => ({ id: u.id, chunk: u.current_chunk }))
+        });
       } else {
         logger.debug(`✅ ${updates.length} batch updates salvos`);
         this.batchUpdates.clear();

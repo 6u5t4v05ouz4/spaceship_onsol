@@ -1,11 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/game.html",
-      "destination": "/game.html"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!api|_next|_static|favicon.ico|game.html|login.html).*)",
       "destination": "/index.html"
     }
   ]

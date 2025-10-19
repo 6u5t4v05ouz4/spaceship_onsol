@@ -182,12 +182,23 @@ export default class ProfilePage {
       }
 
       const googleEmail = session.user.email;
+      const googleUser = session.user;
       console.log('👤 Carregando perfil para:', googleEmail);
 
       // Buscar perfil
       this.profile = await profileService.getProfile(this.supabase, googleEmail);
 
-      console.log('✅ Perfil carregado:', this.profile);
+      // Sempre garantir que temos os dados do Google OAuth
+      this.profile.google_name = googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'Usuário';
+      this.profile.google_email = googleUser.email;
+      this.profile.google_picture = googleUser.user_metadata?.picture;
+
+      // Preencher campos que podem vir do banco ou do Google
+      this.profile.display_name = this.profile.display_name || this.profile.google_name;
+      this.profile.username = this.profile.username || this.profile.google_name;
+      this.profile.avatar_url = this.profile.avatar_url || this.profile.google_picture;
+
+      console.log('✅ Perfil carregado com dados Google:', this.profile);
 
       this.setState(container, 'viewing');
       this.renderProfile(container);
@@ -203,17 +214,21 @@ export default class ProfilePage {
    * Renderizar perfil
    */
   renderProfile(container) {
-    // Preencher campos
-    container.querySelector('#username').value = this.profile.username || '';
-    container.querySelector('#email').value = this.profile.email || '';
+    // Preencher campos com dados do Google OAuth (sempre disponíveis)
+    container.querySelector('#username').value = this.profile.username || this.profile.google_name || '';
+    container.querySelector('#email').value = this.profile.google_email || '';
     container.querySelector('#bio').value = this.profile.bio || '';
     container.querySelector('#bioCounter').textContent = (this.profile.bio || '').length;
 
-    // Avatar
-    if (this.profile.avatar_url) {
+    // Avatar - usar do banco se existir, senão do Google
+    const avatarUrl = this.profile.avatar_url || this.profile.google_picture;
+    if (avatarUrl) {
       const preview = container.querySelector('#avatarPreview');
-      preview.innerHTML = `<img src="${this.profile.avatar_url}" alt="Avatar">`;
-      container.querySelector('#avatarStatus').textContent = '✅ Avatar definido';
+      preview.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+      container.querySelector('#avatarStatus').textContent = this.profile.avatar_url ?
+        '✅ Avatar personalizado' : '✅ Avatar do Google';
+    } else {
+      container.querySelector('#avatarStatus').textContent = '👤 Sem avatar';
     }
 
     // Mostrar estado viewing

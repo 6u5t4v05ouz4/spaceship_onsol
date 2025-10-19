@@ -214,12 +214,21 @@ export default class DashboardPage {
         return;
       }
 
-      const userId = session.user.id;
-      console.log('📊 Carregando dados para usuário:', userId);
+      const googleEmail = session.user.email;
+      const googleUser = session.user;
+      console.log('📊 Carregando dados para usuário:', googleEmail);
 
       // Buscar profile
-      const profile = await this.fetchProfile(userId);
+      const profile = await this.fetchProfile(googleEmail);
       this.data.profile = profile;
+
+      // Garantir dados do Google OAuth
+      if (!this.data.profile.google_name) {
+        this.data.profile.google_name = googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'Usuário';
+        this.data.profile.google_email = googleUser.email;
+        this.data.profile.google_picture = googleUser.user_metadata?.picture;
+        this.data.profile.display_name = this.data.profile.display_name || this.data.profile.google_name;
+      }
 
       // Buscar player stats (substitui game_data)
       const playerStats = await this.fetchPlayerStats(userId);

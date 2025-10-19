@@ -82,9 +82,30 @@ export default class MiningManager {
      * Cria um único planeta minerável
      */
     createSingleMiningPlanet(frameNames, index) {
-        // Posição aleatória
-        const x = Phaser.Math.Between(-1500, 1500);
-        const y = Phaser.Math.Between(-1500, 1500);
+        // Usar posições fixas baseadas no chunk atual para consistência entre jogadores
+        const multiplayerManager = this.scene.multiplayerManager;
+        let x, y;
+        
+        if (multiplayerManager && multiplayerManager.currentChunk) {
+            const chunkX = multiplayerManager.currentChunk.x;
+            const chunkY = multiplayerManager.currentChunk.y;
+            
+            // Spawn dentro do chunk atual (1000x1000 unidades)
+            const chunkStartX = chunkX * 1000;
+            const chunkStartY = chunkY * 1000;
+            
+            // Posições fixas baseadas em seed para consistência
+            const seed = `${chunkX},${chunkY}`;
+            const randomX = this.seededRandom(seed, index * 2);
+            const randomY = this.seededRandom(seed, index * 2 + 1);
+            
+            x = chunkStartX + Math.floor(randomX * 1000);
+            y = chunkStartY + Math.floor(randomY * 1000);
+        } else {
+            // Fallback para spawn aleatório no chunk (0,0)
+            x = Phaser.Math.Between(-500, 500);
+            y = Phaser.Math.Between(-500, 500);
+        }
         
         // Frame aleatório
         let frameName = null;
@@ -117,6 +138,23 @@ export default class MiningManager {
         this.miningPlanets.push(planet);
         
         console.log(`⛏️ Planeta ${index} criado em (${x}, ${y}) - Taxa: ${planet.miningRate.toFixed(2)}`);
+    }
+    
+    /**
+     * Gera número pseudo-aleatório baseado em seed (mesmo do servidor)
+     */
+    seededRandom(seed, index) {
+        const str = `${seed}-${index}`;
+        let hash = 0;
+        
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        
+        // Normalizar para 0-1
+        return Math.abs(Math.sin(hash)) % 1;
     }
     
     /**

@@ -118,20 +118,48 @@ export default class EnemyManager {
      * Calcula posição de spawn segura
      */
     calculateSpawnPosition() {
-        let x, y;
-        
-        if (this.playerShip) {
-            // Spawn longe do jogador
-            const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-            x = this.playerShip.x + Math.cos(angle) * this.spawnDistance;
-            y = this.playerShip.y + Math.sin(angle) * this.spawnDistance;
-        } else {
-            // Spawn aleatório se não há nave
-            x = Phaser.Math.Between(-1500, 1500);
-            y = Phaser.Math.Between(-1500, 1500);
+        // Usar posições fixas baseadas no chunk atual para consistência entre jogadores
+        const multiplayerManager = this.scene.multiplayerManager;
+        if (multiplayerManager && multiplayerManager.currentChunk) {
+            const chunkX = multiplayerManager.currentChunk.x;
+            const chunkY = multiplayerManager.currentChunk.y;
+            
+            // Spawn dentro do chunk atual (1000x1000 unidades)
+            const chunkStartX = chunkX * 1000;
+            const chunkStartY = chunkY * 1000;
+            
+            // Posições fixas baseadas em seed para consistência
+            const seed = `${chunkX},${chunkY}`;
+            const randomX = this.seededRandom(seed, this.enemies.length * 2);
+            const randomY = this.seededRandom(seed, this.enemies.length * 2 + 1);
+            
+            const x = chunkStartX + Math.floor(randomX * 1000);
+            const y = chunkStartY + Math.floor(randomY * 1000);
+            
+            return { x, y };
         }
         
+        // Fallback para spawn aleatório no chunk (0,0)
+        const x = Phaser.Math.Between(-500, 500);
+        const y = Phaser.Math.Between(-500, 500);
         return { x, y };
+    }
+    
+    /**
+     * Gera número pseudo-aleatório baseado em seed (mesmo do servidor)
+     */
+    seededRandom(seed, index) {
+        const str = `${seed}-${index}`;
+        let hash = 0;
+        
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        
+        // Normalizar para 0-1
+        return Math.abs(Math.sin(hash)) % 1;
     }
     
     /**

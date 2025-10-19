@@ -12,7 +12,7 @@ function getSimulationConfig() {
         type: Phaser.AUTO,
         width: window.innerWidth,
         height: window.innerHeight,
-        backgroundColor: 'transparent',
+        backgroundColor: '#001133', // Fundo azul escuro brilhante
         physics: {
             default: 'arcade',
             arcade: {

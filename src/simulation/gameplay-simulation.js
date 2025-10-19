@@ -6,8 +6,7 @@ const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    //backgroundColor: '#000011',
-    backgroundColor: 'transparent',
+    backgroundColor: '#001133', // Fundo azul escuro brilhante
     physics: {
         default: 'arcade',
         arcade: {

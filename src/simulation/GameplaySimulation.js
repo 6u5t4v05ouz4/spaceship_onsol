@@ -44,18 +44,96 @@ export default class GameplaySimulation extends Phaser.Scene {
     createBackground() {
         const screenWidth = this.scale.width;
         const screenHeight = this.scale.height;
-        this.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000)
+
+        // Fundo azul escuro com brilho ao invés de preto sólido
+        this.add.rectangle(0, 0, screenWidth, screenHeight, 0x001133)
             .setOrigin(0.5).setDepth(-10);
+
+        // Fundo de estrelas muito mais brilhante
         const starsBg = this.add.tileSprite(0, 0, screenWidth * 2, screenHeight * 2, 'stars');
-        starsBg.setOrigin(0.5).setDepth(-9).setAlpha(0.8);
+        starsBg.setOrigin(0.5).setDepth(-9).setAlpha(1.0).setTint(0xaaaaff); // Azul claro
         this.starsBg = starsBg;
-        const starCount = Math.floor((screenWidth * screenHeight) / 10000);
+
+        // Criar MUITAS estrelas brilhantes
+        const starCount = Math.floor((screenWidth * screenHeight) / 4000); // Dobro de estrelas
         for (let i = 0; i < starCount; i++) {
             const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
             const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
-            const star = this.add.rectangle(x, y, 1, 1, 0xffffff);
+            const size = Phaser.Math.Between(1, 4);
+            const star = this.add.rectangle(x, y, size, size, 0xffffff);
             star.setDepth(-8);
-            star.setAlpha(Phaser.Math.FloatBetween(0.3, 1));
+            star.setAlpha(Phaser.Math.FloatBetween(0.8, 1)); // Brilho mínimo muito alto
+
+            // Adicionar efeito de brilho pulsante para MAIS estrelas
+            if (Math.random() < 0.6) { // 60% das estrelas têm efeito de brilho
+                this.tweens.add({
+                    targets: star,
+                    alpha: { from: 0.8, to: 1 },
+                    scale: { from: 1, to: 1.5 },
+                    duration: Phaser.Math.Between(1000, 3000),
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+            }
+        }
+
+        // Adicionar estrelas grandes brilhantes esparsas
+        const bigStarCount = Math.floor((screenWidth * screenHeight) / 50000);
+        for (let i = 0; i < bigStarCount; i++) {
+            const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+            const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+            const bigStar = this.add.rectangle(x, y, 6, 6, 0xaaccff);
+            bigStar.setDepth(-8);
+            bigStar.setAlpha(0.9);
+
+            // Brilho intenso pulsante
+            this.tweens.add({
+                targets: bigStar,
+                alpha: { from: 0.7, to: 1 },
+                scale: { from: 1, to: 2 },
+                duration: Phaser.Math.Between(2000, 4000),
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+
+        // Adicionar nebulosas luminosas
+        this.createNebulas();
+    }
+
+    createNebulas() {
+        const screenWidth = this.scale.width;
+        const screenHeight = this.scale.height;
+
+        // Criar nebulosas BRILHANTES para dar mais vida ao fundo
+        const nebulaColors = [0x6666aa, 0x66aa66, 0xaa8866, 0x6688aa]; // Cores mais claras e brilhantes
+
+        for (let i = 0; i < 5; i++) { // Mais nebulosas
+            const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+            const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+            const color = nebulaColors[i % nebulaColors.length];
+
+            // Criar forma oval para nebulosa com mais brilho
+            const nebula = this.add.graphics();
+            nebula.setDepth(-7);
+            nebula.fillStyle(color, 0.25); // Muito mais brilhante
+            nebula.fillEllipse(x, y, Phaser.Math.Between(300, 600), Phaser.Math.Between(200, 400));
+            nebula.fillStyle(color, 0.15); // Ainda brilhante
+            nebula.fillEllipse(x + 50, y + 30, Phaser.Math.Between(200, 400), Phaser.Math.Between(150, 300));
+
+            // Adicionar movimento lento com brilho pulsante
+            this.tweens.add({
+                targets: nebula,
+                x: x + Phaser.Math.Between(-30, 30),
+                y: y + Phaser.Math.Between(-30, 30),
+                alpha: { from: 0.8, to: 1 },
+                duration: Phaser.Math.Between(8000, 15000),
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
         }
     }
 
@@ -132,7 +210,7 @@ export default class GameplaySimulation extends Phaser.Scene {
         this.elements.ship.setMaxVelocity(200);
         this.elements.ship.health = 50;
         this.elements.ship.maxHealth = 50;
-        this.cameras.main.setZoom(0.6);
+        this.cameras.main.setZoom(1.0); // Zoom completo para background da página web
         this.cameras.main.centerOn(0, 0);
         this.projectilesGroup = this.physics.add.group();
         console.log('Nave criada em (0, 0)');
@@ -844,8 +922,9 @@ export default class GameplaySimulation extends Phaser.Scene {
 
     update() {
         if (this.starsBg) {
-            this.starsBg.tilePositionX += 0.1;
-            this.starsBg.tilePositionY += 0.05;
+            // Movimento mais dinâmico das estrelas para sensação de velocidade no espaço
+            this.starsBg.tilePositionX += 0.3;
+            this.starsBg.tilePositionY += 0.1;
         }
         this.updateSimulation();
     }

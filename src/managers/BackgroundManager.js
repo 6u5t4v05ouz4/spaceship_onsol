@@ -43,34 +43,76 @@ export default class BackgroundManager {
     createBackground() {
         const screenWidth = this.scene.scale.width;
         const screenHeight = this.scene.scale.height;
-        
-        console.log(`🌌 Criando background infinito para tela ${screenWidth}x${screenHeight}`);
-        
-        // Fundo sólido preto
-        this.scene.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000)
+
+        console.log(`🌌 Criando background infinito BRILHANTE para tela ${screenWidth}x${screenHeight}`);
+
+        // Fundo azul escuro com brilho ao invés de preto sólido
+        this.scene.add.rectangle(0, 0, screenWidth, screenHeight, 0x001133)
             .setOrigin(0.5).setDepth(-10);
-        console.log('✅ Fundo preto criado');
-        
+        console.log('✅ Fundo azul escuro criado');
+
         // Criar múltiplos TileSprites para cobertura infinita
         this.createInfiniteStarTiles();
         console.log('✅ Sistema de TileSprites infinitos criado');
-        
-        // Estrelas procedurais individuais
-        const starCount = Math.floor((screenWidth * screenHeight) / 10000);
-        console.log(`🌌 Criando ${starCount} estrelas procedurais...`);
-        
+
+        // Estrelas procedurais individuais MUITO MAIS BRILHANTES
+        const starCount = Math.floor((screenWidth * screenHeight) / 4000); // Dobro de estrelas
+        console.log(`🌌 Criando ${starCount} estrelas procedurais brilhantes...`);
+
         for (let i = 0; i < starCount; i++) {
             const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
             const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
-            const star = this.scene.add.rectangle(x, y, 1, 1, 0xffffff);
+            const size = Phaser.Math.Between(1, 4);
+            const star = this.scene.add.rectangle(x, y, size, size, 0xffffff);
             star.setDepth(-8);
-            star.setAlpha(Phaser.Math.FloatBetween(0.3, 1));
-            
+            star.setAlpha(Phaser.Math.FloatBetween(0.8, 1)); // Brilho mínimo muito alto
+
+            // Adicionar efeito de brilho pulsante para MAIS estrelas
+            if (Math.random() < 0.6) { // 60% das estrelas têm efeito de brilho
+                this.scene.tweens.add({
+                    targets: star,
+                    alpha: { from: 0.8, to: 1 },
+                    scale: { from: 1, to: 1.5 },
+                    duration: Phaser.Math.Between(1000, 3000),
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+            }
+
             // Armazenar para proteger do culling
             this.stars.push(star);
         }
-        
-        console.log(`✅ Background infinito criado: ${starCount} estrelas procedurais`);
+
+        // Adicionar estrelas grandes brilhantes esparsas
+        const bigStarCount = Math.floor((screenWidth * screenHeight) / 50000);
+        console.log(`🌌 Criando ${bigStarCount} estrelas grandes brilhantes...`);
+
+        for (let i = 0; i < bigStarCount; i++) {
+            const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+            const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+            const bigStar = this.scene.add.rectangle(x, y, 6, 6, 0xaaccff);
+            bigStar.setDepth(-8);
+            bigStar.setAlpha(0.9);
+
+            // Brilho intenso pulsante
+            this.scene.tweens.add({
+                targets: bigStar,
+                alpha: { from: 0.7, to: 1 },
+                scale: { from: 1, to: 2 },
+                duration: Phaser.Math.Between(2000, 4000),
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            this.stars.push(bigStar);
+        }
+
+        // Adicionar nebulosas luminosas
+        this.createNebulas();
+
+        console.log(`✅ Background infinito brilhante criado: ${starCount + bigStarCount} estrelas procedurais`);
     }
     
     /**
@@ -88,7 +130,7 @@ export default class BackgroundManager {
                 const tileY = y * tileSize;
                 
                 const starTile = this.scene.add.tileSprite(tileX, tileY, tileSize, tileSize, 'stars');
-                starTile.setOrigin(0.5).setDepth(-9).setAlpha(0.8);
+                starTile.setOrigin(0.5).setDepth(-9).setAlpha(1.0).setTint(0xaaaaff); // Azul claro e muito brilhante
                 
                 // Armazenar informações do tile
                 starTile.tileX = tileX;
@@ -102,6 +144,45 @@ export default class BackgroundManager {
         
         console.log(`✅ Criados ${this.starTiles.length} TileSprites para cobertura infinita`);
     }
+
+    /**
+     * Cria nebulosas luminosas para profundidade visual
+     */
+    createNebulas() {
+        const screenWidth = this.scene.scale.width;
+        const screenHeight = this.scene.scale.height;
+
+        // Criar nebulosas BRILHANTES para dar mais vida ao fundo
+        const nebulaColors = [0x6666aa, 0x66aa66, 0xaa8866, 0x6688aa]; // Cores mais claras e brilhantes
+
+        for (let i = 0; i < 5; i++) { // Mais nebulosas
+            const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+            const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+            const color = nebulaColors[i % nebulaColors.length];
+
+            // Criar forma oval para nebulosa com mais brilho
+            const nebula = this.scene.add.graphics();
+            nebula.setDepth(-7);
+            nebula.fillStyle(color, 0.25); // Muito mais brilhante
+            nebula.fillEllipse(x, y, Phaser.Math.Between(300, 600), Phaser.Math.Between(200, 400));
+            nebula.fillStyle(color, 0.15); // Ainda brilhante
+            nebula.fillEllipse(x + 50, y + 30, Phaser.Math.Between(200, 400), Phaser.Math.Between(150, 300));
+
+            // Adicionar movimento lento com brilho pulsante
+            this.scene.tweens.add({
+                targets: nebula,
+                x: x + Phaser.Math.Between(-30, 30),
+                y: y + Phaser.Math.Between(-30, 30),
+                alpha: { from: 0.8, to: 1 },
+                duration: Phaser.Math.Between(8000, 15000),
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+
+        console.log('✅ Nebulosas luminosas criadas');
+    }
     
     /**
      * Atualiza o background com sistema infinito
@@ -113,11 +194,11 @@ export default class BackgroundManager {
         const shipX = ship.x;
         const shipY = ship.y;
         
-        // Animação de todos os TileSprites
+        // Animação MAIS DINÂMICA de todos os TileSprites
         this.starTiles.forEach(tile => {
             if (tile && tile.active) {
-                tile.tilePositionX += 0.1;
-                tile.tilePositionY += 0.05;
+                tile.tilePositionX += 0.3; // Movimento mais rápido
+                tile.tilePositionY += 0.1;
             }
         });
         

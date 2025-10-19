@@ -58,6 +58,17 @@ export function initRouter(container) {
     loadPage('profile');
   });
 
+  // Rota: /config - Protegida
+  page('/config', async () => {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      console.warn('⚠️ Acesso negado - redirecionando para login');
+      page.redirect('/login');
+      return;
+    }
+    loadPage('config');
+  });
+
   // Rota: /auth-callback (OAuth callback) - Pública
   page('/auth-callback', () => {
     loadPage('auth-callback');
@@ -108,6 +119,9 @@ async function loadPage(pageName) {
       case 'profile':
         PageClass = (await import('../web/pages/ProfilePage.js')).default;
         break;
+      case 'config':
+        PageClass = (await import('../web/pages/SettingsPage.js')).default;
+        break;
       case 'auth-callback':
         PageClass = (await import('../web/pages/AuthCallbackPage.js')).default;
         break;
@@ -117,8 +131,8 @@ async function loadPage(pageName) {
 
     // Criar instância da página - passar Supabase para páginas que precisam
     let pageInstance;
-    if (pageName === 'dashboard' || pageName === 'profile') {
-      // Dashboard e Profile precisam de Supabase para acessar banco
+    if (pageName === 'dashboard' || pageName === 'profile' || pageName === 'config') {
+      // Dashboard, Profile e Config precisam de Supabase para acessar banco
       pageInstance = new PageClass(supabase);
     } else {
       pageInstance = new PageClass();

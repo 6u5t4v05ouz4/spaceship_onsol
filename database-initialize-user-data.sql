@@ -125,6 +125,41 @@ BEGIN
   )
   RETURNING id INTO v_wallet_id;
 
+  -- 5. Create PVP rankings (even if user hasn't played PVP yet)
+  INSERT INTO public.pvp_rankings (
+    user_id,
+    season_id,
+    battles_won,
+    battles_lost,
+    battles_draw,
+    total_damage_dealt,
+    total_damage_taken,
+    current_rating,
+    highest_rating
+  ) VALUES (
+    v_profile_id,
+    'season_2025_01',  -- Current season
+    0, 0, 0, 0, 0,     -- All zeros
+    1000, 1000         -- Default rating
+  );
+
+  -- Note: Other tables like player_inventory, player_equipment, player_crew, etc.
+  -- are intentionally left empty as they should only have entries when user
+  -- actually acquires items/equipment/crew members during gameplay.
+  
+  -- Tables that DON'T need initial data (will be populated during gameplay):
+  -- - game_sessions (created when user starts playing)
+  -- - player_inventory (created when user mines resources)
+  -- - player_equipment (created when user crafts/acquires equipment)
+  -- - player_crew (created when user hires crew)
+  -- - player_achievements (created when user unlocks achievements)
+  -- - mining_sessions (created during mining)
+  -- - pvp_battles (created during PVP)
+  -- - craft_sessions (created during crafting)
+  -- - token_transactions (created during transactions)
+  -- - player_action_logs (created during actions)
+  -- - discovered_planets (created when user discovers planets)
+
   -- Return success
   RETURN QUERY
   SELECT 

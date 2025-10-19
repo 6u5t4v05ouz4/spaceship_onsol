@@ -21,6 +21,7 @@ import {
   handlePlayerMove,
   handleDisconnect,
 } from './events/player-events.js';
+import { handleAttack, handleRespawn } from './events/battle-events.js';
 
 // =====================================================
 // EXPRESS SETUP
@@ -125,6 +126,16 @@ io.on('connection', (socket) => {
   // Event: player:move (atualizar posição)
   socket.on('player:move', (data) => {
     handlePlayerMove(socket, data, io);
+  });
+
+  // Event: battle:attack (atacar outro jogador)
+  socket.on('battle:attack', (data) => {
+    handleAttack(socket, data, io);
+  });
+
+  // Event: battle:respawn (respawn após morte)
+  socket.on('battle:respawn', (data) => {
+    handleRespawn(socket, data, io);
   });
 
   // Event: disconnect (desconexão)

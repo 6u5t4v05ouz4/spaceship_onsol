@@ -492,26 +492,24 @@ class BackgroundSimulation {
             canvas.style.left = '0';
             canvas.style.pointerEvents = 'none';
             
-            // ✅ Fade in suave
-            canvas.style.opacity = '0';
-            canvas.style.transition = 'opacity 1s ease-in';
+            // ✅ Canvas SEMPRE visível (sem fade in por enquanto para debug)
+            canvas.style.opacity = '1'; // ✅ DIRETO EM 1 para debug
+            canvas.style.transition = 'opacity 0.5s ease-in';
             canvas.style.zIndex = '5'; // ✅ Acima dos backgrounds CSS mas abaixo do conteúdo
             
             console.log('🎨 Canvas configurado para background');
+            console.log('🎨 Canvas opacity:', canvas.style.opacity);
+            console.log('🎨 Canvas zIndex:', canvas.style.zIndex);
+            console.log('🎨 Canvas position:', canvas.style.position);
             
             // Aplicar preferência inicial
             this.applyMotionPreference();
             
-            // ✅ Fade in após render inicial
-            requestAnimationFrame(() => {
-                const targetOpacity = this.prefersReducedMotion ? '0.15' : '1';
-                canvas.style.opacity = targetOpacity;
-                
-                // Atualizar opacity baseado na página
-                setTimeout(() => {
-                    this.updateOpacityForCurrentPage();
-                }, 1000);
-            });
+            // Atualizar opacity baseado na página após um delay
+            setTimeout(() => {
+                this.updateOpacityForCurrentPage();
+                console.log('🎨 Opacity atualizada para página:', this.currentPage);
+            }, 500);
         }
     }
 

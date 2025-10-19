@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Simulação</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000011;
+            color: #00ffcc;
+            font-family: monospace;
+        }
+        #info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border: 2px solid #00ffcc;
+            z-index: 10000;
+            max-width: 400px;
+        }
+        #simulation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 5;
+            border: 5px solid red; /* DEBUG: Border vermelho */
+            pointer-events: none;
+        }
+        #simulation-container canvas {
+            border: 5px solid yellow !important; /* DEBUG: Border amarelo */
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>🐛 Debug Simulação</h2>
+        <div id="status">Carregando...</div>
+    </div>
+
+    <div id="simulation-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
+    <script>
+        const info = document.getElementById('status');
+        
+        function log(msg) {
+            console.log(msg);
+            info.innerHTML += '<br>' + msg;
+        }
+
+        log('✅ Phaser carregado: ' + (typeof Phaser !== 'undefined'));
+        log('✅ Container existe: ' + !!document.getElementById('simulation-container'));
+
+        // Cena de teste SUPER SIMPLES
+        class TestScene extends Phaser.Scene {
+            constructor() {
+                super('TestScene');
+            }
+
+            create() {
+                log('🎮 Scene.create() chamado!');
+                
+                // Background vermelho brilhante para DEBUG
+                this.add.rectangle(400, 300, 800, 600, 0xff0000).setAlpha(0.5);
+                
+                // Texto grande
+                this.add.text(400, 300, 'TESTE SIMULAÇÃO', {
+                    fontSize: '64px',
+                    color: '#00ffcc',
+                    stroke: '#000000',
+                    strokeThickness: 8
+                }).setOrigin(0.5);
+
+                // Círculo animado
+                const circle = this.add.circle(400, 300, 50, 0x00ffcc);
+                this.tweens.add({
+                    targets: circle,
+                    scale: 2,
+                    duration: 1000,
+                    yoyo: true,
+                    repeat: -1
+                });
+
+                log('✅ Elementos criados!');
+            }
+        }
+
+        // Config SUPER SIMPLES
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'simulation-container',
+            backgroundColor: '#ff00ff', // MAGENTA para DEBUG
+            scene: [TestScene],
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            }
+        };
+
+        log('🚀 Criando jogo Phaser...');
+        
+        try {
+            const game = new Phaser.Game(config);
+            log('✅ Jogo criado!');
+            
+            game.events.once('ready', () => {
+                log('✅ Jogo pronto!');
+                log('Canvas existe: ' + !!game.canvas);
+                if (game.canvas) {
+                    log('Canvas width: ' + game.canvas.width);
+                    log('Canvas height: ' + game.canvas.height);
+                    log('Canvas style.width: ' + game.canvas.style.width);
+                    log('Canvas style.height: ' + game.canvas.style.height);
+                    log('Canvas style.position: ' + game.canvas.style.position);
+                    log('Canvas style.zIndex: ' + game.canvas.style.zIndex);
+                    log('Canvas style.opacity: ' + game.canvas.style.opacity);
+                }
+            });
+        } catch (error) {
+            log('❌ ERRO: ' + error.message);
+            console.error(error);
+        }
+    </script>
+</body>
+</html>
+

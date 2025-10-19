@@ -23,7 +23,7 @@ html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    background: var(--bg-primary); /* ✅ Background no HTML (mais atrás de tudo) */
+    background: transparent; /* ✅ Background no HTML (mais atrás de tudo) */
 }
 
 body {

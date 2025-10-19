@@ -54,17 +54,57 @@ export default class DashboardPage {
 
           <!-- Data State -->
           <div id="dataState" class="data-state" style="display: none;">
-            <!-- User Profile -->
-            <section class="profile-section">
-              <div class="profile-card">
-                <div id="profileAvatar" class="profile-avatar">👤</div>
-                <div class="profile-info">
-                  <h2 id="username" class="profile-username"></h2>
-                  <p id="userEmail" class="profile-email"></p>
+            <!-- User Profile & Ship Display -->
+            <div class="profile-ship-container">
+              <!-- User Profile -->
+              <section class="profile-section">
+                <div class="profile-card">
+                  <div id="profileAvatar" class="profile-avatar">👤</div>
+                  <div class="profile-info">
+                    <h2 id="username" class="profile-username"></h2>
+                    <p id="userEmail" class="profile-email"></p>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
+              <!-- Ship Display -->
+              <section class="ship-display-section">
+                <h3 class="section-title">
+                  <span role="img" aria-label="Nave">🚀</span> Sua Nave
+                </h3>
+                <div class="ship-display-card">
+                  <div class="ship-visual">
+                    <canvas id="shipCanvas" width="128" height="64"></canvas>
+                  </div>
+                  <div class="ship-info">
+                    <h4 id="shipName" class="ship-name">Space Miner Comum</h4>
+                    <div id="shipRarity" class="ship-rarity">Comum</div>
+                    <div class="ship-stats">
+                      <div class="ship-stat">
+                        <span class="ship-stat-icon">⚡</span>
+                        <span class="ship-stat-label">Velocidade:</span>
+                        <span id="shipSpeed" class="ship-stat-value">100</span>
+                      </div>
+                      <div class="ship-stat">
+                        <span class="ship-stat-icon">📦</span>
+                        <span class="ship-stat-label">Carga:</span>
+                        <span id="shipCargo" class="ship-stat-value">50</span>
+                      </div>
+                      <div class="ship-stat">
+                        <span class="ship-stat-icon">⛽</span>
+                        <span class="ship-stat-label">Combustível:</span>
+                        <span id="shipFuel" class="ship-stat-value">100</span>
+                      </div>
+                      <div class="ship-stat">
+                        <span class="ship-stat-icon">🛡️</span>
+                        <span class="ship-stat-label">Escudo:</span>
+                        <span id="shipShield" class="ship-stat-value">100</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
 
             <!-- Stats Grid -->
             <section class="stats-section">
@@ -203,6 +243,125 @@ export default class DashboardPage {
   }
 
   /**
+   * Renderizar nave do usuário no canvas
+   */
+  async renderShipDisplay(container) {
+    try {
+      const canvas = container.querySelector('#shipCanvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      
+      // Definir características da nave padrão (Comum)
+      const rarityLevels = {
+        'Comum': {
+          speed: 100,
+          cargo: 50,
+          fuel: 100,
+          shield: 100,
+          color: '#CCCCCC',
+          name: 'Space Miner Comum'
+        },
+        'Incomum': {
+          speed: 200,
+          cargo: 100,
+          fuel: 150,
+          shield: 200,
+          color: '#00FF00',
+          name: 'Space Miner Incomum'
+        },
+        'Raro': {
+          speed: 300,
+          cargo: 150,
+          fuel: 200,
+          shield: 300,
+          color: '#0080FF',
+          name: 'Space Miner Raro'
+        },
+        'Épico': {
+          speed: 400,
+          cargo: 175,
+          fuel: 250,
+          shield: 400,
+          color: '#8000FF',
+          name: 'Space Miner Épico'
+        },
+        'Lendário': {
+          speed: 500,
+          cargo: 200,
+          fuel: 300,
+          shield: 500,
+          color: '#FF8000',
+          name: 'Space Miner Lendário'
+        }
+      };
+
+      // Por padrão, usar nave Comum (pode ser expandido para buscar do NFT)
+      const selectedRarity = 'Comum';
+      const shipData = rarityLevels[selectedRarity];
+
+      // Carregar sprite da nave
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = '/assets/images/01.png';
+      
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          // Limpar canvas
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // Desenhar fundo escuro
+          ctx.fillStyle = '#0a0a1a';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Desenhar borda com cor da raridade
+          ctx.strokeStyle = shipData.color;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+          
+          // Desenhar primeiro frame da nave (frame 0: x=0, y=0, w=64, h=64)
+          const scale = 1.5;
+          const offsetX = (canvas.width - 64 * scale) / 2;
+          const offsetY = (canvas.height - 64 * scale) / 2;
+          
+          ctx.drawImage(
+            img,
+            0, 0, 64, 64, // source: primeiro frame
+            offsetX, offsetY, 64 * scale, 64 * scale // destination: centralizado e escalado
+          );
+          
+          resolve();
+        };
+        img.onerror = reject;
+      });
+
+      // Atualizar informações da nave
+      container.querySelector('#shipName').textContent = shipData.name;
+      container.querySelector('#shipRarity').textContent = selectedRarity;
+      container.querySelector('#shipRarity').style.color = shipData.color;
+      container.querySelector('#shipSpeed').textContent = shipData.speed;
+      container.querySelector('#shipCargo').textContent = shipData.cargo;
+      container.querySelector('#shipFuel').textContent = shipData.fuel;
+      container.querySelector('#shipShield').textContent = shipData.shield;
+
+      console.log('✅ Nave renderizada no dashboard:', selectedRarity);
+    } catch (error) {
+      console.error('❌ Erro ao renderizar nave:', error);
+      // Em caso de erro, apenas mostrar placeholder
+      const canvas = container.querySelector('#shipCanvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0a0a1a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#00ffcc';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🚀', canvas.width / 2, canvas.height / 2 + 7);
+      }
+    }
+  }
+
+  /**
    * Buscar profile do Supabase (com dados Google OAuth)
    */
   async fetchProfile(userId) {
@@ -312,6 +471,9 @@ export default class DashboardPage {
         avatarElement.textContent = '👤';
       }
     }
+
+    // Renderizar nave do usuário
+    this.renderShipDisplay(container);
 
     // Stats - usar player_stats e player_wallet
     const stats = this.data.gameData || {};
@@ -429,6 +591,105 @@ export default class DashboardPage {
           max-width: 1200px;
           width: 100%;
           margin: 0 auto;
+        }
+
+        /* Profile & Ship Container */
+        .profile-ship-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--spacing-lg, 1.5rem);
+          margin-bottom: var(--spacing-xl, 2rem);
+        }
+
+        /* Ship Display Section */
+        .ship-display-section {
+          background: rgba(0, 255, 204, 0.05);
+          border: 1px solid rgba(0, 255, 204, 0.2);
+          border-radius: var(--border-radius-lg, 1rem);
+          padding: var(--spacing-lg, 1.5rem);
+        }
+
+        .ship-display-card {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-md, 1rem);
+          margin-top: var(--spacing-md, 1rem);
+        }
+
+        .ship-visual {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: #0a0a1a;
+          border-radius: var(--border-radius-md, 0.5rem);
+          padding: var(--spacing-md, 1rem);
+          border: 2px solid rgba(0, 255, 204, 0.3);
+        }
+
+        #shipCanvas {
+          image-rendering: pixelated;
+          image-rendering: crisp-edges;
+          width: 256px;
+          height: 128px;
+        }
+
+        .ship-info {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-sm, 0.5rem);
+        }
+
+        .ship-name {
+          font-size: var(--text-lg, 1.25rem);
+          font-weight: 700;
+          color: var(--primary-cyan, #00ffcc);
+          font-family: var(--font-primary, Arial);
+          margin: 0;
+          text-align: center;
+        }
+
+        .ship-rarity {
+          font-size: var(--text-base, 1rem);
+          font-weight: 600;
+          text-align: center;
+          padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: var(--border-radius-sm, 0.25rem);
+          display: inline-block;
+          margin: 0 auto;
+        }
+
+        .ship-stats {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--spacing-sm, 0.5rem);
+          margin-top: var(--spacing-sm, 0.5rem);
+        }
+
+        .ship-stat {
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-xs, 0.25rem);
+          padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+          background: rgba(0, 255, 204, 0.08);
+          border: 1px solid rgba(0, 255, 204, 0.15);
+          border-radius: var(--border-radius-sm, 0.25rem);
+          font-size: var(--text-sm, 0.875rem);
+        }
+
+        .ship-stat-icon {
+          font-size: 1rem;
+        }
+
+        .ship-stat-label {
+          color: var(--text-secondary, #b0b0b0);
+          font-weight: 500;
+        }
+
+        .ship-stat-value {
+          color: var(--primary-cyan, #00ffcc);
+          font-weight: 700;
+          margin-left: auto;
         }
 
         .loading-state,
@@ -640,6 +901,20 @@ export default class DashboardPage {
 
           .dashboard-content {
             padding: var(--spacing-md, 1rem);
+          }
+
+          .profile-ship-container {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md, 1rem);
+          }
+
+          #shipCanvas {
+            width: 192px;
+            height: 96px;
+          }
+
+          .ship-stats {
+            grid-template-columns: 1fr;
           }
 
           .stats-grid {

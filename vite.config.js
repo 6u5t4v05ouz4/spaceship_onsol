@@ -1,6 +1,40 @@
 import { defineConfig } from 'vite';
 import { parse } from 'node:url';
 
+// Plugin SPA Fallback
+const spaFallbackPlugin = {
+  name: 'spa-fallback',
+  configResolved(config) {
+    this.config = config;
+  },
+  configureServer(server) {
+    // Adicionar no INÍCIO dos middlewares (antes do file serving)
+    return () => {
+      server.middlewares.use((req, res, next) => {
+        // Se é arquivo estático (tem ponto na URL), deixa passar
+        if (req.url.includes('.')) {
+          return next();
+        }
+
+        // Se é Vite HMR ou dev socket, deixa passar
+        if (req.url.startsWith('/@') || req.url === '/') {
+          return next();
+        }
+
+        // Se é node_modules, deixa passar
+        if (req.url.startsWith('/node_modules')) {
+          return next();
+        }
+
+        // Para qualquer outra rota, servir index.html
+        // O router.js no frontend vai gerenciar a navegação
+        req.url = '/index.html';
+        next();
+      });
+    };
+  }
+};
+
 export default defineConfig({
 	// Expor origem e path para uso no frontend e para registro no provedor OAuth
 	define: {
@@ -8,6 +42,7 @@ export default defineConfig({
 		'process.env.VITE_APP_REDIRECT_PATH': JSON.stringify(process.env.DEV_REDIRECT_PATH || '/__dev/oauth-callback'),
 	},
   publicDir: 'public',
+  plugins: [spaFallbackPlugin],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -85,45 +120,6 @@ export default defineConfig({
           }
         }
       }
-    },
-    // Middleware dev: reescreve header Location quando backend redireciona para URL de produção
-    // Usa DEV_REDIRECT_ORIGIN (ex.: export DEV_REDIRECT_ORIGIN="http://localhost:3000")
-    // para sobrescrever o destino do redirect durante desenvolvimento.
-    configureServer(server) {
-      const devOrigin = process.env.DEV_REDIRECT_ORIGIN || `http://localhost:3000`;
-      const devCallbackPath = process.env.DEV_REDIRECT_PATH || '/__dev/oauth-callback';
-
-      // Middleware: SPA fallback - redireciona todas as rotas desconhecidas para index.html
-      server.middlewares.use((req, res, next) => {
-        // OAuth dev callback
-        try {
-          const reqUrl = new URL(req.url, `http://${req.headers.host}`);
-          if (reqUrl.pathname === devCallbackPath) {
-            const localTargetPath = process.env.DEV_POST_LOGIN_PATH || '/dashboard';
-            const target = new URL(localTargetPath, devOrigin);
-            target.search = reqUrl.search;
-            res.writeHead(302, { Location: target.toString() });
-            return res.end();
-          }
-        } catch (e) {
-          // ignore and continue
-        }
-
-        // Se é arquivo estático (tem extensão), deixa passar
-        if (req.url.includes('.')) {
-          return next();
-        }
-
-        // Se é Vite HMR ou node_modules, deixa passar
-        if (req.url.startsWith('/@') || req.url.startsWith('/node_modules')) {
-          return next();
-        }
-
-        // Para qualquer outra rota SPA, servir index.html
-        // O router.js no frontend vai gerenciar a navegação
-        req.url = '/index.html';
-        next();
-      });
     }
   }
 });

@@ -239,12 +239,14 @@ async function startServer() {
     cacheManager.start();
     
     // 4. Iniciar servidor
-    server.listen(PORT, () => {
+    server.listen(PORT, '0.0.0.0', () => {
       logger.info(`🚀 Server running on port ${PORT}`);
       logger.info(`📡 WebSocket ready for connections`);
       logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
       logger.info(`📊 Metrics: http://localhost:${PORT}/metrics`);
+      logger.info(`🌐 Railway Public Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'Not set'}`);
+      logger.info(`🔧 CORS Origin: ${process.env.CORS_ORIGIN || 'Not set'}`);
     });
   } catch (error) {
     logger.error('❌ Failed to start server:', error);

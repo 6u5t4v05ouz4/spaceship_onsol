@@ -637,6 +637,15 @@ export default class UIManager {
         
         if (!connectionStatus || !pingText) return;
         
+        // Debug: verificar estado do socketService
+        console.log('🔍 UIManager - Estado do socketService:', {
+            exists: !!socketService,
+            connected: socketService?.isConnected(),
+            authenticated: socketService?.isAuthenticated(),
+            socket: !!socketService?.socket,
+            socketConnected: socketService?.socket?.connected
+        });
+        
         // Usar socketService importado diretamente
         if (!socketService) {
             connectionStatus.setText('Serviço não disponível');

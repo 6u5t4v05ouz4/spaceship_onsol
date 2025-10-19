@@ -37,6 +37,9 @@ class SocketService {
 
     const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
     console.log('🔌 Conectando ao servidor:', serverUrl);
+    console.log('🔍 VITE_SERVER_URL:', import.meta.env.VITE_SERVER_URL);
+    console.log('🔍 window.location.origin:', window.location.origin);
+    console.log('🔍 io disponível:', typeof io !== 'undefined');
 
     this.socket = io(serverUrl, {
       transports: ['websocket', 'polling'],

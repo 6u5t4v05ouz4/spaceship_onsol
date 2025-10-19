@@ -12,7 +12,7 @@
     "providers": ["nodejs"],
     "phases": {
       "setup": {
-        "nixPkgs": ["nodejs_20", "npm-10_x"]
+        "nixPkgs": ["nodejs_20"]
       }
     }
   }

@@ -26,9 +26,34 @@ export default class MultiplayerManager {
     // Conectar ao servidor se não estiver conectado
     if (!socketService.isConnected()) {
       socketService.connect();
+      
+      // Aguardar conexão
+      await new Promise((resolve) => {
+        if (socketService.isConnected()) {
+          resolve();
+        } else {
+          const checkConnection = () => {
+            if (socketService.isConnected()) {
+              window.removeEventListener('socket:connected', checkConnection);
+              resolve();
+            }
+          };
+          window.addEventListener('socket:connected', checkConnection);
+          
+          // Timeout de 5 segundos
+          setTimeout(() => {
+            window.removeEventListener('socket:connected', checkConnection);
+            resolve();
+          }, 5000);
+        }
+      });
     }
 
-    // Aguardar autenticação
+    // Autenticar explicitamente (Supabase já está disponível aqui)
+    console.log('🔐 Tentando autenticar...');
+    await socketService.authenticate();
+
+    // Aguardar confirmação de autenticação
     await this.waitForAuthentication();
 
     // Setup event listeners

@@ -64,10 +64,8 @@ class SocketService {
         detail: { socketId: this.socket.id }
       }));
 
-      // Auto-autenticar após pequeno delay para garantir que Supabase está pronto
-      setTimeout(() => {
-        this.authenticateIfNeeded();
-      }, 500);
+      // NÃO autenticar automaticamente aqui
+      // O MultiplayerManager vai chamar authenticate() quando estiver pronto
     });
 
     this.socket.on('disconnect', (reason) => {

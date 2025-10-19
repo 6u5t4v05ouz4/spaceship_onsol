@@ -86,7 +86,8 @@ export default class LoginPage {
 
             <!-- OAuth Button -->
             <button id="oauthBtn" class="login-btn login-btn-oauth" type="button">
-              🔍 Login com Google
+              <span class="btn-text">🔍 Login com Google</span>
+              <span class="btn-loader" style="display: none;">⏳</span>
             </button>
 
             <!-- Footer -->
@@ -266,13 +267,15 @@ export default class LoginPage {
 
     if (isLoading) {
       button.disabled = true;
-      text.style.display = 'none';
-      loader.style.display = 'inline';
+      // Apenas atualizar se os elementos existem
+      if (text) text.style.display = 'none';
+      if (loader) loader.style.display = 'inline';
       this.isLoading = true;
     } else {
       button.disabled = false;
-      text.style.display = 'inline';
-      loader.style.display = 'none';
+      // Apenas atualizar se os elementos existem
+      if (text) text.style.display = 'inline';
+      if (loader) loader.style.display = 'none';
       this.isLoading = false;
     }
   }

@@ -200,6 +200,8 @@ export default class MultiplayerManager {
       console.log('👥 Processando players do chunk...');
       data.players.forEach(player => {
         console.log(`  - Player: ${player.username} (ID: ${player.id})`);
+        console.log(`    📍 Posição: (${player.x}, ${player.y})`);
+        console.log(`    🗺️ Chunk: ${player.current_chunk}`);
         
         // Não adicionar o próprio player
         if (player.id !== this.playerId) {
@@ -285,23 +287,16 @@ export default class MultiplayerManager {
     // Criar sprite do player (usar 'nave' como fallback)
     const spriteKey = this.scene.textures.exists('enemy') ? 'enemy' : 'nave';
     console.log('🎨 Usando sprite:', spriteKey);
+    console.log('📍 Posição do sprite:', data.x, data.y);
     
     const sprite = this.scene.physics.add.sprite(data.x, data.y, spriteKey);
     sprite.setScale(0.6);
     
-    // Tentar tocar animação se existir
-    try {
-      if (this.scene.anims.exists('enemy_thrust')) {
-        sprite.play('enemy_thrust');
-      } else if (this.scene.anims.exists('nave_thrust')) {
-        sprite.play('nave_thrust');
-      }
-    } catch (e) {
-      console.warn('⚠️ Animação não disponível:', e.message);
-    }
-    
-    sprite.setDepth(10);
+    // Debug: verificar se o sprite foi criado corretamente
     console.log('✅ Sprite criado:', sprite);
+    console.log('📍 Sprite posição final:', sprite.x, sprite.y);
+    console.log('👁️ Sprite visível:', sprite.visible);
+    console.log('🎯 Sprite ativo:', sprite.active);
 
     // Criar texto do nome
     const nameText = this.scene.add.text(data.x, data.y - 40, data.username, {

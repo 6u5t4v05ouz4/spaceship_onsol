@@ -14,43 +14,42 @@ DROP POLICY IF EXISTS "Enable insert for users based on user_id" ON user_setting
 DROP POLICY IF EXISTS "Enable update for users based on user_id" ON user_settings;
 
 -- Create new policies for authenticated users
--- These policies use auth.uid() to get the authenticated user's ID
--- Then query auth.users to get their email
--- Then match against user_profiles.google_email to get the profile ID
+-- IMPORTANT: Use auth.jwt() ->> 'email' directly to avoid "permission denied for table users"
+-- Do NOT query auth.users table as it requires special permissions
 
-CREATE POLICY "authenticated_users_select_own_settings"
+CREATE POLICY "user_settings_select_policy"
   ON user_settings FOR SELECT
   TO authenticated
   USING (
     user_id IN (
       SELECT id FROM user_profiles 
-      WHERE google_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+      WHERE google_email = (auth.jwt() ->> 'email')
     )
   );
 
-CREATE POLICY "authenticated_users_insert_own_settings"
+CREATE POLICY "user_settings_insert_policy"
   ON user_settings FOR INSERT
   TO authenticated
   WITH CHECK (
     user_id IN (
       SELECT id FROM user_profiles 
-      WHERE google_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+      WHERE google_email = (auth.jwt() ->> 'email')
     )
   );
 
-CREATE POLICY "authenticated_users_update_own_settings"
+CREATE POLICY "user_settings_update_policy"
   ON user_settings FOR UPDATE
   TO authenticated
   USING (
     user_id IN (
       SELECT id FROM user_profiles 
-      WHERE google_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+      WHERE google_email = (auth.jwt() ->> 'email')
     )
   )
   WITH CHECK (
     user_id IN (
       SELECT id FROM user_profiles 
-      WHERE google_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+      WHERE google_email = (auth.jwt() ->> 'email')
     )
   );
 

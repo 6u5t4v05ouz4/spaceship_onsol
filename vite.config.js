@@ -40,6 +40,9 @@ export default defineConfig({
 	define: {
 		'process.env.VITE_APP_REDIRECT_ORIGIN': JSON.stringify(process.env.DEV_REDIRECT_ORIGIN || 'http://localhost:3000'),
 		'process.env.VITE_APP_REDIRECT_PATH': JSON.stringify(process.env.DEV_REDIRECT_PATH || '/__dev/oauth-callback'),
+		// Variáveis do Supabase para produção
+		'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
+		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
 	},
   publicDir: 'public',
   plugins: [spaFallbackPlugin],

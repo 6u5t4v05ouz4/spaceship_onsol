@@ -215,6 +215,7 @@ export default class DashboardPage {
         return;
       }
 
+      const userId = session.user.id;
       const googleEmail = session.user.email;
       const googleUser = session.user;
       console.log('📊 Carregando dados para usuário:', googleEmail);

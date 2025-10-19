@@ -7,6 +7,8 @@
  * - Animações de UI
  * - Responsividade e layout
  */
+import socketService from '../services/socketService.js';
+
 export default class UIManager {
     constructor(scene, gameState) {
         this.scene = scene;
@@ -635,8 +637,7 @@ export default class UIManager {
         
         if (!connectionStatus || !pingText) return;
         
-        // Obter status do socketService
-        const socketService = this.scene.multiplayerManager?.socketService;
+        // Usar socketService importado diretamente
         if (!socketService) {
             connectionStatus.setText('Serviço não disponível');
             connectionStatus.setColor('#ff4444');

@@ -46,13 +46,39 @@ class SocketService {
     console.log('🔍 window.location.origin:', window.location.origin);
     console.log('🔍 io disponível:', typeof io !== 'undefined');
 
+    // ✅ Teste básico de conectividade HTTP primeiro
+    this.testServerConnectivity(serverUrl).then(() => {
+      this.createSocketConnection(serverUrl);
+    }).catch((error) => {
+      console.error('❌ Servidor não acessível:', error);
+      // Tentar mesmo assim com polling
+      this.createSocketConnection(serverUrl);
+    });
+  }
+
+  async testServerConnectivity(serverUrl) {
+    try {
+      const response = await fetch(`${serverUrl}/health`, {
+        method: 'GET',
+        mode: 'cors',
+        timeout: 5000
+      });
+      console.log('✅ Servidor HTTP acessível:', response.status);
+    } catch (error) {
+      console.warn('⚠️ Teste HTTP falhou, tentando Socket.io mesmo assim:', error.message);
+    }
+  }
+
+  createSocketConnection(serverUrl) {
     this.socket = io(serverUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // ✅ Polling primeiro, websocket como fallback
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: this.maxReconnectAttempts,
       timeout: 10000,
+      forceNew: true, // ✅ Força nova conexão
+      upgrade: true, // ✅ Permite upgrade para websocket
     });
 
     this.setupListeners();
@@ -91,6 +117,12 @@ class SocketService {
 
     this.socket.on('connect_error', (error) => {
       console.error('❌ Erro de conexão:', error.message);
+      console.error('🔍 Detalhes do erro:', {
+        type: error.type,
+        description: error.description,
+        context: error.context,
+        transport: error.transport
+      });
       this.reconnectAttempts++;
 
       window.dispatchEvent(new CustomEvent('socket:connect_error', {

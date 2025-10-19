@@ -181,12 +181,11 @@ export default class ProfilePage {
         return;
       }
 
-      const userId = session.user.id;
-      console.log('👤 Carregando perfil:', userId);
+      const googleEmail = session.user.email;
+      console.log('👤 Carregando perfil para:', googleEmail);
 
       // Buscar perfil
-      this.profile = await profileService.getProfile(this.supabase, userId);
-      this.profile.email = session.user.email;
+      this.profile = await profileService.getProfile(this.supabase, googleEmail);
 
       console.log('✅ Perfil carregado:', this.profile);
 
@@ -351,7 +350,7 @@ export default class ProfilePage {
         const session = await authService.getSession();
         const avatarUrl = await profileService.uploadAvatar(
           this.supabase,
-          session.user.id,
+          session.user.email,
           this.selectedAvatarFile
         );
         formData.avatar_url = avatarUrl;
@@ -381,7 +380,7 @@ export default class ProfilePage {
 
       this.profile = await profileService.updateProfile(
         this.supabase,
-        session.user.id,
+        session.user.email,
         formData
       );
 

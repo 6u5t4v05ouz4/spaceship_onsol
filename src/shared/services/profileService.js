@@ -12,9 +12,9 @@
 export async function getProfile(supabase, userId) {
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('google_email', userId) // Mudança: buscar por email, não por id
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -69,7 +69,7 @@ export function validateProfileData(profile) {
  * @param {object} profileData - Dados a atualizar (username, bio, avatar_url)
  * @returns {Promise<object>} - Perfil atualizado
  */
-export async function updateProfile(supabase, userId, profileData) {
+export async function updateProfile(supabase, googleEmail, profileData) {
   try {
     // Validar antes de enviar
     const validationErrors = validateProfileData(profileData);
@@ -93,9 +93,9 @@ export async function updateProfile(supabase, userId, profileData) {
     }
 
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .update(updateData)
-      .eq('id', userId)
+      .eq('google_email', googleEmail)
       .select()
       .single();
 
@@ -114,11 +114,11 @@ export async function updateProfile(supabase, userId, profileData) {
 /**
  * Fazer upload de avatar
  * @param {object} supabase - Cliente Supabase
- * @param {string} userId - ID do usuário
+ * @param {string} googleEmail - Email do Google do usuário
  * @param {File} file - Arquivo de imagem
  * @returns {Promise<string>} - URL pública da imagem
  */
-export async function uploadAvatar(supabase, userId, file) {
+export async function uploadAvatar(supabase, googleEmail, file) {
   try {
     // Validar arquivo
     const validationError = validateAvatarFile(file);
@@ -126,9 +126,10 @@ export async function uploadAvatar(supabase, userId, file) {
       throw new Error(validationError);
     }
 
-    // Gerar nome único
+    // Gerar nome único baseado no email (remover caracteres especiais)
+    const emailPrefix = googleEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_');
     const ext = file.name.split('.').pop();
-    const fileName = `${userId}-${Date.now()}.${ext}`;
+    const fileName = `${emailPrefix}-${Date.now()}.${ext}`;
 
     console.log('📤 Upload de avatar:', fileName);
 

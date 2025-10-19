@@ -1,8 +1,15 @@
 import page from 'page';
 import * as authService from './services/authService.js';
+import { createClient } from '@supabase/supabase-js';
 
 // Importar páginas (lazy loading será implementado conforme necessário)
 let appContainer = null;
+
+// Criar cliente Supabase
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 /**
  * Verifica se usuário está autenticado
@@ -108,12 +115,18 @@ async function loadPage(pageName) {
         throw new Error(`Página desconhecida: ${pageName}`);
     }
 
-    // Criar instância da página
-    const page = new PageClass();
+    // Criar instância da página - passar Supabase para páginas que precisam
+    let pageInstance;
+    if (pageName === 'dashboard' || pageName === 'profile') {
+      // Dashboard e Profile precisam de Supabase para acessar banco
+      pageInstance = new PageClass(supabase);
+    } else {
+      pageInstance = new PageClass();
+    }
     
     // Renderizar página
-    if (appContainer && typeof page.render === 'function') {
-      const content = page.render();
+    if (appContainer && typeof pageInstance.render === 'function') {
+      const content = pageInstance.render();
       appContainer.appendChild(content);
     }
   } catch (error) {

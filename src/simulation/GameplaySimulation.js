@@ -619,7 +619,7 @@ export default class GameplaySimulation extends Phaser.Scene {
                     if (distance < 80) {
                         this.moveToNextPlanet();
                     } else {
-                        const speed = 150; // ✅ AUMENTADO de 12 para 150 (12x mais rápido!)
+                        const speed = 12; // ✅ AUMENTADO de 12 para 150 (12x mais rápido!)
                         const angle = Phaser.Math.Angle.Between(ship.x, ship.y, target.x, target.y);
                         ship.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed); // ✅ Usando physics velocity
                         ship.rotation = angle + Math.PI/2; // ✅ Rotacionar nave na direção do movimento
@@ -649,7 +649,7 @@ export default class GameplaySimulation extends Phaser.Scene {
         });
 
         this.time.addEvent({
-            delay: 1000, callback: () => { if (this.elements.enemies.length < 8) {
+            delay: 3000, callback: () => { if (this.elements.enemies.length < 3) {
                     this.spawnEnemy();
                 }
             },
@@ -657,7 +657,7 @@ export default class GameplaySimulation extends Phaser.Scene {
         });
 
         this.time.addEvent({
-            delay: 1500, callback: () => { if (this.elements.meteors.length < 6) {
+            delay: 4000, callback: () => { if (this.elements.meteors.length < 2) {
                     this.spawnMeteor();
                 }
             },

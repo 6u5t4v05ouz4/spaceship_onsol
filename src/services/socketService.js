@@ -110,8 +110,19 @@ class SocketService {
     // ===== Chunk =====
     this.socket.on('chunk:data', (data) => {
       console.log('📦 Dados do chunk:', data.chunk.zone_type, `(${data.chunk.chunk_x}, ${data.chunk.chunk_y})`);
-      console.log('  - Asteroides:', data.asteroids.length);
-      console.log('  - Players:', data.players.length);
+      console.log('  - Asteroides:', data.asteroids?.length || 0);
+      console.log('  - Players:', data.players?.length || 0);
+      
+      // Log detalhado de cada player
+      if (data.players && data.players.length > 0) {
+        console.log('👥 Players recebidos:');
+        data.players.forEach((player, index) => {
+          console.log(`  ${index + 1}. ${player.username} (ID: ${player.id})`);
+          console.log(`     - Posição: (${player.x}, ${player.y})`);
+          console.log(`     - Chunk: ${player.current_chunk}`);
+          console.log(`     - Health: ${player.health}/${player.max_health}`);
+        });
+      }
 
       window.dispatchEvent(new CustomEvent('socket:chunk:data', {
         detail: data
@@ -121,6 +132,10 @@ class SocketService {
     // ===== Players =====
     this.socket.on('player:joined', (data) => {
       console.log('👤 Player entrou:', data.username);
+      console.log('   - ID:', data.id);
+      console.log('   - Posição:', `(${data.x}, ${data.y})`);
+      console.log('   - Chunk:', data.current_chunk);
+      console.log('   - Health:', `${data.health}/${data.max_health}`);
 
       window.dispatchEvent(new CustomEvent('socket:player:joined', {
         detail: data

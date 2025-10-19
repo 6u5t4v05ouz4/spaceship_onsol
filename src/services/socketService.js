@@ -94,9 +94,15 @@ class SocketService {
       this.playerId = data.playerId;
       this.playerState = data.playerState;
 
+      console.log('📡 Disparando evento socket:authenticated');
       window.dispatchEvent(new CustomEvent('socket:authenticated', {
         detail: data
       }));
+      console.log('✅ Estado do socketService:', {
+        connected: this.connected,
+        authenticated: this.authenticated,
+        playerId: this.playerId
+      });
     });
 
     this.socket.on('auth:error', (data) => {

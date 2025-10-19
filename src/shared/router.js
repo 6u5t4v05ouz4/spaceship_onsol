@@ -64,6 +64,14 @@ export function initRouter(container) {
 
   // Iniciar roteador
   page.start();
+
+  // Detectar OAuth callback no hash (Supabase Implicit Flow)
+  // page.js não processa fragments automaticamente, então fazemos isso manualmente
+  if (window.location.hash.includes('access_token') || window.location.hash.includes('error')) {
+    console.log('🔐 OAuth fragment detectado, redirecionando para /auth-callback');
+    // Transformar hash em query string para page.js processar
+    window.location.href = '/auth-callback' + window.location.hash;
+  }
 }
 
 /**

@@ -119,6 +119,78 @@
     transform: translateY(-2px);
 }
 
+.simulation-control-btn:focus-visible {
+    outline: 2px solid var(--primary-cyan);
+    outline-offset: 2px;
+}
+
+.simulation-control-btn-danger {
+    border-color: rgba(255, 68, 68, 0.5);
+}
+
+.simulation-control-btn-danger:hover {
+    border-color: var(--error);
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+}
+
+/* ✅ Indicador de modo de performance */
+.simulation-mode-indicator {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+}
+
+.mode-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mode-badge-lite {
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+    border: 1px solid rgba(255, 170, 0, 0.5);
+}
+
+.mode-badge-full {
+    background: rgba(0, 255, 102, 0.2);
+    color: #00ff66;
+    border: 1px solid rgba(0, 255, 102, 0.5);
+}
+
+/* ✅ Toast de feedback de atalhos */
+.simulation-shortcut-toast {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    background: rgba(0, 255, 204, 0.9);
+    color: #000;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: var(--font-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    z-index: var(--z-tooltip);
+    box-shadow: 0 4px 12px rgba(0, 255, 204, 0.3);
+    animation: slideInRight 0.3s ease-out;
+    transition: opacity 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 /* =====================================================
    CONTAINER PRINCIPAL
    ===================================================== */

@@ -192,14 +192,14 @@ export default class GameplaySimulation extends Phaser.Scene {
         enemy.setAlpha(1); // ✅ Alpha máximo
         enemy.play('enemy_thrust');
         enemy.body.setCircle(40);
-        enemy.setMaxVelocity(100);
+        // ✅ REMOVIDO setMaxVelocity que estava limitando a velocidade!
         enemy.body.setImmovable(true);
         enemy.health = 10;
         enemy.maxHealth = 10;
         
         // Direção aleatória em vez de sempre ir para o centro
         const randomAngle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-        const speed = Phaser.Math.Between(5, 10);
+        const speed = Phaser.Math.Between(80, 150); // ✅ AUMENTADO de 5-10 para 80-150 (15x mais rápido!)
         enemy.setVelocity(
             Math.cos(randomAngle) * speed,
             Math.sin(randomAngle) * speed
@@ -264,7 +264,7 @@ export default class GameplaySimulation extends Phaser.Scene {
         const centerX = Phaser.Math.Between(-150, 150);
         const centerY = Phaser.Math.Between(-150, 150);
         const angle = Phaser.Math.Angle.Between(x, y, centerX, centerY);
-        const speed = Phaser.Math.Between(100, 200);
+        const speed = Phaser.Math.Between(150, 250); // ✅ AUMENTADO de 100-200 para 150-250
         meteor.setVelocity(
             Math.cos(angle) * speed,
             Math.sin(angle) * speed
@@ -563,11 +563,10 @@ export default class GameplaySimulation extends Phaser.Scene {
                     if (distance < 80) {
                         this.moveToNextPlanet();
                     } else {
-                        const speed = 12;
+                        const speed = 150; // ✅ AUMENTADO de 12 para 150 (12x mais rápido!)
                         const angle = Phaser.Math.Angle.Between(ship.x, ship.y, target.x, target.y);
-                        const deltaTime = 0.016;
-                        ship.x += Math.cos(angle) * speed * deltaTime;
-                        ship.y += Math.sin(angle) * speed * deltaTime;
+                        ship.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed); // ✅ Usando physics velocity
+                        ship.rotation = angle + Math.PI/2; // ✅ Rotacionar nave na direção do movimento
                         if (Math.random() < 0.01) {
                             console.log(`Nave: (${ship.x.toFixed(1)}, ${ship.y.toFixed(1)}) -> Planeta: (${target.x}, ${target.y}) | Distância: ${distance.toFixed(1)}`);
                         }

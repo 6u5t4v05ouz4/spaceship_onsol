@@ -49,19 +49,19 @@ export default class GameplaySimulation extends Phaser.Scene {
         // this.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000)
         //     .setOrigin(0.5).setDepth(-10);
         
-        // Background de estrelas com alpha reduzido para não competir com o CSS
+        // Background de estrelas com alpha aumentado para melhor visibilidade
         const starsBg = this.add.tileSprite(0, 0, screenWidth * 2, screenHeight * 2, 'stars');
-        starsBg.setOrigin(0.5).setDepth(-9).setAlpha(0.3); // ✅ Reduzido de 0.8 para 0.3
+        starsBg.setOrigin(0.5).setDepth(-9).setAlpha(0.6); // ✅ AUMENTADO de 0.3 para 0.6
         this.starsBg = starsBg;
         
-        // Estrelas individuais com alpha reduzido
-        const starCount = Math.floor((screenWidth * screenHeight) / 10000);
+        // Estrelas individuais mais brilhantes
+        const starCount = Math.floor((screenWidth * screenHeight) / 8000); // ✅ Mais estrelas
         for (let i = 0; i < starCount; i++) {
             const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
             const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
-            const star = this.add.rectangle(x, y, 1, 1, 0xffffff);
+            const star = this.add.rectangle(x, y, 2, 2, 0xffffff); // ✅ Tamanho 2x2 (maior)
             star.setDepth(-8);
-            star.setAlpha(Phaser.Math.FloatBetween(0.1, 0.5)); // ✅ Reduzido para ser mais sutil
+            star.setAlpha(Phaser.Math.FloatBetween(0.3, 0.9)); // ✅ AUMENTADO para 0.3-0.9
         }
     }
 

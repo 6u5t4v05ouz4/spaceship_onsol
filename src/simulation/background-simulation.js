@@ -53,15 +53,15 @@ class BackgroundSimulation {
         // ✅ P0: Suporte a prefers-reduced-motion
         this.prefersReducedMotion = false;
         
-        // ✅ P1: Opacity adaptativa por página
+        // ✅ P1: Opacity adaptativa por página (AUMENTADAS para melhor visibilidade)
         this.currentPage = 'unknown';
         this.opacityMap = {
-            'home': 0.8,      // Mais visível na home (destaque)
-            'login': 0.3,     // Muito sutil (foco no form)
-            'profile': 0.3,   // Muito sutil (foco no form)
-            'dashboard': 0.5, // Moderado (equilíbrio)
+            'home': 1.0,      // ✅ 100% visível na home (destaque máximo)
+            'login': 0.5,     // ✅ Aumentado de 0.3 para 0.5
+            'profile': 0.5,   // ✅ Aumentado de 0.3 para 0.5
+            'dashboard': 0.7, // ✅ Aumentado de 0.5 para 0.7
             'game': 0.0,      // Invisível (não competir com jogo real)
-            'default': 0.6    // Padrão para outras páginas
+            'default': 0.8    // ✅ Aumentado de 0.6 para 0.8
         };
         
         // ✅ P1: Performance mobile adaptativa

@@ -74,6 +74,8 @@
     pointer-events: none;
     overflow: hidden;
     opacity: 1; /* Opacity inicial (será ajustada por página via JS) */
+    /* Remover qualquer overlay escuro */
+    background: transparent !important;
 }
 
 #simulation-container canvas,

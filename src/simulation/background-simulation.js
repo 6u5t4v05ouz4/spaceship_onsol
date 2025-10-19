@@ -57,11 +57,11 @@ class BackgroundSimulation {
         this.currentPage = 'unknown';
         this.opacityMap = {
             'home': 1.0,      // ✅ 100% visível na home (destaque máximo)
-            'login': 0.5,     // ✅ Aumentado de 0.3 para 0.5
-            'profile': 0.5,   // ✅ Aumentado de 0.3 para 0.5
-            'dashboard': 0.7, // ✅ Aumentado de 0.5 para 0.7
+            'login': 0.8,     // ✅ Aumentado de 0.5 para 0.8
+            'profile': 0.8,   // ✅ Aumentado de 0.5 para 0.8
+            'dashboard': 0.9, // ✅ Aumentado de 0.7 para 0.9
             'game': 0.0,      // Invisível (não competir com jogo real)
-            'default': 0.8    // ✅ Aumentado de 0.6 para 0.8
+            'default': 0.9    // ✅ Aumentado de 0.8 para 0.9
         };
         
         // ✅ P1: Performance mobile adaptativa
@@ -164,6 +164,12 @@ class BackgroundSimulation {
         // Aplicar opacity (respeitando prefers-reduced-motion)
         let targetOpacity = this.opacityMap[pageName];
         
+        // ✅ CORREÇÃO: Desktop deve ter opacidade mais alta para evitar "película escura"
+        if (!this.isMobile) {
+            // Desktop: aumentar opacidade mínima para evitar película escura
+            targetOpacity = Math.max(targetOpacity, 0.7);
+        }
+        
         if (this.prefersReducedMotion) {
             targetOpacity = Math.min(targetOpacity, 0.15);
         }
@@ -171,7 +177,7 @@ class BackgroundSimulation {
         this.container.style.transition = 'opacity 0.5s ease';
         this.container.style.opacity = targetOpacity;
         
-        console.log(`🎨 Opacity ajustada para página "${pageName}": ${targetOpacity}`);
+        console.log(`🎨 Opacity ajustada para página "${pageName}" (${this.isMobile ? 'Mobile' : 'Desktop'}): ${targetOpacity}`);
     }
 
     // ✅ P1: Detectar se é dispositivo móvel

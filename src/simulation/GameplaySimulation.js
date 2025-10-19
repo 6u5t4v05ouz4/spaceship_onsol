@@ -131,8 +131,10 @@ export default class GameplaySimulation extends Phaser.Scene {
 
     createShip() {
         this.elements.ship = this.physics.add.sprite(0, 0, 'ship_idle');
-        this.elements.ship.setScale(0.8);
+        this.elements.ship.setScale(1.2); // ✅ AUMENTADO de 0.8 para 1.2 (50% maior)
         this.elements.ship.setDepth(2);
+        this.elements.ship.setTint(0xffffff); // ✅ Tint branco para máximo brilho
+        this.elements.ship.setAlpha(1); // ✅ Alpha máximo
         this.elements.ship.play('ship_thrust');
         this.elements.ship.body.setCircle(20);
         this.elements.ship.setMaxVelocity(200);
@@ -141,7 +143,7 @@ export default class GameplaySimulation extends Phaser.Scene {
         this.cameras.main.setZoom(0.6);
         this.cameras.main.centerOn(0, 0);
         this.projectilesGroup = this.physics.add.group();
-        console.log('Nave criada em (0, 0)');
+        console.log('✅ Nave criada (MAIOR e MAIS BRILHANTE)');
     }
 
     createEnemies() {
@@ -184,13 +186,15 @@ export default class GameplaySimulation extends Phaser.Scene {
         }
         
         const enemy = this.physics.add.sprite(x, y, 'enemy');
-        enemy.setScale(Phaser.Math.FloatBetween(0.4, 0.6));
+        enemy.setScale(Phaser.Math.FloatBetween(0.6, 0.9)); // ✅ AUMENTADO de 0.4-0.6 para 0.6-0.9
         enemy.setDepth(1);
+        enemy.setTint(0xff6666); // ✅ Tint vermelho claro para destaque
+        enemy.setAlpha(1); // ✅ Alpha máximo
         enemy.play('enemy_thrust');
-        enemy.body.setCircle(40); // Aumentado para 40 para colisão mais confiável
+        enemy.body.setCircle(40);
         enemy.setMaxVelocity(100);
-        enemy.body.setImmovable(true); // Inimigos não se movem por física
-        enemy.health = 10; // 10 tiros para destruir
+        enemy.body.setImmovable(true);
+        enemy.health = 10;
         enemy.maxHealth = 10;
         
         // Direção aleatória em vez de sempre ir para o centro
@@ -250,8 +254,10 @@ export default class GameplaySimulation extends Phaser.Scene {
         }
         
         const meteor = this.physics.add.sprite(x, y, 'meteoro', 'meteoro 0.aseprite');
-        meteor.setScale(Phaser.Math.FloatBetween(0.5, 0.8));
+        meteor.setScale(Phaser.Math.FloatBetween(0.8, 1.2)); // ✅ AUMENTADO de 0.5-0.8 para 0.8-1.2
         meteor.setDepth(1);
+        meteor.setTint(0xffaa66); // ✅ Tint laranja claro para destaque
+        meteor.setAlpha(1); // ✅ Alpha máximo
         meteor.play('meteoro_anim');
         meteor.body.setCircle(25);
         meteor.setMaxVelocity(300);
@@ -619,8 +625,10 @@ export default class GameplaySimulation extends Phaser.Scene {
             'minibullet',
             'minibullet 0.aseprite'
         );
-        bullet.setScale(0.6);
+        bullet.setScale(1.0); // ✅ AUMENTADO de 0.6 para 1.0
         bullet.setDepth(1);
+        bullet.setTint(0x00ffff); // ✅ Tint ciano brilhante
+        bullet.setAlpha(1); // ✅ Alpha máximo
         bullet.play('minibullet_anim');
         bullet.rotation = angle;
         bullet.body.setAllowGravity(false);

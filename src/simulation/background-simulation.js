@@ -235,11 +235,9 @@ class BackgroundSimulation {
         // Criar container se não existir
         this.createContainer();
         
-        // Criar controles
-        this.createControls();
-        
-        // ✅ P1: Configurar atalhos de teclado
-        this.setupKeyboardShortcuts();
+        // ✅ REMOVIDO: Controles e atalhos (simulação sempre ativa)
+        // this.createControls();
+        // this.setupKeyboardShortcuts();
         
         // Inicializar Phaser
         this.initPhaser();

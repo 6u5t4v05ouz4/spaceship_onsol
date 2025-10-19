@@ -287,9 +287,6 @@ export async function handleOAuthCallback() {
             google_email: user.email,
             display_name: user.user_metadata?.name || user.email.split('@')[0],
             avatar_url: user.user_metadata?.picture || null,
-            level: 1,
-            xp: 0,
-            coins: 100, // Bônus inicial
             ship_type: 'default_idle', // Nave padrão para usuários sem NFT
             ship_rarity: 'Comum' // Raridade padrão
           }]);

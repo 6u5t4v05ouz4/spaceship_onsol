@@ -184,16 +184,16 @@ export default class DashboardPage {
    */
   async fetchProfile(userId) {
     const { data, error } = await this.supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
       throw new Error('Erro ao carregar perfil: ' + error.message);
     }
 
-    return data || { username: 'Usuário', id: userId };
+    return data || { user_id: userId, username: 'Usuário', id: userId };
   }
 
   /**
@@ -201,7 +201,7 @@ export default class DashboardPage {
    */
   async fetchGameData(userId) {
     const { data, error } = await this.supabase
-      .from('game_data')
+      .from('game_sessions')
       .select('*')
       .eq('user_id', userId)
       .single();
@@ -219,7 +219,7 @@ export default class DashboardPage {
    */
   async fetchInventory(userId) {
     const { data, error } = await this.supabase
-      .from('inventory')
+      .from('player_inventory')
       .select('*')
       .eq('user_id', userId);
 
@@ -236,7 +236,7 @@ export default class DashboardPage {
    */
   async fetchShips(userId) {
     const { data, error } = await this.supabase
-      .from('nft_ships')
+      .from('player_wallet')
       .select('*')
       .eq('user_id', userId);
 
@@ -258,27 +258,27 @@ export default class DashboardPage {
     // Profile
     if (this.data.profile) {
       container.querySelector('#username').textContent = this.data.profile.username || 'Usuário';
-      container.querySelector('#userId').textContent = `ID: ${this.data.profile.id}`;
+      container.querySelector('#userId').textContent = `ID: ${this.data.profile.user_id || this.data.profile.id}`;
     }
 
-    // Stats
+    // Stats - Usar valores padrão se tabela vazia
     const gameData = this.data.gameData || {};
-    container.querySelector('#level').textContent = gameData.level || 0;
-    container.querySelector('#xp').textContent = gameData.experience || 0;
-    container.querySelector('#coins').textContent = gameData.coins || 0;
-    container.querySelector('#wins').textContent = gameData.win_count || 0;
+    container.querySelector('#level').textContent = gameData.current_level || gameData.level || 0;
+    container.querySelector('#xp').textContent = gameData.experience || gameData.total_xp || 0;
+    container.querySelector('#coins').textContent = gameData.coins || gameData.balance || 0;
+    container.querySelector('#wins').textContent = gameData.wins || gameData.win_count || 0;
 
-    // Ships
+    // Ships/Wallet
     const shipsGrid = container.querySelector('#shipsGrid');
     if (this.data.ships.length > 0) {
       shipsGrid.innerHTML = this.data.ships.map(ship => `
         <div class="ship-card">
-          <div class="ship-name">${ship.name || 'Nave'}</div>
-          <div class="ship-rarity">${ship.rarity || 'comum'}</div>
+          <div class="ship-name">${ship.wallet_address || ship.name || 'Wallet'}</div>
+          <div class="ship-rarity">${ship.balance || ship.rarity || 'N/A'}</div>
         </div>
       `).join('');
     } else {
-      shipsGrid.innerHTML = '<p class="empty-message">Nenhuma nave encontrada</p>';
+      shipsGrid.innerHTML = '<p class="empty-message">Nenhuma carteira encontrada</p>';
     }
 
     // Inventory
@@ -286,7 +286,7 @@ export default class DashboardPage {
     if (this.data.inventory.length > 0) {
       inventoryGrid.innerHTML = this.data.inventory.map(item => `
         <div class="inventory-item">
-          <div class="item-id">Item #${item.item_id || 'N/A'}</div>
+          <div class="item-id">${item.item_name || item.item_id || 'Item'}</div>
           <div class="item-qty">x${item.quantity || 1}</div>
         </div>
       `).join('');

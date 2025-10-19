@@ -25,6 +25,7 @@ import MiningManager from '../managers/MiningManager.js';
 import BackgroundManager from '../managers/BackgroundManager.js';
 import GameOverManager from '../managers/GameOverManager.js';
 import RocketManager from '../managers/RocketManager.js';
+import MultiplayerManager from '../managers/MultiplayerManager.js';
 
 export default class GameSceneModular extends Phaser.Scene {
     constructor() {
@@ -42,6 +43,7 @@ export default class GameSceneModular extends Phaser.Scene {
         this.backgroundManager = null;
         this.gameOverManager = null;
         this.rocketManager = null;
+        this.multiplayerManager = null;
         
         // Managers de efeitos (existentes)
         this.juiceManager = null;
@@ -269,6 +271,10 @@ export default class GameSceneModular extends Phaser.Scene {
         console.log('🔍 Inicializando RocketManager...');
         this.rocketManager = new RocketManager(this, this.collisionManager);
         console.log('✅ RocketManager inicializado');
+        
+        console.log('🔍 Inicializando MultiplayerManager...');
+        this.multiplayerManager = new MultiplayerManager(this);
+        console.log('✅ MultiplayerManager inicializado');
     }
 
     setupScene(data) {
@@ -376,6 +382,13 @@ export default class GameSceneModular extends Phaser.Scene {
             this.juiceManager
         );
         console.log('✅ Sistema de foguetes inicializado');
+        
+        console.log('🔍 Inicializando sistema multiplayer...');
+        // Inicializa MultiplayerManager (async)
+        this.multiplayerManager.init().catch(err => {
+            console.error('❌ Erro ao inicializar multiplayer:', err);
+        });
+        console.log('✅ Sistema multiplayer inicializado');
         
         // Configura a mineração
         this.setupMining();
@@ -765,6 +778,14 @@ export default class GameSceneModular extends Phaser.Scene {
             }
             
             this.shipManager.updateMovement(inputState, delta);
+            
+            // Atualiza posição no multiplayer
+            if (this.multiplayerManager && this.shipManager.ship) {
+                this.multiplayerManager.updatePosition(
+                    this.shipManager.ship.x,
+                    this.shipManager.ship.y
+                );
+            }
         }
         
         // Atualiza oxigênio
@@ -778,6 +799,11 @@ export default class GameSceneModular extends Phaser.Scene {
         // Atualiza sistema de background
         if (this.backgroundManager) {
             this.backgroundManager.update(time, delta);
+        }
+        
+        // Atualiza sistema multiplayer
+        if (this.multiplayerManager) {
+            this.multiplayerManager.update();
         }
         
         // Atualiza mira
@@ -1068,6 +1094,7 @@ export default class GameSceneModular extends Phaser.Scene {
         if (this.backgroundManager) this.backgroundManager.destroy();
         if (this.gameOverManager) this.gameOverManager.destroy();
         if (this.rocketManager) this.rocketManager.destroy();
+        if (this.multiplayerManager) this.multiplayerManager.destroy();
         
         // Limpa efeitos
         if (this.particleEffects) this.particleEffects.cleanup();

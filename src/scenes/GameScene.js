@@ -5,6 +5,7 @@ import AudioManager from '../managers/AudioManager.js';
 import ParticleEffects from '../effects/ParticleEffects.js';
 import UIAnimations from '../effects/UIAnimations.js';
 import TrailEffects from '../effects/TrailEffects.js';
+import MultiplayerManager from '../managers/MultiplayerManager.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -59,6 +60,9 @@ export default class GameScene extends Phaser.Scene {
         this.uiAnimations = null;
         this.trailEffects = null;
         this.thrustEmitterId = null; // ID do emitter de propulsão
+        
+        // Multiplayer Manager
+        this.multiplayerManager = null;
     }
 
     preload() {

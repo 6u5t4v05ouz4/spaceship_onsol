@@ -64,8 +64,10 @@ class SocketService {
         detail: { socketId: this.socket.id }
       }));
 
-      // NÃO autenticar automaticamente aqui
-      // O MultiplayerManager vai chamar authenticate() quando estiver pronto
+      // Auto-autenticar após conectar
+      setTimeout(() => {
+        this.authenticateIfNeeded();
+      }, 500);
     });
 
     this.socket.on('disconnect', (reason) => {

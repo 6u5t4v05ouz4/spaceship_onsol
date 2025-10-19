@@ -5,7 +5,7 @@ import { parse } from 'node:url';
 const spaFallbackPlugin = {
   name: 'spa-fallback',
   configResolved(config) {
-    this.config = config;
+    // Não precisamos armazenar config aqui
   },
   configureServer(server) {
     // Adicionar no INÍCIO dos middlewares (antes do file serving)

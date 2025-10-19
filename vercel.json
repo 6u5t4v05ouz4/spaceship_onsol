@@ -1,8 +1,7 @@
 {
-  "rewrites": [
-    {
-      "source": "/((?!api|_next|_static|favicon.ico|game.html|login.html).*)",
-      "destination": "/index.html"
+  "functions": {
+    "app/api/**/*.js": {
+      "runtime": "nodejs18.x"
     }
-  ]
+  }
 }

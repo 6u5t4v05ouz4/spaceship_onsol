@@ -1,0 +1,7 @@
+# Vercel redirects file
+# Serve HTML files directly
+/game.html /game.html 200
+/login.html /login.html 200
+
+# SPA fallback for all other routes
+/* /index.html 200

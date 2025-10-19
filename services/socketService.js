@@ -46,27 +46,8 @@ class SocketService {
     console.log('🔍 window.location.origin:', window.location.origin);
     console.log('🔍 io disponível:', typeof io !== 'undefined');
 
-    // ✅ Teste básico de conectividade HTTP primeiro
-    this.testServerConnectivity(serverUrl).then(() => {
-      this.createSocketConnection(serverUrl);
-    }).catch((error) => {
-      console.error('❌ Servidor não acessível:', error);
-      // Tentar mesmo assim com polling
-      this.createSocketConnection(serverUrl);
-    });
-  }
-
-  async testServerConnectivity(serverUrl) {
-    try {
-      const response = await fetch(`${serverUrl}/health`, {
-        method: 'GET',
-        mode: 'cors',
-        timeout: 5000
-      });
-      console.log('✅ Servidor HTTP acessível:', response.status);
-    } catch (error) {
-      console.warn('⚠️ Teste HTTP falhou, tentando Socket.io mesmo assim:', error.message);
-    }
+    // ✅ Conectar diretamente via Socket.io (sem teste HTTP)
+    this.createSocketConnection(serverUrl);
   }
 
   createSocketConnection(serverUrl) {

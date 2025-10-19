@@ -23,7 +23,7 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--primary-cyan), transparent);
+    background: transparent;
     opacity: 0.5;
 }
 
@@ -79,7 +79,7 @@
    CARD DE GAME
    ===================================================== */
 .card-game {
-    background: var(--glass-bg);
+    background: transparent;
     
     border: 1px solid var(--accent-blue-light);
     border-radius: var(--border-radius-lg);
@@ -96,7 +96,7 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: conic-gradient(from 0deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+    background: transparent;
     animation: rotate 4s linear infinite;
     border-radius: var(--border-radius-md);
     z-index: -1;
@@ -154,7 +154,7 @@
 }
 
 .card-inventory:hover {
-    background: var(--primary-cyan-light);
+    background: transparent;
     border-color: var(--primary-cyan);
     transform: translateY(-2px);
 }
@@ -273,48 +273,48 @@
    ===================================================== */
 .card-rarity-comum {
     border-color: var(--rarity-common-border);
-    background: var(--rarity-common-bg);
+    background: transparent;
 }
 
 .card-rarity-comum::before {
-    background: conic-gradient(from 0deg, transparent, rgba(102, 102, 102, 0.15), transparent);
+    background: transparent;
 }
 
 .card-rarity-incomum {
     border-color: var(--rarity-uncommon-border);
-    background: var(--rarity-uncommon-bg);
+    background: transparent;
 }
 
 .card-rarity-incomum::before {
-    background: conic-gradient(from 0deg, transparent, rgba(30, 255, 0, 0.15), transparent);
+    background: transparent;
 }
 
 .card-rarity-raro {
     border-color: var(--rarity-rare-border);
-    background: var(--rarity-rare-bg);
+    background: transparent;
 }
 
 .card-rarity-raro::before {
-    background: conic-gradient(from 0deg, transparent, rgba(0, 112, 221, 0.15), transparent);
+    background: transparent;
 }
 
 .card-rarity-epico {
     border-color: var(--rarity-epic-border);
-    background: var(--rarity-epic-bg);
+    background: transparent;
 }
 
 .card-rarity-epico::before {
-    background: conic-gradient(from 0deg, transparent, rgba(163, 53, 238, 0.15), transparent);
+    background: transparent;
 }
 
 .card-rarity-lendario {
     border-color: var(--rarity-legendary-border);
-    background: var(--rarity-legendary-bg);
+    background: transparent;
     box-shadow: 0 0 20px rgba(255, 128, 0, 0.2);
 }
 
 .card-rarity-lendario::before {
-    background: conic-gradient(from 0deg, transparent, rgba(255, 128, 0, 0.15), transparent);
+    background: transparent;
 }
 
 .card-rarity-lendario:hover {
@@ -348,7 +348,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(0, 255, 204, 0.1), transparent);
+    background: transparent;
     animation: shimmer 1.5s infinite;
 }
 

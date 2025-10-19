@@ -42,7 +42,7 @@
    BOTÃO PRIMÁRIO
    ===================================================== */
 .btn-primary {
-    background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+    background: transparent;
     color: #000;
     border: 2px solid transparent;
     box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
@@ -51,7 +51,7 @@
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 255, 204, 0.4);
-    background: linear-gradient(45deg, var(--secondary-blue), var(--primary-cyan));
+    background: transparent;
 }
 
 .btn-primary:active:not(:disabled) {
@@ -63,14 +63,14 @@
    BOTÃO SECUNDÁRIO
    ===================================================== */
 .btn-secondary {
-    background: var(--primary-cyan-dark);
+    background: transparent;
     border: 2px solid var(--primary-cyan-light);
     color: var(--primary-cyan);
     box-shadow: 0 4px 15px rgba(0, 255, 204, 0.1);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: var(--primary-cyan-light);
+    background: transparent;
     border-color: var(--primary-cyan);
     color: var(--text-primary);
     box-shadow: 0 6px 20px rgba(0, 255, 204, 0.3);
@@ -93,7 +93,7 @@
 }
 
 .btn-ghost:hover:not(:disabled) {
-    background: var(--primary-cyan-dark);
+    background: transparent;
     border-color: var(--primary-cyan);
     box-shadow: 0 4px 15px rgba(0, 255, 204, 0.2);
     transform: translateY(-1px);
@@ -101,14 +101,14 @@
 
 .btn-ghost:active:not(:disabled) {
     transform: translateY(0);
-    background: var(--primary-cyan-light);
+    background: transparent;
 }
 
 /* =====================================================
    BOTÃO DE SUCESSO
    ===================================================== */
 .btn-success {
-    background: linear-gradient(45deg, var(--success), #00cc88);
+    background: transparent;
     color: #000;
     border: 2px solid transparent;
     box-shadow: 0 4px 15px rgba(0, 255, 0, 0.2);
@@ -117,14 +117,14 @@
 .btn-success:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 255, 0, 0.4);
-    background: linear-gradient(45deg, #00cc88, var(--success));
+    background: transparent;
 }
 
 /* =====================================================
    BOTÃO DE AVISO
    ===================================================== */
 .btn-warning {
-    background: linear-gradient(45deg, var(--warning), #ff8800);
+    background: transparent;
     color: #000;
     border: 2px solid transparent;
     box-shadow: 0 4px 15px rgba(255, 170, 0, 0.2);
@@ -133,14 +133,14 @@
 .btn-warning:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(255, 170, 0, 0.4);
-    background: linear-gradient(45deg, #ff8800, var(--warning));
+    background: transparent;
 }
 
 /* =====================================================
    BOTÃO DE ERRO
    ===================================================== */
 .btn-error {
-    background: linear-gradient(45deg, var(--error), #cc3333);
+    background: transparent;
     color: #fff;
     border: 2px solid transparent;
     box-shadow: 0 4px 15px rgba(255, 68, 68, 0.2);
@@ -149,7 +149,7 @@
 .btn-error:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
-    background: linear-gradient(45deg, #cc3333, var(--error));
+    background: transparent;
 }
 
 /* =====================================================
@@ -187,7 +187,7 @@
 
 /* Botão de Login */
 .btn-login {
-    background: linear-gradient(135deg, #4285f4, #34a853);
+    background: transparent;
     color: white;
     border: none;
     padding: var(--spacing-md) var(--spacing-lg);
@@ -206,7 +206,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background: transparent;
     transition: left 0.5s ease;
 }
 
@@ -221,7 +221,7 @@
 
 /* Botão Solana */
 .btn-solana {
-    background: linear-gradient(135deg, #9945ff, #14f195);
+    background: transparent;
     color: white;
     border: none;
     padding: var(--spacing-md) var(--spacing-lg);
@@ -240,7 +240,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background: transparent;
     transition: left 0.5s ease;
 }
 
@@ -255,7 +255,7 @@
 
 /* Botão Play */
 .btn-play {
-    background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+    background: transparent;
     color: #000;
     border: none;
     padding: var(--spacing-md) var(--spacing-xl);
@@ -276,7 +276,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background: transparent;
     transition: left 0.5s ease;
 }
 

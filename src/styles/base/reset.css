@@ -17,7 +17,7 @@
    ELEMENTOS HTML
    ===================================================== */
 html {
-    background: transparent !important;
+    background: transparent;
     font-size: 16px;
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
@@ -28,7 +28,7 @@ html {
 }
 
 body {
-    background: transparent !important;
+    background: transparent;
     font-family: var(--font-secondary);
     background: transparent; /* ✅ Transparente para não cobrir a simulação */
     color: var(--text-primary);
@@ -205,12 +205,12 @@ img {
    SELETOR DE TEXTO PERSONALIZADO
    ===================================================== */
 ::selection {
-    background: var(--primary-cyan-light);
+    background: transparent;
     color: var(--text-primary);
 }
 
 ::-moz-selection {
-    background: var(--primary-cyan-light);
+    background: transparent;
     color: var(--text-primary);
 }
 
@@ -223,18 +223,18 @@ img {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
+    background: transparent;
     border-radius: var(--border-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--primary-cyan-light);
+    background: transparent;
     border-radius: var(--border-radius-sm);
     transition: var(--transition-normal);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-cyan);
+    background: transparent;
     box-shadow: var(--glow-primary);
 }
 
@@ -260,7 +260,7 @@ img {
     *,
     *::before,
     *::after {
-        background: transparent !important;
+        background: transparent;
         color: black !important;
         box-shadow: none !important;
         text-shadow: none !important;

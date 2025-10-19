@@ -305,7 +305,7 @@ body {
 
 /* Container principal da aplicação SPA */
 #app {
-    background: transparent !important;
+    background: transparent;
     position: relative;
     z-index: var(--z-content); /* Acima da simulação */
     min-height: 100vh;
@@ -477,3 +477,12 @@ body {
 .animate-slide-in-right {
     animation: slideInRight 0.5s ease-out;
 }
+
+
+
+
+/* Remove pelÃ­cula sobre simulaÃ§Ã£o */
+html { background-color: #000000 !important; }
+body { background-color: transparent !important; }
+#app { background-color: transparent !important; }
+#app > * { background-color: transparent !important; }

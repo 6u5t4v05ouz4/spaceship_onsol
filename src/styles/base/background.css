@@ -46,7 +46,7 @@
 
 .particle {
     position: absolute;
-    background: white;
+    background: transparent;
     border-radius: 50%;
     animation: twinkle 3s infinite;
     box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
@@ -154,13 +154,13 @@
 }
 
 .mode-badge-lite {
-    background: rgba(255, 170, 0, 0.2);
+    background: transparent;
     color: #ffaa00;
     border: 1px solid rgba(255, 170, 0, 0.5);
 }
 
 .mode-badge-full {
-    background: rgba(0, 255, 102, 0.2);
+    background: transparent;
     color: #00ff66;
     border: 1px solid rgba(0, 255, 102, 0.5);
 }
@@ -170,7 +170,7 @@
     position: fixed;
     bottom: 80px;
     right: 20px;
-    background: rgba(0, 255, 204, 0.9);
+    background: transparent;
     color: #000;
     padding: 12px 20px;
     border-radius: 8px;
@@ -282,19 +282,19 @@
    GRADIENTES
    ===================================================== */
 .bg-gradient-primary {
-    background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+    background: transparent;
 }
 
 .bg-gradient-secondary {
-    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    background: transparent;
 }
 
 .bg-gradient-accent {
-    background: linear-gradient(45deg, var(--accent-blue), var(--primary-cyan));
+    background: transparent;
 }
 
 .bg-gradient-space {
-    background: radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    background: transparent;
 }
 
 /* =====================================================

@@ -23,11 +23,12 @@ html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    background: var(--bg-primary); /* ✅ Background no HTML (mais atrás de tudo) */
 }
 
 body {
     font-family: var(--font-secondary);
-    background: var(--bg-primary);
+    background: transparent; /* ✅ Transparente para não cobrir a simulação */
     color: var(--text-primary);
     overflow-x: hidden;
     min-height: 100vh;

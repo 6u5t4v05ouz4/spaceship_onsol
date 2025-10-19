@@ -1,7 +1,16 @@
 import page from 'page';
+import * as authService from './services/authService.js';
 
 // Importar páginas (lazy loading será implementado conforme necessário)
 let appContainer = null;
+
+/**
+ * Verifica se usuário está autenticado
+ */
+async function isAuthenticated() {
+  const session = await authService.getSession();
+  return !!session;
+}
 
 /**
  * Inicializa o roteador e configura todas as rotas
@@ -10,27 +19,39 @@ let appContainer = null;
 export function initRouter(container) {
   appContainer = container;
 
-  // Rota: / (Home)
+  // Rota: / (Home) - Pública
   page('/', () => {
     loadPage('home');
   });
 
-  // Rota: /login
+  // Rota: /login - Pública
   page('/login', () => {
     loadPage('login');
   });
 
-  // Rota: /dashboard
-  page('/dashboard', () => {
+  // Rota: /dashboard - Protegida
+  page('/dashboard', async () => {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      console.warn('⚠️ Acesso negado - redirecionando para login');
+      page.redirect('/login');
+      return;
+    }
     loadPage('dashboard');
   });
 
-  // Rota: /profile
-  page('/profile', () => {
+  // Rota: /profile - Protegida
+  page('/profile', async () => {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      console.warn('⚠️ Acesso negado - redirecionando para login');
+      page.redirect('/login');
+      return;
+    }
     loadPage('profile');
   });
 
-  // Rota: /auth-callback (OAuth callback)
+  // Rota: /auth-callback (OAuth callback) - Pública
   page('/auth-callback', () => {
     loadPage('auth-callback');
   });

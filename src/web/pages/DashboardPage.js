@@ -156,17 +156,17 @@ export default class DashboardPage {
       const profile = await this.fetchProfile(userId);
       this.data.profile = profile;
 
-      // Buscar game data
-      const gameData = await this.fetchGameData(userId);
-      this.data.gameData = gameData || { level: 0, experience: 0, coins: 0, win_count: 0 };
+      // Buscar player stats (substitui game_data)
+      const playerStats = await this.fetchPlayerStats(userId);
+      this.data.gameData = playerStats || {};
 
       // Buscar inventory
       const inventory = await this.fetchInventory(userId);
       this.data.inventory = inventory || [];
 
-      // Buscar ships
-      const ships = await this.fetchShips(userId);
-      this.data.ships = ships || [];
+      // Buscar wallet (ships agora é wallet)
+      const wallet = await this.fetchShips(userId);
+      this.data.ships = wallet || [];
 
       console.log('✅ Dados carregados:', this.data);
 
@@ -197,17 +197,17 @@ export default class DashboardPage {
   }
 
   /**
-   * Buscar game data do Supabase
+   * Buscar estatísticas do jogador do Supabase
    */
-  async fetchGameData(userId) {
+  async fetchPlayerStats(userId) {
     const { data, error } = await this.supabase
-      .from('game_sessions')
+      .from('player_stats')
       .select('*')
       .eq('user_id', userId)
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      console.warn('Aviso ao carregar game data:', error.message);
+      console.warn('Aviso ao carregar player stats:', error.message);
       return null;
     }
 
@@ -261,12 +261,14 @@ export default class DashboardPage {
       container.querySelector('#userId').textContent = `ID: ${this.data.profile.id}`;
     }
 
-    // Stats - game_sessions não tem level/xp, mostrar valores padrão
-    const gameData = this.data.gameData || {};
-    container.querySelector('#level').textContent = 0; // game_sessions não tem level
-    container.querySelector('#xp').textContent = 0; // game_sessions não tem xp
-    container.querySelector('#coins').textContent = 0; // usar player_wallet depois
-    container.querySelector('#wins').textContent = 0; // não há wins em game_sessions
+    // Stats - usar player_stats e player_wallet
+    const stats = this.data.gameData || {};
+    const wallet = this.data.ships.length > 0 ? this.data.ships[0] : null;
+    
+    container.querySelector('#level').textContent = stats.sessions_count || 0; // Usar sessions como "level"
+    container.querySelector('#xp').textContent = stats.total_tokens_earned || 0; // Tokens ganhos como "XP"
+    container.querySelector('#coins').textContent = wallet ? wallet.space_tokens || 0 : 0; // Space tokens
+    container.querySelector('#wins').textContent = stats.battles_won || 0; // Batalhas ganhas
 
     // Wallet - usar campos reais: space_tokens, sol_tokens
     const shipsGrid = container.querySelector('#shipsGrid');

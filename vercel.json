@@ -1,21 +1,17 @@
 {
   "rewrites": [
     {
-      "source": "/login",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/game",
+      "source": "/game.html",
       "destination": "/game.html"
     },
     {
-      "source": "/original",
-      "destination": "/index-backup.html"
+      "source": "/((?!api|_next|_static|favicon.ico|game.html).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -34,24 +30,6 @@
     },
     {
       "source": "/game.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/index-backup.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/login.html",
       "headers": [
         {
           "key": "Cache-Control",

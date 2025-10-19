@@ -118,9 +118,20 @@ const server = http.createServer((req, res) => {
     // 1. Arquivos estáticos (.js, .css, .png, etc)
     // 2. game.html (entry point separado)
     
+    // Assets da pasta public/
+    if (req.url.startsWith('/assets/')) {
+        filePath = './public' + req.url;
+    }
+    // Source files
+    else if (req.url.startsWith('/src/')) {
+        filePath = '.' + req.url;
+    }
+    // Favicon
+    else if (req.url === '/favicon.ico') {
+        filePath = './public/favicon.ico';
+    }
     // Se tem extensão de arquivo, servir normalmente
-    if (req.url.includes('.')) {
-        // Arquivo estático - pode ter extensão
+    else if (req.url.includes('.')) {
         filePath = '.' + req.url;
     } 
     // game.html é entry point separado

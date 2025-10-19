@@ -63,25 +63,29 @@
 /* =====================================================
    SIMULAÇÃO DE GAMEPLAY
    ===================================================== */
+#simulation-container,
 .simulation-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -1; /* var(--z-bg-simulation); */
+    z-index: 5; /* ✅ Acima dos backgrounds CSS (-3, -2, -1) mas abaixo do conteúdo (10) */
     pointer-events: none;
     overflow: hidden;
-    opacity: 1;
+    opacity: 1; /* Opacity inicial (será ajustada por página via JS) */
 }
 
+#simulation-container canvas,
 .simulation-container canvas {
     width: 100vw !important;
     height: 100vh !important;
-    position: absolute !important;
+    position: fixed !important; /* Fixed para não criar scroll */
     top: 0 !important;
     left: 0 !important;
     display: block !important;
+    pointer-events: none !important;
+    z-index: 5 !important; /* ✅ Mesmo z-index do container */
 }
 
 /* Controles da simulação */

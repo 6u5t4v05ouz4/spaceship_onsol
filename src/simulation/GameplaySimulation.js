@@ -44,18 +44,24 @@ export default class GameplaySimulation extends Phaser.Scene {
     createBackground() {
         const screenWidth = this.scale.width;
         const screenHeight = this.scale.height;
-        this.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000)
-            .setOrigin(0.5).setDepth(-10);
+        
+        // ✅ REMOVIDO: Retângulo preto que causava escuridão
+        // this.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000)
+        //     .setOrigin(0.5).setDepth(-10);
+        
+        // Background de estrelas com alpha reduzido para não competir com o CSS
         const starsBg = this.add.tileSprite(0, 0, screenWidth * 2, screenHeight * 2, 'stars');
-        starsBg.setOrigin(0.5).setDepth(-9).setAlpha(0.8);
+        starsBg.setOrigin(0.5).setDepth(-9).setAlpha(0.3); // ✅ Reduzido de 0.8 para 0.3
         this.starsBg = starsBg;
+        
+        // Estrelas individuais com alpha reduzido
         const starCount = Math.floor((screenWidth * screenHeight) / 10000);
         for (let i = 0; i < starCount; i++) {
             const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
             const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
             const star = this.add.rectangle(x, y, 1, 1, 0xffffff);
             star.setDepth(-8);
-            star.setAlpha(Phaser.Math.FloatBetween(0.3, 1));
+            star.setAlpha(Phaser.Math.FloatBetween(0.1, 0.5)); // ✅ Reduzido para ser mais sutil
         }
     }
 

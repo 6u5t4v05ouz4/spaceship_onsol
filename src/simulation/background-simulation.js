@@ -483,11 +483,11 @@ class BackgroundSimulation {
     onGameReady() {
         const canvas = this.game.canvas;
         if (canvas) {
-            // Configurar canvas para ocupar toda a tela
+            // Configurar canvas para ocupar toda a tela (FIXED para não criar scroll)
             canvas.style.width = '100vw';
             canvas.style.height = '100vh';
             canvas.style.display = 'block';
-            canvas.style.position = 'absolute';
+            canvas.style.position = 'fixed'; // ✅ FIXED em vez de absolute
             canvas.style.top = '0';
             canvas.style.left = '0';
             canvas.style.pointerEvents = 'none';
@@ -495,7 +495,7 @@ class BackgroundSimulation {
             // ✅ Fade in suave
             canvas.style.opacity = '0';
             canvas.style.transition = 'opacity 1s ease-in';
-            canvas.style.zIndex = '-1';
+            canvas.style.zIndex = '5'; // ✅ Acima dos backgrounds CSS mas abaixo do conteúdo
             
             console.log('🎨 Canvas configurado para background');
             

@@ -6,6 +6,7 @@
 import * as authService from '../../shared/services/authService.js';
 import * as profileService from '../../shared/services/profileService.js';
 import { navigateTo } from '../../shared/router.js';
+import HeaderNavigation from '../components/HeaderNavigation.js';
 
 export default class ProfilePage {
   constructor(supabaseClient) {
@@ -27,19 +28,11 @@ export default class ProfilePage {
     container.innerHTML = `
       <div class="background-primary"></div>
       <div class="stars-background"></div>
-      
+
+      <!-- Global Navigation Header -->
+      <div id="globalHeader"></div>
+
       <div class="profile-wrapper">
-        <!-- Header -->
-        <header class="profile-header">
-          <div class="header-left">
-            <h1 class="profile-title">👤 Meu Perfil</h1>
-          </div>
-          <div class="header-right">
-            <button id="logoutBtn" class="logout-btn" title="Fazer logout">
-              🚪 Logout
-            </button>
-          </div>
-        </header>
 
         <!-- Content -->
         <div class="profile-content">
@@ -156,6 +149,9 @@ export default class ProfilePage {
     // Adicionar estilos
     this.addStyles();
 
+    // Renderizar header de navegação global
+    this.renderGlobalHeader(container);
+
     // Carregar dados
     this.loadProfile(container);
 
@@ -163,6 +159,18 @@ export default class ProfilePage {
     this.setupEventListeners(container);
 
     return container;
+  }
+
+  /**
+   * Renderizar header de navegação global
+   */
+  renderGlobalHeader(container) {
+    const headerContainer = container.querySelector('#globalHeader');
+    if (headerContainer) {
+      const headerNav = new HeaderNavigation();
+      const headerElement = headerNav.render();
+      headerContainer.appendChild(headerElement);
+    }
   }
 
   /**
@@ -239,10 +247,6 @@ export default class ProfilePage {
    * Setup event listeners
    */
   setupEventListeners(container) {
-    // Logout
-    container.querySelector('#logoutBtn').addEventListener('click', () => {
-      this.handleLogout();
-    });
 
     // Retry
     const retryBtn = container.querySelector('#retryBtn');
@@ -555,18 +559,6 @@ export default class ProfilePage {
     container.querySelector('#dataState').style.display = 'block';
   }
 
-  /**
-   * Handle logout
-   */
-  async handleLogout() {
-    try {
-      await authService.signOut();
-      navigateTo('/login');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      navigateTo('/login');
-    }
-  }
 
   /**
    * Adicionar estilos
@@ -591,42 +583,9 @@ export default class ProfilePage {
           display: flex;
           flex-direction: column;
           min-height: 100vh;
+          padding-top: 80px; /* Espaço para o header global */
         }
 
-        .profile-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: var(--spacing-lg, 1.5rem);
-          background: rgba(0, 255, 204, 0.05);
-          border-bottom: 1px solid rgba(0, 255, 204, 0.1);
-        }
-
-        .profile-title {
-          font-size: clamp(1.5rem, 4vw, 2.5rem);
-          color: var(--primary-cyan, #00ffcc);
-          font-family: var(--font-primary, Arial);
-          font-weight: 700;
-          margin: 0;
-          text-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
-        }
-
-        .logout-btn {
-          padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
-          background: rgba(255, 107, 107, 0.2);
-          border: 1px solid rgba(255, 107, 107, 0.4);
-          border-radius: var(--border-radius-md, 0.5rem);
-          color: #ff6b6b;
-          cursor: pointer;
-          font-family: var(--font-primary, Arial);
-          font-weight: 600;
-          transition: var(--transition-normal, 0.3s);
-        }
-
-        .logout-btn:hover {
-          background: rgba(255, 107, 107, 0.3);
-          box-shadow: 0 0 15px rgba(255, 107, 107, 0.2);
-        }
 
         .profile-content {
           flex: 1;

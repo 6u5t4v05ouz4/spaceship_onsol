@@ -5,6 +5,7 @@
 
 import * as authService from '../../shared/services/authService.js';
 import { navigateTo } from '../../shared/router.js';
+import HeaderNavigation from '../components/HeaderNavigation.js';
 
 export default class DashboardPage {
   constructor(supabaseClient) {
@@ -28,21 +29,11 @@ export default class DashboardPage {
     container.innerHTML = `
       <div class="background-primary"></div>
       <div class="stars-background"></div>
-      
+
+      <!-- Global Navigation Header -->
+      <div id="globalHeader"></div>
+
       <div class="dashboard-wrapper">
-        <!-- Header -->
-        <header class="dashboard-header">
-          <div class="header-left">
-            <h1 class="dashboard-title">
-              <span role="img" aria-label="Controle de jogo">🎮</span> Dashboard
-            </h1>
-          </div>
-          <div class="header-right">
-            <button id="logoutBtn" class="logout-btn" aria-label="Fazer logout da conta">
-              <span role="img" aria-label="Porta">🚪</span> Logout
-            </button>
-          </div>
-        </header>
 
         <!-- Content -->
         <div class="dashboard-content">
@@ -151,13 +142,11 @@ export default class DashboardPage {
     // Adicionar estilos
     this.addStyles();
 
+    // Renderizar header de navegação global
+    this.renderGlobalHeader(container);
+
     // Carregar dados
     this.loadData(container);
-
-    // Event listeners
-    container.querySelector('#logoutBtn').addEventListener('click', () => {
-      this.handleLogout();
-    });
 
     const retryBtn = container.querySelector('#retryBtn');
     if (retryBtn) {
@@ -197,6 +186,18 @@ export default class DashboardPage {
     }
 
     return container;
+  }
+
+  /**
+   * Renderizar header de navegação global
+   */
+  renderGlobalHeader(container) {
+    const headerContainer = container.querySelector('#globalHeader');
+    if (headerContainer) {
+      const headerNav = new HeaderNavigation();
+      const headerElement = headerNav.render();
+      headerContainer.appendChild(headerElement);
+    }
   }
 
   /**
@@ -446,18 +447,6 @@ export default class DashboardPage {
     container.querySelector('#loadingState').style.display = 'none';
   }
 
-  /**
-   * Handle logout
-   */
-  async handleLogout() {
-    try {
-      await authService.signOut();
-      navigateTo('/login');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-      navigateTo('/login');
-    }
-  }
 
   /**
    * Adicionar estilos
@@ -482,42 +471,9 @@ export default class DashboardPage {
           display: flex;
           flex-direction: column;
           min-height: 100vh;
+          padding-top: 80px; /* Espaço para o header global */
         }
 
-        .dashboard-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: var(--spacing-lg, 1.5rem);
-          background: rgba(0, 255, 204, 0.05);
-          border-bottom: 1px solid rgba(0, 255, 204, 0.1);
-        }
-
-        .dashboard-title {
-          font-size: clamp(1.5rem, 4vw, 2.5rem);
-          color: var(--primary-cyan, #00ffcc);
-          font-family: var(--font-primary, Arial);
-          font-weight: 700;
-          margin: 0;
-          text-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
-        }
-
-        .logout-btn {
-          padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
-          background: rgba(255, 107, 107, 0.2);
-          border: 1px solid rgba(255, 107, 107, 0.4);
-          border-radius: var(--border-radius-md, 0.5rem);
-          color: #ff6b6b;
-          cursor: pointer;
-          font-family: var(--font-primary, Arial);
-          font-weight: 600;
-          transition: var(--transition-normal, 0.3s);
-        }
-
-        .logout-btn:hover {
-          background: rgba(255, 107, 107, 0.3);
-          box-shadow: 0 0 15px rgba(255, 107, 107, 0.2);
-        }
 
         .dashboard-content {
           flex: 1;

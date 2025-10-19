@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Test Client - Space Crypto Miner</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0e27;
+      color: #00ff88;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    .panel {
+      background: #1a1f3a;
+      border: 2px solid #00ff88;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .panel h2 {
+      color: #00ffff;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #00ff88;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      background: #0a0e27;
+      border: 1px solid #00ff88;
+      color: #00ff88;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+
+    button {
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      background: #00ff88;
+      color: #0a0e27;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    .status.connected {
+      background: rgba(0, 255, 136, 0.2);
+      border: 1px solid #00ff88;
+    }
+
+    .status.disconnected {
+      background: rgba(255, 0, 0, 0.2);
+      border: 1px solid #ff0000;
+      color: #ff0000;
+    }
+
+    .log {
+      background: #0a0e27;
+      border: 1px solid #00ff88;
+      border-radius: 4px;
+      padding: 15px;
+      height: 400px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-radius: 3px;
+    }
+
+    .log-entry.info {
+      color: #00ffff;
+    }
+
+    .log-entry.success {
+      color: #00ff88;
+    }
+
+    .log-entry.error {
+      color: #ff0000;
+    }
+
+    .log-entry.event {
+      color: #ffaa00;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 WebSocket Test Client</h1>
+
+    <!-- Status -->
+    <div id="status" class="status disconnected">
+      ❌ Desconectado
+    </div>
+
+    <!-- Panels -->
+    <div class="grid">
+      <!-- Connection Panel -->
+      <div class="panel">
+        <h2>🔌 Conexão</h2>
+        <div class="input-group">
+          <label>Server URL:</label>
+          <input type="text" id="serverUrl" value="http://localhost:3001">
+        </div>
+        <button id="connectBtn" onclick="connect()">Conectar</button>
+        <button id="disconnectBtn" onclick="disconnect()" disabled>Desconectar</button>
+      </div>
+
+      <!-- Auth Panel -->
+      <div class="panel">
+        <h2>🔐 Autenticação</h2>
+        <div class="input-group">
+          <label>JWT Token:</label>
+          <input type="text" id="token" placeholder="Cole seu JWT token aqui">
+        </div>
+        <button id="authBtn" onclick="authenticate()" disabled>Autenticar</button>
+      </div>
+
+      <!-- Chunk Panel -->
+      <div class="panel">
+        <h2>🗺️ Chunk</h2>
+        <div class="input-group">
+          <label>Chunk X:</label>
+          <input type="number" id="chunkX" value="0">
+        </div>
+        <div class="input-group">
+          <label>Chunk Y:</label>
+          <input type="number" id="chunkY" value="0">
+        </div>
+        <button id="enterChunkBtn" onclick="enterChunk()" disabled>Entrar no Chunk</button>
+      </div>
+
+      <!-- Movement Panel -->
+      <div class="panel">
+        <h2>🚀 Movimento</h2>
+        <div class="input-group">
+          <label>Posição X:</label>
+          <input type="number" id="posX" value="100">
+        </div>
+        <div class="input-group">
+          <label>Posição Y:</label>
+          <input type="number" id="posY" value="200">
+        </div>
+        <button id="moveBtn" onclick="move()" disabled>Mover</button>
+      </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div class="panel">
+      <h2>📋 Logs</h2>
+      <div id="log" class="log"></div>
+      <button onclick="clearLog()">Limpar Logs</button>
+    </div>
+  </div>
+
+  <script>
+    let socket = null;
+    let isAuthenticated = false;
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('log').innerHTML = '';
+    }
+
+    function updateStatus(connected) {
+      const statusDiv = document.getElementById('status');
+      if (connected) {
+        statusDiv.className = 'status connected';
+        statusDiv.textContent = '✅ Conectado';
+      } else {
+        statusDiv.className = 'status disconnected';
+        statusDiv.textContent = '❌ Desconectado';
+      }
+    }
+
+    function updateButtons() {
+      document.getElementById('connectBtn').disabled = socket !== null;
+      document.getElementById('disconnectBtn').disabled = socket === null;
+      document.getElementById('authBtn').disabled = socket === null || isAuthenticated;
+      document.getElementById('enterChunkBtn').disabled = !isAuthenticated;
+      document.getElementById('moveBtn').disabled = !isAuthenticated;
+    }
+
+    function connect() {
+      const serverUrl = document.getElementById('serverUrl').value;
+      
+      socket = io(serverUrl, {
+        transports: ['websocket'],
+        reconnection: true,
+      });
+
+      socket.on('connect', () => {
+        log('✅ Conectado ao servidor', 'success');
+        updateStatus(true);
+        updateButtons();
+      });
+
+      socket.on('disconnect', (reason) => {
+        log(`❌ Desconectado: ${reason}`, 'error');
+        updateStatus(false);
+        isAuthenticated = false;
+        updateButtons();
+      });
+
+      // Auth events
+      socket.on('auth:success', (data) => {
+        log(`✅ Autenticado! Player ID: ${data.playerId}`, 'success');
+        log(`Player State: ${JSON.stringify(data.playerState, null, 2)}`, 'info');
+        isAuthenticated = true;
+        updateButtons();
+      });
+
+      socket.on('auth:error', (data) => {
+        log(`❌ Erro de autenticação: ${data.message}`, 'error');
+      });
+
+      // Chunk events
+      socket.on('chunk:data', (data) => {
+        log(`📦 Dados do chunk recebidos:`, 'event');
+        log(`  - Chunk: (${data.chunk.chunk_x}, ${data.chunk.chunk_y}) - ${data.chunk.zone_type}`, 'info');
+        log(`  - Asteroides: ${data.asteroids.length}`, 'info');
+        log(`  - Players: ${data.players.length}`, 'info');
+      });
+
+      // Player events
+      socket.on('player:joined', (data) => {
+        log(`👤 Player entrou: ${data.username} (${data.playerId})`, 'event');
+      });
+
+      socket.on('player:left', (data) => {
+        log(`👋 Player saiu: ${data.playerId}`, 'event');
+      });
+
+      socket.on('player:moved', (data) => {
+        log(`🚀 Player moveu: ${data.playerId} -> (${data.x}, ${data.y})`, 'event');
+      });
+
+      // Error events
+      socket.on('error', (data) => {
+        log(`❌ Erro: ${data.message}`, 'error');
+      });
+
+      log('🔌 Conectando...', 'info');
+    }
+
+    function disconnect() {
+      if (socket) {
+        socket.disconnect();
+        socket = null;
+        isAuthenticated = false;
+        updateStatus(false);
+        updateButtons();
+        log('👋 Desconectado manualmente', 'info');
+      }
+    }
+
+    function authenticate() {
+      const token = document.getElementById('token').value;
+      
+      if (!token) {
+        log('❌ Token não fornecido', 'error');
+        return;
+      }
+
+      socket.emit('auth', { token });
+      log('🔐 Enviando autenticação...', 'info');
+    }
+
+    function enterChunk() {
+      const chunkX = parseInt(document.getElementById('chunkX').value);
+      const chunkY = parseInt(document.getElementById('chunkY').value);
+
+      socket.emit('chunk:enter', { chunkX, chunkY });
+      log(`🗺️ Entrando no chunk (${chunkX}, ${chunkY})...`, 'info');
+    }
+
+    function move() {
+      const x = parseInt(document.getElementById('posX').value);
+      const y = parseInt(document.getElementById('posY').value);
+      const chunkX = parseInt(document.getElementById('chunkX').value);
+      const chunkY = parseInt(document.getElementById('chunkY').value);
+
+      socket.emit('player:move', { x, y, chunkX, chunkY });
+      log(`🚀 Movendo para (${x}, ${y})...`, 'info');
+    }
+
+    // Initialize
+    updateButtons();
+    log('🎮 Test Client iniciado', 'success');
+    log('ℹ️ Obtenha seu JWT token fazendo login no frontend', 'info');
+  </script>
+</body>
+</html>
+

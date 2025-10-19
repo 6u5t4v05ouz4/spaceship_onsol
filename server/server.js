@@ -14,6 +14,12 @@ import { supabaseAdmin, validateSupabaseConnection } from './config/supabase.js'
 import { initRedis, closeRedis } from './config/redis.js';
 import cacheManager from './managers/cache-manager.js';
 import authMiddleware from './middleware/auth-middleware.js';
+import {
+  handleAuth,
+  handleChunkEnter,
+  handlePlayerMove,
+  handleDisconnect,
+} from './events/player-events.js';
 
 // =====================================================
 // EXPRESS SETUP
@@ -104,16 +110,25 @@ const io = new Server(server, {
 // Connection handler
 io.on('connection', (socket) => {
   logger.info(`🔌 Client connected: ${socket.id}`);
-  
-  // TODO: Implementar event handlers
+
+  // Event: auth (autenticação inicial)
   socket.on('auth', (data) => {
-    logger.debug(`Auth request from ${socket.id}`);
-    // TODO: Implementar autenticação
+    handleAuth(socket, data, io);
   });
-  
+
+  // Event: chunk:enter (entrar em um chunk)
+  socket.on('chunk:enter', (data) => {
+    handleChunkEnter(socket, data, io);
+  });
+
+  // Event: player:move (atualizar posição)
+  socket.on('player:move', (data) => {
+    handlePlayerMove(socket, data, io);
+  });
+
+  // Event: disconnect (desconexão)
   socket.on('disconnect', (reason) => {
-    logger.info(`❌ Client disconnected: ${socket.id} (${reason})`);
-    // TODO: Implementar cleanup
+    handleDisconnect(socket, reason, io);
   });
 });
 

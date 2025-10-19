@@ -1,0 +1,360 @@
+/**
+ * Socket Service
+ * Gerencia conexão WebSocket com o servidor Node.js
+ */
+
+import { io } from 'socket.io-client';
+import { supabase } from '../supabase-dev.js';
+
+class SocketService {
+  constructor() {
+    this.socket = null;
+    this.connected = false;
+    this.authenticated = false;
+    this.playerId = null;
+    this.playerState = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+  }
+
+  /**
+   * Conecta ao servidor WebSocket
+   */
+  connect() {
+    if (this.socket?.connected) {
+      console.log('✅ Já conectado ao servidor');
+      return;
+    }
+
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    console.log('🔌 Conectando ao servidor:', serverUrl);
+
+    this.socket = io(serverUrl, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: this.maxReconnectAttempts,
+      timeout: 10000,
+    });
+
+    this.setupListeners();
+  }
+
+  /**
+   * Configura event listeners
+   */
+  setupListeners() {
+    // ===== Conexão =====
+    this.socket.on('connect', () => {
+      console.log('✅ Conectado ao servidor:', this.socket.id);
+      this.connected = true;
+      this.reconnectAttempts = 0;
+
+      // Disparar evento customizado
+      window.dispatchEvent(new CustomEvent('socket:connected', {
+        detail: { socketId: this.socket.id }
+      }));
+
+      // Auto-autenticar se já temos sessão
+      this.authenticateIfNeeded();
+    });
+
+    this.socket.on('disconnect', (reason) => {
+      console.log('❌ Desconectado:', reason);
+      this.connected = false;
+      this.authenticated = false;
+
+      window.dispatchEvent(new CustomEvent('socket:disconnected', {
+        detail: { reason }
+      }));
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('❌ Erro de conexão:', error.message);
+      this.reconnectAttempts++;
+
+      window.dispatchEvent(new CustomEvent('socket:connect_error', {
+        detail: { error: error.message, attempts: this.reconnectAttempts }
+      }));
+    });
+
+    // ===== Autenticação =====
+    this.socket.on('auth:success', (data) => {
+      console.log('✅ Autenticado:', data.playerId);
+      this.authenticated = true;
+      this.playerId = data.playerId;
+      this.playerState = data.playerState;
+
+      window.dispatchEvent(new CustomEvent('socket:authenticated', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('auth:error', (data) => {
+      console.error('❌ Erro de autenticação:', data.message);
+      this.authenticated = false;
+
+      window.dispatchEvent(new CustomEvent('socket:auth:error', {
+        detail: data
+      }));
+    });
+
+    // ===== Chunk =====
+    this.socket.on('chunk:data', (data) => {
+      console.log('📦 Dados do chunk:', data.chunk.zone_type, `(${data.chunk.chunk_x}, ${data.chunk.chunk_y})`);
+      console.log('  - Asteroides:', data.asteroids.length);
+      console.log('  - Players:', data.players.length);
+
+      window.dispatchEvent(new CustomEvent('socket:chunk:data', {
+        detail: data
+      }));
+    });
+
+    // ===== Players =====
+    this.socket.on('player:joined', (data) => {
+      console.log('👤 Player entrou:', data.username);
+
+      window.dispatchEvent(new CustomEvent('socket:player:joined', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('player:left', (data) => {
+      console.log('👋 Player saiu:', data.playerId);
+
+      window.dispatchEvent(new CustomEvent('socket:player:left', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('player:moved', (data) => {
+      window.dispatchEvent(new CustomEvent('socket:player:moved', {
+        detail: data
+      }));
+    });
+
+    // ===== Combate =====
+    this.socket.on('battle:hit', (data) => {
+      console.log('💥 Você foi atingido!', {
+        attacker: data.attackerName,
+        damage: data.damage,
+        critical: data.isCritical,
+        health: `${data.health}/${data.maxHealth}`,
+      });
+
+      window.dispatchEvent(new CustomEvent('socket:battle:hit', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('battle:attack', (data) => {
+      console.log('⚔️ Combate:', `${data.attackerName} → ${data.defenderName} (-${data.damage})`);
+
+      window.dispatchEvent(new CustomEvent('socket:battle:attack', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('battle:attack:success', (data) => {
+      console.log('✅ Ataque bem-sucedido:', data);
+
+      window.dispatchEvent(new CustomEvent('socket:battle:attack:success', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('battle:attack:failed', (data) => {
+      console.log('❌ Ataque falhou:', data.reason);
+
+      window.dispatchEvent(new CustomEvent('socket:battle:attack:failed', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('player:died', (data) => {
+      console.log('💀 Player morreu:', `${data.victimName} (morto por ${data.killerName})`);
+
+      window.dispatchEvent(new CustomEvent('socket:player:died', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('player:death', (data) => {
+      console.log('💀 Você morreu!', {
+        killer: data.killerName,
+        respawnIn: `${data.respawnDelay / 1000}s`,
+      });
+
+      window.dispatchEvent(new CustomEvent('socket:player:death', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('player:respawned', (data) => {
+      console.log('🔄 Respawn:', data);
+
+      window.dispatchEvent(new CustomEvent('socket:player:respawned', {
+        detail: data
+      }));
+    });
+
+    // ===== Erros =====
+    this.socket.on('error', (data) => {
+      console.error('❌ Erro:', data.message);
+
+      window.dispatchEvent(new CustomEvent('socket:error', {
+        detail: data
+      }));
+    });
+
+    this.socket.on('battle:error', (data) => {
+      console.error('❌ Erro de combate:', data.message);
+
+      window.dispatchEvent(new CustomEvent('socket:battle:error', {
+        detail: data
+      }));
+    });
+  }
+
+  /**
+   * Autentica com o servidor
+   */
+  async authenticate() {
+    if (!this.connected) {
+      console.error('❌ Não conectado ao servidor');
+      return false;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      console.error('❌ Sem sessão ativa no Supabase');
+      return false;
+    }
+
+    console.log('🔐 Autenticando com servidor...');
+    this.socket.emit('auth', {
+      token: session.access_token,
+    });
+
+    return true;
+  }
+
+  /**
+   * Auto-autentica se necessário
+   */
+  async authenticateIfNeeded() {
+    if (!this.authenticated && this.connected) {
+      await this.authenticate();
+    }
+  }
+
+  /**
+   * Entra em um chunk
+   */
+  enterChunk(chunkX, chunkY) {
+    if (!this.authenticated) {
+      console.error('❌ Não autenticado');
+      return false;
+    }
+
+    console.log(`📍 Entrando no chunk (${chunkX}, ${chunkY})`);
+    this.socket.emit('chunk:enter', { chunkX, chunkY });
+    return true;
+  }
+
+  /**
+   * Atualiza posição
+   */
+  updatePosition(x, y, chunkX, chunkY) {
+    if (!this.authenticated) return false;
+
+    this.socket.emit('player:move', { x, y, chunkX, chunkY });
+    return true;
+  }
+
+  /**
+   * Ataca outro jogador
+   */
+  attack(targetId) {
+    if (!this.authenticated) {
+      console.error('❌ Não autenticado');
+      return false;
+    }
+
+    console.log(`⚔️ Atacando ${targetId}`);
+    this.socket.emit('battle:attack', { targetId });
+    return true;
+  }
+
+  /**
+   * Solicita respawn
+   */
+  respawn() {
+    if (!this.authenticated) {
+      console.error('❌ Não autenticado');
+      return false;
+    }
+
+    console.log('🔄 Solicitando respawn...');
+    this.socket.emit('battle:respawn', {});
+    return true;
+  }
+
+  /**
+   * Desconecta
+   */
+  disconnect() {
+    if (this.socket) {
+      console.log('👋 Desconectando...');
+      this.socket.disconnect();
+      this.socket = null;
+      this.connected = false;
+      this.authenticated = false;
+      this.playerId = null;
+      this.playerState = null;
+    }
+  }
+
+  /**
+   * Verifica se está conectado
+   */
+  isConnected() {
+    return this.connected && this.socket?.connected;
+  }
+
+  /**
+   * Verifica se está autenticado
+   */
+  isAuthenticated() {
+    return this.authenticated;
+  }
+
+  /**
+   * Obtém ID do jogador
+   */
+  getPlayerId() {
+    return this.playerId;
+  }
+
+  /**
+   * Obtém estado do jogador
+   */
+  getPlayerState() {
+    return this.playerState;
+  }
+
+  /**
+   * Obtém socket ID
+   */
+  getSocketId() {
+    return this.socket?.id;
+  }
+}
+
+// Singleton
+const socketService = new SocketService();
+
+export default socketService;
+

@@ -7,6 +7,7 @@ import * as authService from '../../shared/services/authService.js';
 import * as userInitService from '../../shared/services/userInitService.js';
 import { navigateTo } from '../../shared/router.js';
 import HeaderNavigation from '../components/HeaderNavigation.js';
+import ServerStatus from '../components/ServerStatus.js';
 
 export default class DashboardPage {
   constructor(supabaseClient) {
@@ -55,6 +56,9 @@ export default class DashboardPage {
 
           <!-- Data State -->
           <div id="dataState" class="data-state" style="display: none;">
+            <!-- Server Status Widget -->
+            <div id="serverStatusWidget"></div>
+
             <!-- User Profile & Ship Display -->
             <div class="profile-ship-container">
               <!-- User Profile -->
@@ -301,6 +305,7 @@ export default class DashboardPage {
 
       this.hideLoading(container);
       this.renderData(container);
+      this.renderServerStatus(container);
 
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
@@ -1202,6 +1207,18 @@ export default class DashboardPage {
         }
       `;
       document.head.appendChild(style);
+    }
+  }
+
+  /**
+   * Renderiza o widget de status do servidor
+   */
+  renderServerStatus(container) {
+    const serverStatusWidget = container.querySelector('#serverStatusWidget');
+    if (serverStatusWidget) {
+      const serverStatus = new ServerStatus();
+      const statusElement = serverStatus.render();
+      serverStatusWidget.appendChild(statusElement);
     }
   }
 }

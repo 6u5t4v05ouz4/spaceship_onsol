@@ -3,7 +3,7 @@
 // =====================================================
 // Versão: 2.0 - Com melhorias de acessibilidade e performance
 
-// Importar a simulação de gameplay
+// Importar a simulação de gameplay com ASSETS REAIS
 import GameplaySimulation from './GameplaySimulation.js';
 
 // ✅ Função para retornar config adaptada (substitui const estática)
@@ -500,14 +500,20 @@ class BackgroundSimulation {
             console.log('🎨 Canvas zIndex:', canvas.style.zIndex);
             console.log('🎨 Canvas position:', canvas.style.position);
             
-            // Aplicar preferência inicial
-            this.applyMotionPreference();
-            
-            // Atualizar opacity baseado na página após um delay
-            setTimeout(() => {
-                this.updateOpacityForCurrentPage();
-                console.log('🎨 Opacity atualizada para página:', this.currentPage);
-            }, 500);
+        // Aplicar preferência inicial
+        this.applyMotionPreference();
+        
+        // ✅ DEBUG: Verificar se está pausado
+        console.log('🔍 DEBUG: isPaused =', this.isPaused);
+        console.log('🔍 DEBUG: isActive =', this.isActive);
+        console.log('🔍 DEBUG: prefersReducedMotion =', this.prefersReducedMotion);
+        
+        // Atualizar opacity baseado na página após um delay
+        setTimeout(() => {
+            this.updateOpacityForCurrentPage();
+            console.log('🎨 Opacity atualizada para página:', this.currentPage);
+            console.log('🔍 DEBUG FINAL: isPaused =', this.isPaused, 'isActive =', this.isActive);
+        }, 500);
         }
     }
 

@@ -16,16 +16,72 @@ export default class GameplaySimulation extends Phaser.Scene {
 
     preload() {
         this.load.setPath('');
-        this.load.atlas('ship', '/assets/images/01.png', '/assets/images/01.json');
-        this.load.image('ship_idle', '/assets/images/idle.png');
-        this.load.atlas('enemy', '/assets/images/02.png', '/assets/images/02.json');
-        this.load.atlas('meteoro', '/assets/images/meteoro.png', '/assets/images/meteoro.json');
-        this.load.atlas('explosion', '/assets/images/explosion.png', '/assets/images/explosion.json');
-        this.load.atlas('minibullet', '/assets/images/minibullet.png', '/assets/images/minibullet.json');
-        this.load.atlas('planets', '/assets/background/planets.png', '/assets/background/planets.json');
-        this.load.image('stars', '/assets/background/stars.jpeg');
-        this.load.audio('bullet_sound', '/assets/sounds_effects/bullet.mp3');
-        this.load.audio('explosion_sound', '/assets/sounds_effects/explosion.mp3');
+        console.log('🔍 PRELOAD: Iniciando carregamento de assets...');
+        
+        try {
+            this.load.atlas('ship', '/assets/images/01.png', '/assets/images/01.json');
+            console.log('✅ Ship atlas adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar ship:', e); }
+        
+        try {
+            this.load.image('ship_idle', '/assets/images/idle.png');
+            console.log('✅ Ship idle adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar ship_idle:', e); }
+        
+        try {
+            this.load.atlas('enemy', '/assets/images/02.png', '/assets/images/02.json');
+            console.log('✅ Enemy atlas adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar enemy:', e); }
+        
+        try {
+            this.load.atlas('meteoro', '/assets/images/meteoro.png', '/assets/images/meteoro.json');
+            console.log('✅ Meteoro atlas adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar meteoro:', e); }
+        
+        try {
+            this.load.atlas('explosion', '/assets/images/explosion.png', '/assets/images/explosion.json');
+            console.log('✅ Explosion atlas adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar explosion:', e); }
+        
+        try {
+            this.load.atlas('minibullet', '/assets/images/minibullet.png', '/assets/images/minibullet.json');
+            console.log('✅ Minibullet atlas adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar minibullet:', e); }
+        
+        try {
+            this.load.atlas('planets', '/assets/background/planets.png', '/assets/background/planets.json');
+            console.log('✅ Planets atlas adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar planets:', e); }
+        
+        try {
+            this.load.image('stars', '/assets/background/stars.jpeg');
+            console.log('✅ Stars image adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar stars:', e); }
+        
+        try {
+            this.load.audio('bullet_sound', '/assets/sounds_effects/bullet.mp3');
+            console.log('✅ Bullet sound adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar bullet_sound:', e); }
+        
+        try {
+            this.load.audio('explosion_sound', '/assets/sounds_effects/explosion.mp3');
+            console.log('✅ Explosion sound adicionado ao preload');
+        } catch(e) { console.error('❌ Erro ao carregar explosion_sound:', e); }
+        
+        console.log('🔍 PRELOAD: Todos os assets adicionados à fila de carregamento');
+        
+        // Listeners de erro
+        this.load.on('loaderror', (file) => {
+            console.error('❌ ERRO AO CARREGAR ARQUIVO:', file.src);
+        });
+        
+        this.load.on('fileprogress', (file) => {
+            console.log('📦 Carregando:', file.src);
+        });
+        
+        this.load.on('complete', () => {
+            console.log('✅ PRELOAD COMPLETO! Todos os assets carregados com sucesso!');
+        });
     }
 
     create() {
@@ -593,9 +649,7 @@ export default class GameplaySimulation extends Phaser.Scene {
         });
 
         this.time.addEvent({
-            delay: 3000,
-            callback: () => {
-                if (this.elements.enemies.length < 3) {
+            delay: 1000, callback: () => { if (this.elements.enemies.length < 8) {
                     this.spawnEnemy();
                 }
             },
@@ -603,9 +657,7 @@ export default class GameplaySimulation extends Phaser.Scene {
         });
 
         this.time.addEvent({
-            delay: 4000,
-            callback: () => {
-                if (this.elements.meteors.length < 2) {
+            delay: 1500, callback: () => { if (this.elements.meteors.length < 6) {
                     this.spawnMeteor();
                 }
             },

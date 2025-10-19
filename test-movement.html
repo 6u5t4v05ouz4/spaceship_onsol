@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TESTE MOVIMENTO DIRETO</title>
+    <style>
+        body { margin: 0; background: #000; color: #0ff; font-family: monospace; }
+        #info { position: fixed; top: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.8); padding: 10px; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>🔥 TESTE MOVIMENTO DIRETO</h3>
+        <div id="status">Carregando...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
+    <script>
+        const status = document.getElementById('status');
+        
+        function log(msg) {
+            console.log(msg);
+            status.innerHTML += '<br>' + msg;
+        }
+
+        class TestMovement extends Phaser.Scene {
+            constructor() {
+                super('TestMovement');
+            }
+
+            create() {
+                log('🎮 CRIANDO ELEMENTOS...');
+                
+                // Círculo VERMELHO que se move
+                this.redCircle = this.add.circle(100, 100, 30, 0xff0000);
+                
+                // Retângulo VERDE que se move
+                this.greenRect = this.add.rectangle(200, 200, 60, 40, 0x00ff00);
+                
+                // Sprite com physics (se tiver assets)
+                this.blueCircle = this.physics.add.sprite(300, 300, null);
+                this.blueCircle.setTint(0x0000ff);
+                this.blueCircle.displayWidth = 50;
+                this.blueCircle.displayHeight = 50;
+                this.blueCircle.setVelocity(100, 50);
+                
+                log('✅ ELEMENTOS CRIADOS!');
+                log('🔄 INICIANDO MOVIMENTO...');
+            }
+
+            update() {
+                // Movimento MANUAL (sempre funciona)
+                this.redCircle.x += 2;
+                this.redCircle.y += 1;
+                
+                // Se sair da tela, volta
+                if (this.redCircle.x > 800) this.redCircle.x = 0;
+                if (this.redCircle.y > 600) this.redCircle.y = 0;
+                
+                // Movimento rotacional
+                this.greenRect.rotation += 0.02;
+                this.greenRect.x = 400 + Math.cos(this.time.now * 0.002) * 150;
+                this.greenRect.y = 300 + Math.sin(this.time.now * 0.002) * 100;
+                
+                // Physics (se funcionar)
+                if (this.blueCircle.body) {
+                    if (this.blueCircle.x > 800 || this.blueCircle.x < 0) {
+                        this.blueCircle.setVelocityX(-this.blueCircle.body.velocity.x);
+                    }
+                    if (this.blueCircle.y > 600 || this.blueCircle.y < 0) {
+                        this.blueCircle.setVelocityY(-this.blueCircle.body.velocity.y);
+                    }
+                }
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            backgroundColor: '#001122',
+            physics: {
+                default: 'arcade',
+                arcade: { gravity: { x: 0, y: 0 } }
+            },
+            scene: [TestMovement]
+        };
+
+        log('🚀 CRIANDO JOGO...');
+        const game = new Phaser.Game(config);
+        
+        game.events.once('ready', () => {
+            log('✅ JOGO PRONTO!');
+            log('🎯 SE VOCÊ VÊ MOVIMENTO = PHASER OK');
+            log('🎯 SE NÃO VÊ MOVIMENTO = PROBLEMA NO PHASER');
+        });
+    </script>
+</body>
+</html>

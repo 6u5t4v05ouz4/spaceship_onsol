@@ -67,59 +67,11 @@ export default defineConfig({
   server: {
     open: '/',
     port: 3000,
-    // Proxy requests to backend (use BACKEND env var) and rewrite Location headers on proxy responses
-    proxy: {
-      // ajuste os contextos conforme seu backend (ex.: /auth, /oauth, /api/auth)
-      '/auth': {
-        // Default para desenvolvimento: localhost:3000
-        target: process.env.BACKEND || 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        onProxyRes(proxyRes) {
-          const location = proxyRes.headers['location'] || proxyRes.headers['Location'];
-          if (location && typeof location === 'string' && location.includes('://')) {
-            try {
-              const devOrigin = process.env.DEV_REDIRECT_ORIGIN || `http://localhost:${process.env.PORT || 3000}`;
-              const url = new URL(location);
-              const devUrl = new URL(devOrigin);
-              if (url.origin !== devUrl.origin) {
-                url.protocol = devUrl.protocol;
-                url.host = devUrl.host;
-                const newLoc = url.toString();
-                proxyRes.headers['location'] = newLoc;
-                proxyRes.headers['Location'] = newLoc;
-              }
-            } catch (e) {
-              /* ignore malformed URL */
-            }
-          }
-        }
-      },
-      '/api': {
-        // Default para desenvolvimento: localhost:3000
-        target: process.env.BACKEND || 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        onProxyRes(proxyRes) {
-          const location = proxyRes.headers['location'] || proxyRes.headers['Location'];
-          if (location && typeof location === 'string' && location.includes('://')) {
-            try {
-              const devOrigin = process.env.DEV_REDIRECT_ORIGIN || `http://localhost:${process.env.PORT || 3000}`;
-              const url = new URL(location);
-              const devUrl = new URL(devOrigin);
-              if (url.origin !== devUrl.origin) {
-                url.protocol = devUrl.protocol;
-                url.host = devUrl.host;
-                const newLoc = url.toString();
-                proxyRes.headers['location'] = newLoc;
-                proxyRes.headers['Location'] = newLoc;
-              }
-            } catch (e) {
-              /* ignore malformed URL */
-            }
-          }
-        }
-      }
-    }
+    // Proxy desabilitado - não temos backend local
+    // Se precisar de proxy no futuro, adicione aqui
+    // proxy: {
+    //   '/auth': { ... },
+    //   '/api': { ... }
+    // }
   }
 });

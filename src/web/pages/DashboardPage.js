@@ -109,45 +109,102 @@ export default class DashboardPage {
             <!-- Stats Grid -->
             <section class="stats-section">
               <h3 class="section-title">
-                <span role="img" aria-label="Estatísticas">📊</span> Estatísticas
+                <span role="img" aria-label="Estatísticas">📊</span> Estatísticas de Jogo
               </h3>
               <div class="stats-grid">
                 <div class="stat-card">
-                  <div class="stat-label">Nível</div>
-                  <div class="stat-value" id="level" aria-label="Nível do jogador">0</div>
+                  <div class="stat-icon">🎮</div>
+                  <div class="stat-label">Sessões</div>
+                  <div class="stat-value" id="sessionsCount">0</div>
                 </div>
                 <div class="stat-card">
-                  <div class="stat-label">XP</div>
-                  <div class="stat-value" id="xp" aria-label="Pontos de experiência">0</div>
+                  <div class="stat-icon">⏱️</div>
+                  <div class="stat-label">Tempo Jogado</div>
+                  <div class="stat-value" id="playTime">0h</div>
                 </div>
                 <div class="stat-card">
-                  <div class="stat-label">Moedas</div>
-                  <div class="stat-value" id="coins" aria-label="Total de moedas">0</div>
+                  <div class="stat-icon">🌍</div>
+                  <div class="stat-label">Planetas</div>
+                  <div class="stat-value" id="planetsDiscovered">0</div>
                 </div>
                 <div class="stat-card">
+                  <div class="stat-icon">⛏️</div>
+                  <div class="stat-label">Minerações</div>
+                  <div class="stat-value" id="miningSessions">0</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon">⚔️</div>
+                  <div class="stat-label">Batalhas</div>
+                  <div class="stat-value" id="totalBattles">0</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon">🏆</div>
                   <div class="stat-label">Vitórias</div>
-                  <div class="stat-value" id="wins" aria-label="Total de vitórias">0</div>
+                  <div class="stat-value" id="battlesWon">0</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon">🔨</div>
+                  <div class="stat-label">Itens Criados</div>
+                  <div class="stat-value" id="itemsCrafted">0</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon">🚀</div>
+                  <div class="stat-label">Distância</div>
+                  <div class="stat-value" id="distanceTraveled">0 km</div>
                 </div>
               </div>
             </section>
 
-            <!-- Ships Section -->
-            <section class="ships-section">
+            <!-- Wallet Section -->
+            <section class="wallet-section">
               <h3 class="section-title">
-                <span role="img" aria-label="Naves">🚀</span> Naves
+                <span role="img" aria-label="Carteira">💰</span> Carteira
               </h3>
-              <div id="shipsGrid" class="ships-grid">
-                <p class="empty-message">Nenhuma nave encontrada</p>
+              <div class="wallet-grid">
+                <div class="wallet-card space-tokens">
+                  <div class="wallet-icon">🪙</div>
+                  <div class="wallet-info">
+                    <div class="wallet-label">Space Tokens</div>
+                    <div class="wallet-value" id="spaceTokens">0</div>
+                    <div class="wallet-description">Moeda do jogo</div>
+                  </div>
+                </div>
+                <div class="wallet-card sol-tokens">
+                  <div class="wallet-icon">◎</div>
+                  <div class="wallet-info">
+                    <div class="wallet-label">SOL Tokens</div>
+                    <div class="wallet-value" id="solTokens">0.00</div>
+                    <div class="wallet-description">Blockchain Solana</div>
+                  </div>
+                </div>
+                <div class="wallet-card total-earned">
+                  <div class="wallet-icon">💎</div>
+                  <div class="wallet-info">
+                    <div class="wallet-label">Total Ganho</div>
+                    <div class="wallet-value" id="totalEarned">0</div>
+                    <div class="wallet-description">Tokens acumulados</div>
+                  </div>
+                </div>
               </div>
             </section>
 
             <!-- Inventory Section -->
             <section class="inventory-section">
               <h3 class="section-title">
-                <span role="img" aria-label="Inventário">🎒</span> Inventário
+                <span role="img" aria-label="Inventário">🎒</span> Inventário de Recursos
               </h3>
               <div id="inventoryGrid" class="inventory-grid">
-                <p class="empty-message">Inventário vazio</p>
+                <p class="empty-message">Inventário vazio - Comece a minerar!</p>
+              </div>
+            </section>
+
+            <!-- Recent Activity Section -->
+            <section class="activity-section">
+              <h3 class="section-title">
+                <span role="img" aria-label="Atividade">📜</span> Atividade Recente
+              </h3>
+              <div id="recentActivity" class="activity-list">
+                <p class="empty-message">Nenhuma atividade recente</p>
               </div>
             </section>
           </div>
@@ -486,45 +543,84 @@ export default class DashboardPage {
     // Renderizar nave do usuário
     this.renderShipDisplay(container);
 
-    // Stats - usar player_stats e player_wallet
+    // Stats - usar player_stats
     const stats = this.data.gameData || {};
+    
+    // Estatísticas de Jogo
+    container.querySelector('#sessionsCount').textContent = stats.sessions_count || 0;
+    
+    // Tempo jogado (converter segundos para horas)
+    const playTimeHours = Math.floor((stats.total_play_time_seconds || 0) / 3600);
+    const playTimeMinutes = Math.floor(((stats.total_play_time_seconds || 0) % 3600) / 60);
+    container.querySelector('#playTime').textContent = playTimeHours > 0 
+      ? `${playTimeHours}h ${playTimeMinutes}m` 
+      : `${playTimeMinutes}m`;
+    
+    container.querySelector('#planetsDiscovered').textContent = stats.planets_discovered || 0;
+    container.querySelector('#miningSessions').textContent = stats.total_mining_sessions || 0;
+    container.querySelector('#totalBattles').textContent = stats.total_battles || 0;
+    container.querySelector('#battlesWon').textContent = stats.battles_won || 0;
+    container.querySelector('#itemsCrafted').textContent = stats.total_items_crafted || 0;
+    
+    // Distância (converter para km)
+    const distanceKm = ((stats.distance_traveled || 0) / 1000).toFixed(1);
+    container.querySelector('#distanceTraveled').textContent = `${distanceKm} km`;
+
+    // Wallet - usar player_wallet
     const wallet = this.data.ships.length > 0 ? this.data.ships[0] : null;
     
-    container.querySelector('#level').textContent = stats.sessions_count || 0; // Usar sessions como "level"
-    container.querySelector('#xp').textContent = stats.total_tokens_earned || 0; // Tokens ganhos como "XP"
-    container.querySelector('#coins').textContent = wallet ? wallet.space_tokens || 0 : 0; // Space tokens
-    container.querySelector('#wins').textContent = stats.battles_won || 0; // Batalhas ganhas
+    container.querySelector('#spaceTokens').textContent = wallet ? (wallet.space_tokens || 0).toLocaleString() : '0';
+    container.querySelector('#solTokens').textContent = wallet ? parseFloat(wallet.sol_tokens || 0).toFixed(4) : '0.0000';
+    container.querySelector('#totalEarned').textContent = (stats.total_tokens_earned || 0).toLocaleString();
 
-    // Wallet - usar campos reais: space_tokens, sol_tokens
-    const shipsGrid = container.querySelector('#shipsGrid');
-    if (this.data.ships.length > 0) {
-      // player_wallet tem space_tokens e sol_tokens
-      const wallet = this.data.ships[0]; // só há 1 wallet por user
-      shipsGrid.innerHTML = `
-        <div class="ship-card">
-          <div class="ship-name">💰 Space Tokens</div>
-          <div class="ship-rarity">${wallet.space_tokens || 0}</div>
-        </div>
-        <div class="ship-card">
-          <div class="ship-name">◎ SOL Tokens</div>
-          <div class="ship-rarity">${wallet.sol_tokens || 0}</div>
-        </div>
-      `;
-    } else {
-      shipsGrid.innerHTML = '<p class="empty-message">Carteira não encontrada</p>';
-    }
-
-    // Inventory - usar campos reais: resource_type_id, quantity
+    // Inventory - usar player_inventory
     const inventoryGrid = container.querySelector('#inventoryGrid');
     if (this.data.inventory.length > 0) {
       inventoryGrid.innerHTML = this.data.inventory.map(item => `
         <div class="inventory-item">
-          <div class="item-id">Resource ${item.resource_type_id?.substring(0, 8) || 'N/A'}</div>
-          <div class="item-qty">x${item.quantity || 0}</div>
+          <div class="item-icon">📦</div>
+          <div class="item-info">
+            <div class="item-name">Recurso #${item.resource_type_id?.substring(0, 8) || 'N/A'}</div>
+            <div class="item-quantity">Quantidade: ${item.quantity || 0}</div>
+          </div>
         </div>
       `).join('');
     } else {
-      inventoryGrid.innerHTML = '<p class="empty-message">Inventário vazio</p>';
+      inventoryGrid.innerHTML = '<p class="empty-message">Inventário vazio - Comece a minerar!</p>';
+    }
+
+    // Recent Activity - placeholder
+    const activityList = container.querySelector('#recentActivity');
+    if (stats.sessions_count > 0) {
+      activityList.innerHTML = `
+        <div class="activity-item">
+          <div class="activity-icon">🎮</div>
+          <div class="activity-content">
+            <div class="activity-title">Sessões de jogo</div>
+            <div class="activity-description">Você jogou ${stats.sessions_count} ${stats.sessions_count === 1 ? 'vez' : 'vezes'}</div>
+          </div>
+        </div>
+        ${stats.planets_discovered > 0 ? `
+        <div class="activity-item">
+          <div class="activity-icon">🌍</div>
+          <div class="activity-content">
+            <div class="activity-title">Exploração espacial</div>
+            <div class="activity-description">Descobriu ${stats.planets_discovered} ${stats.planets_discovered === 1 ? 'planeta' : 'planetas'}</div>
+          </div>
+        </div>
+        ` : ''}
+        ${stats.battles_won > 0 ? `
+        <div class="activity-item">
+          <div class="activity-icon">⚔️</div>
+          <div class="activity-content">
+            <div class="activity-title">Combates vencidos</div>
+            <div class="activity-description">Venceu ${stats.battles_won} ${stats.battles_won === 1 ? 'batalha' : 'batalhas'}</div>
+          </div>
+        </div>
+        ` : ''}
+      `;
+    } else {
+      activityList.innerHTML = '<p class="empty-message">Nenhuma atividade recente - Comece a jogar!</p>';
     }
   }
 
@@ -827,19 +923,28 @@ export default class DashboardPage {
           border-radius: var(--border-radius-md, 0.5rem);
           text-align: center;
           transition: var(--transition-normal, 0.3s);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--spacing-xs, 0.25rem);
         }
 
         .stat-card:hover {
           background: rgba(0, 255, 204, 0.12);
           border-color: rgba(0, 255, 204, 0.4);
           transform: translateY(-2px);
+          box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+        }
+
+        .stat-icon {
+          font-size: 2rem;
+          margin-bottom: var(--spacing-xs, 0.25rem);
         }
 
         .stat-label {
           font-size: 0.875rem;
           color: var(--text-secondary, #b0b0b0);
           font-family: var(--font-secondary, Arial);
-          margin-bottom: 0.5rem;
         }
 
         .stat-value {
@@ -849,44 +954,193 @@ export default class DashboardPage {
           font-weight: 700;
         }
 
-        .ships-section,
-        .inventory-section {
+        /* Wallet Section */
+        .wallet-section {
           margin-bottom: var(--spacing-xl, 2rem);
         }
 
-        .ships-grid,
-        .inventory-grid {
+        .wallet-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
           gap: var(--spacing-md, 1rem);
         }
 
-        .ship-card,
+        .wallet-card {
+          padding: var(--spacing-lg, 1.5rem);
+          background: rgba(0, 255, 204, 0.08);
+          border: 1px solid rgba(0, 255, 204, 0.2);
+          border-radius: var(--border-radius-lg, 1rem);
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-md, 1rem);
+          transition: var(--transition-normal, 0.3s);
+        }
+
+        .wallet-card:hover {
+          background: rgba(0, 255, 204, 0.12);
+          border-color: rgba(0, 255, 204, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+        }
+
+        .wallet-card.space-tokens {
+          border-color: rgba(255, 215, 0, 0.3);
+          background: rgba(255, 215, 0, 0.05);
+        }
+
+        .wallet-card.space-tokens:hover {
+          border-color: rgba(255, 215, 0, 0.5);
+          background: rgba(255, 215, 0, 0.1);
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .wallet-card.sol-tokens {
+          border-color: rgba(138, 43, 226, 0.3);
+          background: rgba(138, 43, 226, 0.05);
+        }
+
+        .wallet-card.sol-tokens:hover {
+          border-color: rgba(138, 43, 226, 0.5);
+          background: rgba(138, 43, 226, 0.1);
+          box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
+        }
+
+        .wallet-card.total-earned {
+          border-color: rgba(0, 255, 255, 0.3);
+          background: rgba(0, 255, 255, 0.05);
+        }
+
+        .wallet-card.total-earned:hover {
+          border-color: rgba(0, 255, 255, 0.5);
+          background: rgba(0, 255, 255, 0.1);
+          box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .wallet-icon {
+          font-size: 3rem;
+          flex-shrink: 0;
+        }
+
+        .wallet-info {
+          flex: 1;
+        }
+
+        .wallet-label {
+          font-size: 0.875rem;
+          color: var(--text-secondary, #b0b0b0);
+          font-family: var(--font-secondary, Arial);
+          margin-bottom: var(--spacing-xs, 0.25rem);
+        }
+
+        .wallet-value {
+          font-size: 2rem;
+          color: var(--primary-cyan, #00ffcc);
+          font-family: var(--font-primary, Arial);
+          font-weight: 700;
+          margin-bottom: var(--spacing-xs, 0.25rem);
+        }
+
+        .wallet-description {
+          font-size: 0.75rem;
+          color: var(--text-tertiary, #808080);
+          font-family: var(--font-secondary, Arial);
+        }
+
+        /* Inventory Section */
+        .inventory-section,
+        .activity-section {
+          margin-bottom: var(--spacing-xl, 2rem);
+        }
+
+        .inventory-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: var(--spacing-md, 1rem);
+        }
+
         .inventory-item {
           padding: var(--spacing-md, 1rem);
           background: rgba(0, 255, 204, 0.08);
           border: 1px solid rgba(0, 255, 204, 0.2);
           border-radius: var(--border-radius-md, 0.5rem);
-          text-align: center;
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-sm, 0.5rem);
           transition: var(--transition-normal, 0.3s);
         }
 
-        .ship-card:hover,
         .inventory-item:hover {
           background: rgba(0, 255, 204, 0.12);
+          border-color: rgba(0, 255, 204, 0.4);
           transform: translateY(-2px);
+          box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
         }
 
-        .ship-name,
-        .item-id {
+        .item-icon {
+          font-size: 2rem;
+          flex-shrink: 0;
+        }
+
+        .item-info {
+          flex: 1;
+        }
+
+        .item-name {
           color: var(--primary-cyan, #00ffcc);
           font-family: var(--font-primary, Arial);
           font-weight: 600;
-          margin-bottom: 0.5rem;
+          font-size: 0.875rem;
+          margin-bottom: var(--spacing-xs, 0.25rem);
         }
 
-        .ship-rarity,
-        .item-qty {
+        .item-quantity {
+          color: var(--text-secondary, #b0b0b0);
+          font-family: var(--font-secondary, Arial);
+          font-size: 0.75rem;
+        }
+
+        /* Activity Section */
+        .activity-list {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-sm, 0.5rem);
+        }
+
+        .activity-item {
+          padding: var(--spacing-md, 1rem);
+          background: rgba(0, 255, 204, 0.08);
+          border: 1px solid rgba(0, 255, 204, 0.2);
+          border-radius: var(--border-radius-md, 0.5rem);
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-md, 1rem);
+          transition: var(--transition-normal, 0.3s);
+        }
+
+        .activity-item:hover {
+          background: rgba(0, 255, 204, 0.12);
+          border-color: rgba(0, 255, 204, 0.4);
+          transform: translateX(5px);
+        }
+
+        .activity-icon {
+          font-size: 2rem;
+          flex-shrink: 0;
+        }
+
+        .activity-content {
+          flex: 1;
+        }
+
+        .activity-title {
+          color: var(--primary-cyan, #00ffcc);
+          font-family: var(--font-primary, Arial);
+          font-weight: 600;
+          font-size: 1rem;
+          margin-bottom: var(--spacing-xs, 0.25rem);
+        }
+
+        .activity-description {
           color: var(--text-secondary, #b0b0b0);
           font-family: var(--font-secondary, Arial);
           font-size: 0.875rem;

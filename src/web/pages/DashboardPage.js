@@ -33,11 +33,13 @@ export default class DashboardPage {
         <!-- Header -->
         <header class="dashboard-header">
           <div class="header-left">
-            <h1 class="dashboard-title">🎮 Dashboard</h1>
+            <h1 class="dashboard-title">
+              <span role="img" aria-label="Controle de jogo">🎮</span> Dashboard
+            </h1>
           </div>
           <div class="header-right">
-            <button id="logoutBtn" class="logout-btn" title="Fazer logout">
-              🚪 Logout
+            <button id="logoutBtn" class="logout-btn" aria-label="Fazer logout da conta">
+              <span role="img" aria-label="Porta">🚪</span> Logout
             </button>
           </div>
         </header>
@@ -51,10 +53,12 @@ export default class DashboardPage {
           </div>
 
           <!-- Error State -->
-          <div id="errorState" class="error-state" style="display: none;">
-            <div class="error-icon">❌</div>
+          <div id="errorState" class="error-state" role="alert" aria-live="polite" style="display: none;">
+            <div class="error-icon" role="img" aria-label="Erro">❌</div>
             <p class="error-message" id="errorMessage"></p>
-            <button id="retryBtn" class="retry-btn">🔄 Tentar Novamente</button>
+            <button id="retryBtn" class="retry-btn" aria-label="Tentar carregar dados novamente">
+              <span role="img" aria-label="Recarregar">🔄</span> Tentar Novamente
+            </button>
           </div>
 
           <!-- Data State -->
@@ -72,30 +76,34 @@ export default class DashboardPage {
 
             <!-- Stats Grid -->
             <section class="stats-section">
-              <h3 class="section-title">📊 Estatísticas</h3>
+              <h3 class="section-title">
+                <span role="img" aria-label="Estatísticas">📊</span> Estatísticas
+              </h3>
               <div class="stats-grid">
                 <div class="stat-card">
                   <div class="stat-label">Nível</div>
-                  <div class="stat-value" id="level">0</div>
+                  <div class="stat-value" id="level" aria-label="Nível do jogador">0</div>
                 </div>
                 <div class="stat-card">
                   <div class="stat-label">XP</div>
-                  <div class="stat-value" id="xp">0</div>
+                  <div class="stat-value" id="xp" aria-label="Pontos de experiência">0</div>
                 </div>
                 <div class="stat-card">
                   <div class="stat-label">Moedas</div>
-                  <div class="stat-value" id="coins">0</div>
+                  <div class="stat-value" id="coins" aria-label="Total de moedas">0</div>
                 </div>
                 <div class="stat-card">
                   <div class="stat-label">Vitórias</div>
-                  <div class="stat-value" id="wins">0</div>
+                  <div class="stat-value" id="wins" aria-label="Total de vitórias">0</div>
                 </div>
               </div>
             </section>
 
             <!-- Ships Section -->
             <section class="ships-section">
-              <h3 class="section-title">🚀 Naves</h3>
+              <h3 class="section-title">
+                <span role="img" aria-label="Naves">🚀</span> Naves
+              </h3>
               <div id="shipsGrid" class="ships-grid">
                 <p class="empty-message">Nenhuma nave encontrada</p>
               </div>
@@ -103,7 +111,9 @@ export default class DashboardPage {
 
             <!-- Inventory Section -->
             <section class="inventory-section">
-              <h3 class="section-title">🎒 Inventário</h3>
+              <h3 class="section-title">
+                <span role="img" aria-label="Inventário">🎒</span> Inventário
+              </h3>
               <div id="inventoryGrid" class="inventory-grid">
                 <p class="empty-message">Inventário vazio</p>
               </div>
@@ -313,13 +323,27 @@ export default class DashboardPage {
   }
 
   /**
-   * Mostrar erro
+   * Mostrar erro (accessible)
    */
   showError(container, message) {
     container.querySelector('#loadingState').style.display = 'none';
-    container.querySelector('#errorState').style.display = 'flex';
-    container.querySelector('#errorMessage').textContent = message;
+    const errorState = container.querySelector('#errorState');
+    errorState.style.display = 'flex';
+    errorState.setAttribute('role', 'alert');
+    errorState.setAttribute('aria-live', 'polite');
+    
+    const errorMessage = container.querySelector('#errorMessage');
+    errorMessage.textContent = message;
     container.querySelector('#dataState').style.display = 'none';
+    
+    // Anunciar para screen readers
+    const announcement = document.createElement('div');
+    announcement.className = 'sr-only';
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.textContent = `Erro: ${message}`;
+    document.body.appendChild(announcement);
+    setTimeout(() => announcement.remove(), 1000);
   }
 
   /**

@@ -50,10 +50,12 @@ export default class ProfilePage {
           </div>
 
           <!-- Error State -->
-          <div id="errorState" class="error-state" style="display: none;">
-            <div class="error-icon">❌</div>
+          <div id="errorState" class="error-state" role="alert" aria-live="polite" style="display: none;">
+            <div class="error-icon" role="img" aria-label="Erro">❌</div>
             <p class="error-message" id="errorMessage"></p>
-            <button id="retryBtn" class="retry-btn">🔄 Tentar Novamente</button>
+            <button id="retryBtn" class="retry-btn" aria-label="Tentar carregar novamente">
+              <span role="img" aria-label="Recarregar">🔄</span> Tentar Novamente
+            </button>
           </div>
 
           <!-- Data State -->
@@ -68,9 +70,11 @@ export default class ProfilePage {
                   <p id="avatarStatus" class="avatar-status"></p>
                 </div>
                 <div id="avatarUploadDiv" class="avatar-upload" style="display: none;">
-                  <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display: none;">
-                  <button id="uploadBtn" class="upload-btn" type="button">📤 Trocar Avatar</button>
-                  <p id="uploadError" class="error-text" style="display: none;"></p>
+                  <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display: none;" aria-label="Selecionar arquivo de avatar">
+                  <button id="uploadBtn" class="upload-btn" type="button" aria-label="Trocar foto de avatar">
+                    <span role="img" aria-label="Upload">📤</span> Trocar Avatar
+                  </button>
+                  <p id="uploadError" class="error-text" role="alert" aria-live="polite" style="display: none;"></p>
                 </div>
               </section>
 
@@ -119,24 +123,26 @@ export default class ProfilePage {
                   </div>
 
                   <!-- Success Message -->
-                  <div id="successMessage" class="success-message" style="display: none;">
-                    ✅ Perfil atualizado com sucesso!
+                  <div id="successMessage" class="success-message" role="status" aria-live="polite" style="display: none;">
+                    <span role="img" aria-label="Sucesso">✅</span> Perfil atualizado com sucesso!
                   </div>
 
                   <!-- Error Message -->
-                  <div id="generalError" class="general-error" style="display: none;"></div>
+                  <div id="generalError" class="general-error" role="alert" aria-live="polite" style="display: none;"></div>
 
                   <!-- Action Buttons -->
                   <div class="form-actions">
-                    <button id="editBtn" class="btn btn-primary" type="button" style="display: none;">
-                      ✏️ Editar
+                    <button id="editBtn" class="btn btn-primary" type="button" style="display: none;" aria-label="Editar perfil">
+                      <span role="img" aria-label="Editar">✏️</span> Editar
                     </button>
-                    <button id="saveBtn" class="btn btn-success" type="button" style="display: none;">
-                      <span class="btn-text">💾 Salvar</span>
-                      <span class="btn-loader" style="display: none;">⏳</span>
+                    <button id="saveBtn" class="btn btn-success" type="button" style="display: none;" aria-label="Salvar alterações">
+                      <span class="btn-text">
+                        <span role="img" aria-label="Salvar">💾</span> Salvar
+                      </span>
+                      <span class="btn-loader" style="display: none;" role="status" aria-label="Salvando">⏳</span>
                     </button>
-                    <button id="cancelBtn" class="btn btn-secondary" type="button" style="display: none;">
-                      ❌ Cancelar
+                    <button id="cancelBtn" class="btn btn-secondary" type="button" style="display: none;" aria-label="Cancelar edição">
+                      <span role="img" aria-label="Cancelar">❌</span> Cancelar
                     </button>
                   </div>
                 </form>
@@ -446,13 +452,22 @@ export default class ProfilePage {
   }
 
   /**
-   * Mostrar erro em campo
+   * Mostrar erro em campo (accessible)
    */
   showFieldError(container, field, message) {
     const errorDiv = container.querySelector(`#${field}Error`);
     if (errorDiv) {
       errorDiv.textContent = message;
       errorDiv.style.display = 'block';
+      errorDiv.setAttribute('role', 'alert');
+      errorDiv.setAttribute('aria-live', 'polite');
+      
+      // Marcar campo como inválido
+      const input = container.querySelector(`#${field}`);
+      if (input) {
+        input.setAttribute('aria-invalid', 'true');
+        input.setAttribute('aria-describedby', `${field}Error`);
+      }
     }
   }
 
@@ -476,10 +491,13 @@ export default class ProfilePage {
   }
 
   /**
-   * Mostrar erro
+   * Mostrar erro (accessible)
    */
   showError(container, message) {
-    container.querySelector('#errorMessage').textContent = message;
+    const errorMsg = container.querySelector('#errorMessage');
+    errorMsg.textContent = message;
+    errorMsg.setAttribute('role', 'alert');
+    errorMsg.setAttribute('aria-live', 'polite');
   }
 
   /**

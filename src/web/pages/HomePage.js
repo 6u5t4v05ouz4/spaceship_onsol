@@ -29,27 +29,29 @@ export default class HomePage {
         </div>
         
         <div class="home-actions">
-          <button class="btn btn-primary" id="loginBtn">
-            <span>🚀 Fazer Login</span>
+          <button class="btn btn-primary" id="loginBtn" aria-label="Fazer login no Space Crypto Miner">
+            <span role="img" aria-label="Foguete">🚀</span>
+            <span>Fazer Login</span>
           </button>
-          <button class="btn btn-secondary" id="learnBtn">
-            <span>📖 Saber Mais</span>
+          <button class="btn btn-secondary" id="learnBtn" aria-label="Saber mais sobre o jogo">
+            <span role="img" aria-label="Livro">📖</span>
+            <span>Saber Mais</span>
           </button>
         </div>
         
         <div class="home-features">
           <div class="feature">
-            <div class="feature-icon">⛏️</div>
+            <div class="feature-icon" role="img" aria-label="Mineração">⛏️</div>
             <h3>Mineração</h3>
             <p>Colete recursos do espaço</p>
           </div>
           <div class="feature">
-            <div class="feature-icon">🎮</div>
+            <div class="feature-icon" role="img" aria-label="Gameplay">🎮</div>
             <h3>Gameplay</h3>
             <p>PvE e PvP épico</p>
           </div>
           <div class="feature">
-            <div class="feature-icon">💎</div>
+            <div class="feature-icon" role="img" aria-label="NFTs">💎</div>
             <h3>NFTs</h3>
             <p>Possua seus ativos digitais</p>
           </div>

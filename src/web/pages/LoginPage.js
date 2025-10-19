@@ -70,12 +70,14 @@ export default class LoginPage {
               </div>
 
               <!-- Error Message -->
-              <div id="errorMessage" class="error-message" style="display: none;"></div>
+              <div id="errorMessage" class="error-message" role="alert" aria-live="polite" style="display: none;"></div>
 
               <!-- Submit Button -->
-              <button type="submit" id="loginBtn" class="login-btn login-btn-primary" disabled>
-                <span class="btn-text">🚀 Fazer Login</span>
-                <span class="btn-loader" style="display: none;">⏳</span>
+              <button type="submit" id="loginBtn" class="login-btn login-btn-primary" disabled aria-label="Fazer login com email e senha">
+                <span class="btn-text">
+                  <span role="img" aria-label="Foguete">🚀</span> Fazer Login
+                </span>
+                <span class="btn-loader" style="display: none;" role="status" aria-label="Carregando">⏳</span>
               </button>
             </form>
 
@@ -85,9 +87,11 @@ export default class LoginPage {
             </div>
 
             <!-- OAuth Button -->
-            <button id="oauthBtn" class="login-btn login-btn-oauth" type="button">
-              <span class="btn-text">🔍 Login com Google</span>
-              <span class="btn-loader" style="display: none;">⏳</span>
+            <button id="oauthBtn" class="login-btn login-btn-oauth" type="button" aria-label="Fazer login com conta do Google">
+              <span class="btn-text">
+                <span role="img" aria-label="Google">🔍</span> Login com Google
+              </span>
+              <span class="btn-loader" style="display: none;" role="status" aria-label="Carregando">⏳</span>
             </button>
 
             <!-- Footer -->
@@ -250,12 +254,23 @@ export default class LoginPage {
   }
 
   /**
-   * Show error message
+   * Show error message (accessible)
    */
   showError(errorDiv, message) {
     errorDiv.textContent = message;
     errorDiv.style.display = 'block';
+    errorDiv.setAttribute('role', 'alert');
+    errorDiv.setAttribute('aria-live', 'polite');
     console.error('❌ Erro exibido:', message);
+    
+    // Anunciar para screen readers
+    const announcement = document.createElement('div');
+    announcement.className = 'sr-only';
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.textContent = `Erro: ${message}`;
+    document.body.appendChild(announcement);
+    setTimeout(() => announcement.remove(), 1000);
   }
 
   /**

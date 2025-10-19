@@ -1116,3 +1116,5 @@ export default class GameSceneModular extends Phaser.Scene {
         }
     }
 }
+
+export default GameSceneModular;

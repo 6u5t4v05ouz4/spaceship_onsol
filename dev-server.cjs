@@ -113,43 +113,27 @@ function getContentType(filePath) {
 const server = http.createServer((req, res) => {
     let filePath = '.' + req.url;
     
-    // Roteamento para desenvolvimento
-    if (req.url === '/') {
-        // Em desenvolvimento, serve login.html
-        filePath = './login.html';
-    } else if (req.url === '/login') {
-        filePath = './login.html';
-    } else if (req.url === '/game') {
-        filePath = './game.html';
-        } else if (req.url === '/soon') {
-            filePath = './soon.html';
-    } else if (req.url === '/profile') {
-        filePath = './profile.html';
-    } else if (req.url === '/dashboard') {
-        filePath = './dashboard.html';
-    } else if (req.url === '/test-auth') {
-        filePath = './test-auth.html';
-    } else if (req.url === '/debug-auth') {
-        filePath = './debug-auth.html';
-    } else if (req.url === '/test-profile-save') {
-        filePath = './test-profile-save.html';
-        } else if (req.url === '/test-auth-session') {
-            filePath = './test-auth-session.html';
-        } else if (req.url === '/debug-session') {
-            filePath = './debug-session.html';
-        } else if (req.url === '/auth-callback') {
-            filePath = './auth-callback.html';
-    } else if (req.url === '/test-supabase') {
-        filePath = './test-supabase.html';
-        } else if (req.url === '/original') {
-            filePath = './index-backup.html';
-    } else if (req.url.startsWith('/assets/')) {
-        // Servir arquivos da pasta public/assets
-        filePath = './public' + req.url;
-    } else if (req.url.startsWith('/src/')) {
-        // Servir arquivos da pasta src
+    // Roteamento para desenvolvimento - SPA Fallback
+    // Todas as rotas servem index.html, exceto:
+    // 1. Arquivos estáticos (.js, .css, .png, etc)
+    // 2. game.html (entry point separado)
+    
+    // Se tem extensão de arquivo, servir normalmente
+    if (req.url.includes('.')) {
+        // Arquivo estático - pode ter extensão
         filePath = '.' + req.url;
+    } 
+    // game.html é entry point separado
+    else if (req.url === '/game') {
+        filePath = './game.html';
     }
+    // Qualquer outra rota sem extensão → serve index.html (SPA)
+    else {
+        filePath = './index.html';
+    }
+    
+    // Normalizar path
+    filePath = path.normalize(filePath);
     
     // Se não for um arquivo específico, tentar servir como arquivo estático
     if (filePath === '.' + req.url) {

@@ -53,7 +53,7 @@
    HEADER
    ===================================================== */
 .header {
-    background: var(--panel-bg);
+    background: transparent;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 2px solid var(--primary-cyan);

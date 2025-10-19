@@ -94,37 +94,36 @@ export default defineConfig({
       const devCallbackPath = process.env.DEV_REDIRECT_PATH || '/__dev/oauth-callback';
 
       // Middleware: SPA fallback - redireciona todas as rotas desconhecidas para index.html
-      // Isso permite que o router.js no frontend gerencie a navegação
-      return () => {
-        server.middlewares.use((req, res, next) => {
-          // Se a URL é um arquivo estático conhecido, deixa passar
-          if (req.url.includes('.') || req.url.startsWith('/node_modules')) {
-            return next();
+      server.middlewares.use((req, res, next) => {
+        // OAuth dev callback
+        try {
+          const reqUrl = new URL(req.url, `http://${req.headers.host}`);
+          if (reqUrl.pathname === devCallbackPath) {
+            const localTargetPath = process.env.DEV_POST_LOGIN_PATH || '/dashboard';
+            const target = new URL(localTargetPath, devOrigin);
+            target.search = reqUrl.search;
+            res.writeHead(302, { Location: target.toString() });
+            return res.end();
           }
+        } catch (e) {
+          // ignore and continue
+        }
 
-          // OAuth dev callback
-          try {
-            const reqUrl = new URL(req.url, `http://${req.headers.host}`);
-            if (reqUrl.pathname === devCallbackPath) {
-              const localTargetPath = process.env.DEV_POST_LOGIN_PATH || '/dashboard';
-              const target = new URL(localTargetPath, devOrigin);
-              target.search = reqUrl.search;
-              res.writeHead(302, { Location: target.toString() });
-              return res.end();
-            }
-          } catch (e) {
-            // ignore and continue
-          }
+        // Se é arquivo estático (tem extensão), deixa passar
+        if (req.url.includes('.')) {
+          return next();
+        }
 
-          // Para rotas da SPA (não são arquivos estáticos), servir index.html
-          // Isso permite que o router do frontend gerencie a navegação
-          if (!req.url.startsWith('/@')) {
-            req.url = '/index.html';
-          }
+        // Se é Vite HMR ou node_modules, deixa passar
+        if (req.url.startsWith('/@') || req.url.startsWith('/node_modules')) {
+          return next();
+        }
 
-          next();
-        });
-      };
+        // Para qualquer outra rota SPA, servir index.html
+        // O router.js no frontend vai gerenciar a navegação
+        req.url = '/index.html';
+        next();
+      });
     }
   }
 });

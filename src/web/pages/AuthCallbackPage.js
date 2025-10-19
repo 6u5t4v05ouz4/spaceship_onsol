@@ -77,22 +77,43 @@ export default class AuthCallbackPage {
         return;
       }
 
-      // Se não tem code, também é erro
-      if (!code) {
-        this.showError(container, 'Código de autenticação não encontrado. Tente fazer login novamente.');
-        return;
-      }
+      // Supabase SDK com detectSessionInUrl: true já processa automaticamente
+      // Apenas precisamos verificar se a session foi estabelecida
+      console.log('🔐 Verificando sessão com Supabase...');
+      
+      // Aguardar um pouco para o SDK processar
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Processar callback com Supabase
-      console.log('🔐 Processando OAuth callback...');
-      const session = await authService.handleOAuthCallback();
+      // Verificar se session foi criada
+      const session = await authService.getSession();
 
       if (!session) {
-        this.showError(container, 'Falha ao processar autenticação. Tente novamente.');
-        return;
+        // Se tem code, tentar trocar por session
+        if (code) {
+          console.log('🔐 Trocando código por sessão...');
+          // O SDK já deveria ter feito isso automaticamente,
+          // mas vamos tentar chamar handleOAuthCallback como fallback
+          try {
+            const result = await authService.handleOAuthCallback();
+            if (!result) {
+              throw new Error('Falha ao processar autenticação');
+            }
+          } catch (exchangeError) {
+            console.error('❌ Erro ao trocar código:', exchangeError);
+            this.showError(container, 'Código de autenticação expirado. Tente novamente.');
+            return;
+          }
+        } else {
+          // Sem code e sem session = erro
+          this.showError(container, 'Código de autenticação não encontrado. Tente fazer login novamente.');
+          return;
+        }
       }
 
-      console.log('✅ OAuth callback processado! Redirecionando para dashboard...');
+      console.log('✅ Sessão estabelecida! Redirecionando para dashboard...');
+
+      // Limpar URL de tokens
+      window.history.replaceState({}, document.title, window.location.pathname);
 
       // Redirecionar para dashboard após pequeno delay para feedback
       setTimeout(() => {

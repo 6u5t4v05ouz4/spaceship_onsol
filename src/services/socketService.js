@@ -34,7 +34,7 @@ class SocketService {
       return;
     }
 
-    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
     console.log('🔌 Conectando ao servidor:', serverUrl);
 
     this.socket = io(serverUrl, {

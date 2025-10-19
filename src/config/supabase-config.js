@@ -23,22 +23,22 @@ function waitForConfig() {
 // Função para criar cliente Supabase
 async function createSupabaseClient() {
     try {
-        // Configuração para desenvolvimento local
-        const localConfig = {
-            url: 'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
-            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDA5MjM2MTYsImV4cCI6MjAxNjQ5OTYxNn0.8X0g5J8XZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ',
-            redirectUrl: 'http://localhost:3000/auth-callback.html'
+        // Configuração dinâmica baseada no ambiente
+        const config = {
+            url: import.meta.env.VITE_SUPABASE_URL || 'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+            anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDA5MjM2MTYsImV4cCI6MjAxNjQ5OTYxNn0.8X0g5J8XZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ',
+            redirectUrl: `${window.location.origin}/auth-callback`
         };
 
-        console.log('🔧 Usando configuração local de desenvolvimento');
+        console.log('🔧 Usando configuração:', config.url);
         
-        // Criar cliente com configuração local
+        // Criar cliente com configuração dinâmica
         const client = window.supabase.createClient(
-            localConfig.url, 
-            localConfig.anonKey, 
+            config.url, 
+            config.anonKey, 
             {
                 auth: {
-                    redirectTo: localConfig.redirectUrl,
+                    redirectTo: config.redirectUrl,
                     autoRefreshToken: true,
                     persistSession: true,
                     detectSessionInUrl: true,

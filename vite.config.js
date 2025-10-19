@@ -38,8 +38,8 @@ const spaFallbackPlugin = {
 export default defineConfig({
 	// Expor origem e path para uso no frontend e para registro no provedor OAuth
 	define: {
-		'process.env.VITE_APP_REDIRECT_ORIGIN': JSON.stringify(process.env.DEV_REDIRECT_ORIGIN || 'http://localhost:3000'),
-		'process.env.VITE_APP_REDIRECT_PATH': JSON.stringify(process.env.DEV_REDIRECT_PATH || '/__dev/oauth-callback'),
+		'process.env.VITE_APP_REDIRECT_ORIGIN': JSON.stringify(process.env.RAILWAY_PUBLIC_DOMAIN || 'https://your-app.railway.app'),
+		'process.env.VITE_APP_REDIRECT_PATH': JSON.stringify('/auth-callback'),
 		// Variáveis do Supabase para produção
 		'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
 		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),

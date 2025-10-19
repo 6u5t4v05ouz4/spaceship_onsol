@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 // Variáveis de ambiente
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const REDIRECT_URL = import.meta.env.VITE_SUPABASE_REDIRECT_TO || 'http://localhost:3000/auth-callback';
+const REDIRECT_URL = import.meta.env.VITE_SUPABASE_REDIRECT_TO || `${window.location.origin}/auth-callback`;
 
 // Validar configuração
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {

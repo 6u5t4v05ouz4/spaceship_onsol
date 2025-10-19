@@ -42,7 +42,7 @@ const server = createServer(app);
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN || 'https://your-app.railway.app',
   credentials: true
 }));
 app.use(express.json());

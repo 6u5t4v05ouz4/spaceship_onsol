@@ -159,8 +159,8 @@ async function loadPage(pageName) {
 
     // Criar instância da página - passar Supabase para páginas que precisam
     let pageInstance;
-    if (pageName === 'dashboard' || pageName === 'profile' || pageName === 'config' || pageName === 'missions') {
-      // Dashboard, Profile, Config e Missions precisam de Supabase para acessar banco
+    if (pageName === 'dashboard' || pageName === 'profile' || pageName === 'config' || pageName === 'missions' || pageName === 'marketplace') {
+      // Dashboard, Profile, Config, Missions e Marketplace precisam de Supabase para acessar banco
       pageInstance = new PageClass(supabase);
     } else {
       pageInstance = new PageClass();

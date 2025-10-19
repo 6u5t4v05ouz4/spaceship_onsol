@@ -10,7 +10,7 @@ const simulationConfig = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    backgroundColor: '#000011',
+    backgroundColor: 'transparent',
     physics: {
         default: 'arcade',
         arcade: {
@@ -201,6 +201,7 @@ class BackgroundSimulation {
         canvas.style.left = '0';
         canvas.style.pointerEvents = 'none';
         canvas.style.opacity = '1';
+        canvas.style.zIndex = '-1'; // Set z-index to -1
             
             console.log('🎨 Canvas configurado para background');
         }

@@ -16,126 +16,119 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
     
     <style>
-        /* CSS específico da página de login */
         .login-container {
             position: relative;
             width: 100%;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             z-index: var(--z-content);
             text-align: center;
             padding: var(--spacing-xl);
         }
         
-        .login-card {
-            background: var(--primary-cyan-dark);
-            border: 2px solid var(--primary-cyan-light);
-            border-radius: var(--border-radius-xl);
-            padding: var(--spacing-xxl);
-            max-width: 500px;
-            width: 100%;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            animation: fadeInUp 1s ease-out;
-        }
-        
-        .login-card:hover {
-            border-color: var(--primary-cyan);
-            box-shadow: 0 0 30px rgba(0, 255, 204, 0.4);
-            transform: translateY(-8px);
-        }
-        
-        .login-title {
-            font-family: var(--font-primary);
-            font-size: var(--text-xl);
-            color: var(--primary-cyan);
-            text-shadow: var(--text-glow-secondary);
-            letter-spacing: var(--letter-spacing-md);
-            text-transform: uppercase;
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .login-subtitle {
-            font-family: var(--font-secondary);
-            font-size: var(--text-body-lg);
-            color: var(--text-secondary);
-            margin-bottom: var(--spacing-xl);
-            opacity: 0.8;
-        }
-        
-        .login-options {
+        .login-header {
             display: flex;
             flex-direction: column;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
+            align-items: center;
+            justify-content: center;
+            height: 50vh;
         }
         
-        .login-btn {
+        .login-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 50vh;
+        }
+        
+        .login-logo {
+            width: 50px;
+            height: 50px;
+            margin-bottom: var(--spacing-xs);
+            opacity: 1;
+        }
+        
+        .login-ships {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: var(--spacing-sm);
-            padding: var(--spacing-md) var(--spacing-lg);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .ship-side {
+            width: 80px;
+            height: 80px;
+            opacity: 0.8;
+        }
+        
+        .ship-center {
+            width: 120px;
+            height: 120px;
+            opacity: 1;
+        }
+        
+        .login-title {
+            font-family: var(--font-primary);
+            font-size: var(--text-lg);
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow-primary);
+            letter-spacing: var(--letter-spacing-md);
+            text-transform: uppercase;
+            margin-bottom: var(--spacing-xs);
+            font-weight: 700;
+        }
+        
+        .login-subtitle {
+            font-family: var(--font-secondary);
+            font-size: var(--text-body);
+            color: var(--text-secondary);
+            margin-bottom: 0;
+            opacity: 1;
+            max-width: 400px;
+            line-height: 1.5;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            max-width: 280px;
+            width: 100%;
+        }
+        
+        .login-btn {
+            background: linear-gradient(45deg, var(--primary-cyan), var(--secondary-blue));
+            color: #000;
             border: none;
             border-radius: var(--border-radius-md);
-            font-size: var(--text-body-lg);
-            font-weight: 600;
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: var(--text-sm);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: var(--letter-spacing-sm);
             cursor: pointer;
             transition: var(--transition-normal);
-            position: relative;
-            overflow: hidden;
+            font-family: var(--font-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-xs);
         }
         
-        .login-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .login-btn:hover::before {
-            left: 100%;
-        }
-        
-        .google-btn {
-            background: linear-gradient(135deg, #4285f4, #34a853);
-            color: white;
-        }
-        
-        .google-btn:hover {
+        .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 255, 204, 0.4);
         }
         
-        .solana-btn {
-            background: linear-gradient(135deg, #9945ff, #14f195);
-            color: white;
-        }
-        
-        .solana-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(153, 69, 255, 0.3);
-        }
-        
-        .btn-icon {
-            font-size: var(--text-lg);
-        }
-        
-        .login-footer {
-            text-align: center;
-        }
-        
-        .login-footer p {
-            color: var(--text-secondary);
-            font-size: var(--text-body);
-            margin: 0;
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .back-link {
@@ -145,7 +138,7 @@
             color: var(--text-secondary);
             text-decoration: none;
             font-family: var(--font-secondary);
-            font-size: var(--text-body);
+            font-size: var(--text-sm);
             transition: var(--transition-normal);
             display: flex;
             align-items: center;
@@ -163,192 +156,251 @@
                 padding: var(--spacing-lg);
             }
             
-            .login-card {
-                padding: var(--spacing-xl);
-                margin: var(--spacing-md);
-            }
-            
             .login-title {
-                font-size: var(--text-lg);
+                font-size: var(--text-md);
             }
             
-            .login-btn {
-                padding: var(--spacing-sm) var(--spacing-md);
-                font-size: var(--text-body);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .login-container {
-                padding: var(--spacing-md);
+            .login-subtitle {
+                font-size: var(--text-sm);
             }
             
-            .login-card {
-                padding: var(--spacing-lg);
-                margin: var(--spacing-sm);
-            }
-            
-            .back-link {
-                top: var(--spacing-md);
-                left: var(--spacing-md);
+            .login-form {
+                max-width: 100%;
             }
         }
     </style>
 </head>
 <body>
     <!-- Background System -->
-    <div class="background-primary"></div>
-    <div class="stars-background"></div>
-    <div class="particles-container" id="particles"></div>
+    <!-- <div class="background-primary"></div>
+    <div class="stars-background"></div> -->
     
-    <!-- Main Container -->
+    <!-- Login Container -->
     <div class="login-container">
         <!-- Back Link -->
         <a href="/" class="back-link">
-            ← Voltar ao Início
+            ← Voltar
         </a>
         
-        <!-- Login Card -->
-        <div class="login-card">
-            <div class="login-header">
-                <h1 class="login-title">🚀 SPACE CRYPTO MINER</h1>
-                <p class="login-subtitle">Faça login para continuar sua jornada espacial</p>
+        <!-- Header - Logo, Título e Subtítulo -->
+        <div class="login-header">
+            <div class="login-ships">
+                <img src="/public/assets/icones/0067.png" alt="Nave Espacial" class="ship-side">
+                <img src="/public/assets/icones/0089.png" alt="Nave Espacial" class="ship-center">
+                <img src="/public/assets/icones/0106.png" alt="Nave Espacial" class="ship-side">
             </div>
-            
-            <div class="login-options">
-                <button id="loginGoogleBtn" class="login-btn google-btn">
-                    <span class="btn-icon">🔍</span>
-                    Login com Google
+            <h1 class="login-title">Space Crypto Miner</h1>
+            <p class="login-subtitle">
+                Faça login para continuar sua jornada espacial
+            </p>
+        </div>
+        
+        <!-- Footer - Botão de Login -->
+        <div class="login-footer">
+            <div class="login-form">
+                <button id="loginGoogleBtn" class="login-btn" onclick="loginWithGoogle();">
+                    🔍 Login com Google
                 </button>
-                
-                <button id="loginSolanaBtn" class="login-btn solana-btn">
-                    <span class="btn-icon">👻</span>
-                    Conectar Phantom Wallet
-                </button>
-            </div>
-            
-            <div class="login-footer">
-                <p>Escolha uma opção para começar sua aventura</p>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="/src/supabase-dev.js"></script>
+    <!-- Supabase SDK primeiro -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Configuração segura -->
+    <script src="/src/config/supabase-config.js"></script>
     <script type="module" src="/src/simulation/background-simulation.js"></script>
+    
+    <!-- Configuração injetada pelo servidor -->
+          <script>
+              // Configuração do Supabase (injetada pelo servidor)
+              window.SUPABASE_CONFIG = {
+                  url: window.SUPABASE_URL,
+                  anonKey: window.SUPABASE_ANON_KEY,
+                  redirectUrl: 'http://localhost:3000/auth-callback.html'
+              };
+          </script>
+    
     <script>
-        // Configuração do Supabase
-        const supabaseConfig = {
-            url: "https://cjrbhqlwfjebnjoyfjnc.supabase.co",
-            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4"
-        };
-
-        // Inicializar Supabase
-        let supabase = null;
-        if (window.supabase) {
-            try {
-                supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
-                console.log('✅ Supabase inicializado na página de login');
-            } catch (error) {
-                console.error('❌ Erro ao inicializar Supabase:', error);
-            }
-        }
-
-        // Criar partículas
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            if (!particlesContainer) return;
-
-            for (let i = 0; i < 30; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.width = Math.random() * 2 + 1 + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.animationDelay = Math.random() * 3 + 's';
-                particlesContainer.appendChild(particle);
-            }
-        }
-
-        // Login com Google
+        // Cliente Supabase
+        let supabaseClient = null;
+        
+        // Login com Google usando Supabase Auth
         async function loginWithGoogle() {
+            console.log('🔄 FUNÇÃO loginWithGoogle CHAMADA!');
+            
             try {
-                console.log('🔄 Iniciando login com Google...');
+                console.log('🔄 Iniciando login com Google via Supabase Auth...');
                 
-                if (!supabase) {
-                    throw new Error('Supabase não inicializado');
+                // Criar/obter cliente Supabase
+                if (!supabaseClient) {
+                    console.log('🔧 Criando cliente Supabase...');
+                    supabaseClient = await window.createSupabaseClient();
                 }
-
-                const { data, error } = await supabase.auth.signInWithOAuth({
+                
+                console.log('🔍 Iniciando OAuth com Google...');
+                
+                // Configuração local
+                const localRedirectUrl = 'http://localhost:3000/auth-callback.html';
+                
+                // Iniciar fluxo OAuth
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/auth-callback.html'
+                        redirectTo: localRedirectUrl,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        },
+                        skipBrowserRedirect: true
                     }
                 });
-
+                
                 if (error) {
+                    console.error('❌ Erro do Supabase OAuth:', error);
                     throw error;
                 }
 
-                console.log('✅ Login Google iniciado:', data);
+                console.log('✅ Login Google iniciado com sucesso:', data);
+                
+                // Se tiver URL, redirecionar diretamente
+                if (data?.url) {
+                    console.log('🔧 Redirecionando para:', data.url);
+                    window.location.href = data.url;
+                    return;
+                }
                 
             } catch (error) {
                 console.error('❌ Erro no login Google:', error);
-                alert('Erro no login: ' + error.message);
-            }
-        }
-
-        // Login com Solana
-        async function loginWithSolana() {
-            try {
-                console.log('🔄 Iniciando login com Solana...');
+                console.error('❌ Detalhes do erro:', error.message);
                 
-                if (!window.solana || !window.solana.isPhantom) {
-                    alert('Instale a extensão Phantom Wallet para continuar');
-                    return;
-                }
-
-                const response = await window.solana.connect();
-                const publicKey = response.publicKey.toString();
-                
-                console.log('✅ Carteira conectada:', publicKey);
-                
-                // Redirecionar para o dashboard
-                window.location.href = '/dashboard.html';
-                
-            } catch (error) {
-                console.error('❌ Erro ao conectar carteira:', error);
-                alert('Erro ao conectar carteira: ' + error.message);
+                // Fallback temporário para desenvolvimento se houver erro
+                console.log('🧪 Usando fallback temporário devido ao erro...');
+                alert('Erro no login OAuth. Usando fallback temporário.\nRedirecionando para dashboard...');
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:3000/dashboard.html';
+                }, 1000);
+                return;
             }
         }
 
         // Verificar autenticação existente
         async function checkExistingAuth() {
-            if (supabase && supabase.auth) {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    console.log('✅ Usuário já autenticado, redirecionando...');
-                    window.location.href = '/dashboard.html';
+            try {
+                if (!supabaseClient) {
+                    supabaseClient = await window.createSupabaseClient();
                 }
+                
+                if (supabaseClient && supabaseClient.auth) {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session) {
+                        console.log('✅ Usuário já autenticado, redirecionando...');
+                        window.location.href = '/dashboard.html';
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Erro ao verificar autenticação:', error);
             }
         }
 
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Página de login carregada');
+              // Inicialização
+              document.addEventListener('DOMContentLoaded', async function() {
+                  console.log('🚀 Página de login carregada');
+                  console.log('🔍 DOM carregado, procurando botão...');
+                  
+                  // Verificar se o botão existe imediatamente
+                  const loginBtnImmediate = document.getElementById('loginGoogleBtn');
+                  console.log('🔍 Botão encontrado imediatamente:', loginBtnImmediate);
+                  
+                  // Adicionar event listener imediato se o botão existir
+                  if (loginBtnImmediate) {
+                      console.log('🔧 Adicionando event listener imediato...');
+                      loginBtnImmediate.onclick = function(e) {
+                          console.log('🖱️ Botão clicado via onclick IMEDIATO!');
+                          e.preventDefault();
+                          e.stopPropagation();
+                          
+                          // Chamar a função de login
+                          loginWithGoogle();
+                          return false;
+                      };
+                      console.log('✅ Event listener imediato adicionado');
+                  }
+                  
+                  // Verificar se o Supabase SDK está carregado
+                  if (typeof window.supabase === 'undefined') {
+                      console.error('❌ Supabase SDK não carregado');
+                      alert('Erro: Supabase SDK não carregado. Recarregue a página.');
+                      return;
+                  }
+                  
+                  console.log('✅ Supabase SDK carregado');
             
-            // Criar partículas
-            createParticles();
-            
-            // Verificar autenticação existente
-            checkExistingAuth();
-            
-            // Event listeners
-            document.getElementById('loginGoogleBtn').addEventListener('click', loginWithGoogle);
-            document.getElementById('loginSolanaBtn').addEventListener('click', loginWithSolana);
-            
-            console.log('✅ Página de login inicializada');
+            // Aguardar configuração carregar
+            setTimeout(async () => {
+                console.log('🔍 Verificando configuração:', window.SUPABASE_CONFIG);
+                
+                if (!window.SUPABASE_CONFIG) {
+                    console.error('❌ Configuração do Supabase não disponível');
+                    alert('Erro: Configuração do Supabase não disponível. Recarregue a página.');
+                    return;
+                }
+                
+                console.log('✅ Configuração do Supabase disponível');
+                
+                // Verificar autenticação existente
+                await checkExistingAuth();
+                
+                // Event listener apenas para Google
+                const loginBtn = document.getElementById('loginGoogleBtn');
+                console.log('🔍 Botão encontrado no setTimeout:', loginBtn);
+                
+                if (loginBtn) {
+                    // Remover event listeners existentes
+                    loginBtn.onclick = null;
+                    
+                    // Adicionar event listener simples
+                    loginBtn.onclick = function(e) {
+                        console.log('🖱️ Botão clicado via onclick!');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        loginWithGoogle();
+                        return false;
+                    };
+                    
+                    // Também adicionar addEventListener como backup
+                    loginBtn.addEventListener('click', function(e) {
+                        console.log('🖱️ Botão clicado via addEventListener!');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        loginWithGoogle();
+                    });
+                    
+                    console.log('✅ Event listeners adicionados ao botão de login');
+                    
+                    // Teste adicional - adicionar estilo visual
+                    loginBtn.style.cursor = 'pointer';
+                    loginBtn.style.backgroundColor = '#4285f4';
+                    loginBtn.style.color = 'white';
+                    loginBtn.style.padding = '10px 20px';
+                    loginBtn.style.border = 'none';
+                    loginBtn.style.borderRadius = '5px';
+                    
+                    loginBtn.addEventListener('mouseover', function() {
+                        console.log('🖱️ Mouse sobre o botão');
+                        this.style.backgroundColor = '#3367d6';
+                    });
+                    
+                    loginBtn.addEventListener('mouseout', function() {
+                        this.style.backgroundColor = '#4285f4';
+                    });
+                } else {
+                    console.error('❌ Botão de login não encontrado');
+                }
+                
+                console.log('✅ Página de login inicializada');
+            }, 100);
         });
     </script>
 </body>

@@ -62,19 +62,17 @@
     
     <!-- Novo Sistema CSS Modular -->
     <link rel="stylesheet" href="/src/styles/main.css">
+
+    <!-- Configuração segura -->
+    <script src="/src/config/supabase-config.js"></script>
     
     <script>
-        // Supabase configuration
-        const supabaseConfig = {
-            url: "https://cjrbhqlwfjebnjoyfjnc.supabase.co",
-            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4"
-        };
-        const supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey);
-        
         // Process OAuth callback
         async function processCallback() {
             try {
                 console.log('🔄 Processing OAuth callback...');
+
+                const supabase = await window.createSupabaseClient();
                 
                 // Get URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
@@ -87,16 +85,10 @@
                 const error = urlParams.get('error');
                 const errorDescription = urlParams.get('error_description');
                 
-                console.log('📋 URL parameters:', {
-                    code: code ? 'Present' : 'Missing',
-                    accessToken: accessToken ? 'Present' : 'Missing',
-                    refreshToken: refreshToken ? 'Present' : 'Missing',
-                    expiresAt: expiresAt,
-                    providerToken: providerToken ? 'Present' : 'Missing',
-                    providerRefreshToken: providerRefreshToken ? 'Present' : 'Missing',
-                    error: error,
-                    errorDescription: errorDescription
-                });
+                // Log seguro (apenas em desenvolvimento)
+                if (window.location.hostname === 'localhost') {
+                    console.log('📋 Debug mode: OAuth parameters received');
+                }
                 
                 // Check for OAuth errors
                 if (error) {
@@ -133,7 +125,10 @@
                     throw new Error('No authorization code or access token received from Google');
                 }
                 
-                console.log('✅ Session created successfully:', sessionData);
+                console.log('✅ Session created successfully');
+
+                // Limpar a URL para remover os tokens
+                window.history.replaceState({}, document.title, window.location.pathname);
                 
                 // Show success message
                 showStatus('success', 'Authentication successful! Redirecting...');
@@ -151,21 +146,21 @@
                 
                 // Wait a moment before redirecting
                 setTimeout(() => {
-                    // Redirect based on profile status
-                    if (profile) {
-                        console.log('✅ User has profile, redirecting to dashboard');
-                        window.location.href = '/dashboard.html';
-                    } else {
-                        console.log('❌ No profile found, redirecting to profile setup');
-                        window.location.href = '/profile.html';
-                    }
+                      // Redirect based on profile status
+                      if (profile) {
+                          console.log('✅ User has profile, redirecting to dashboard');
+                          window.location.href = 'http://localhost:3000/dashboard.html';
+                      } else {
+                          console.log('❌ No profile found, redirecting to profile setup');
+                          window.location.href = 'http://localhost:3000/profile.html';
+                      }
                 }, 2000);
                 
             } catch (error) {
                 console.error('❌ Callback processing error:', error);
                 showStatus('error', `
                     <h3>Authentication Error</h3>
-                    <p>${error.message}</p>
+                    <p>An error occurred during authentication. Please try again.</p>
                     <p><a href="/login.html" style="color: #4CAF50;">Return to Login</a></p>
                 `);
             }

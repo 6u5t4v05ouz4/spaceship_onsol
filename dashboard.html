@@ -206,9 +206,9 @@
     
     <!-- Layout Principal -->
     <div class="layout">
-        <!-- Header -->
+    <!-- Header -->
         <header class="header layout-header">
-            <div class="header-content">
+        <div class="header-content">
                 <a href="/" class="header-logo">
                     🚀 SPACE CRYPTO MINER
                 </a>
@@ -224,13 +224,13 @@
                     <button class="btn btn-ghost" onclick="logout()">
                         🚪 Sair
                     </button>
-                </div>
             </div>
-        </header>
-        
+        </div>
+    </header>
+    
         <!-- Main Content -->
         <main class="main-content layout-main">
-            <div class="container">
+    <div class="container">
                 <!-- Content Header -->
                 <div class="content-header">
                     <h1 class="content-title">Dashboard do Comandante</h1>
@@ -254,10 +254,10 @@
                     <div class="stat-card">
                         <div class="stat-value">2.4K</div>
                         <div class="stat-label">Pontos de Experiência</div>
-                    </div>
-                </div>
-                
-                <!-- Dashboard Grid -->
+            </div>
+        </div>
+        
+        <!-- Dashboard Grid -->
                 <div class="cards-grid">
                     <!-- Wallet Card -->
                     <div class="card card-dashboard">
@@ -265,11 +265,11 @@
                             <h3 class="card-title">💰 Carteira</h3>
                         </div>
                         <div class="card-body">
-                            <div class="wallet-balance">
+                <div class="wallet-balance">
                                 <div class="token-icon">SOL</div>
                                 <div class="token-amount">12.45</div>
-                            </div>
-                            <div class="wallet-balance">
+                </div>
+                <div class="wallet-balance">
                                 <div class="token-icon">USDC</div>
                                 <div class="token-amount">1,234.56</div>
                             </div>
@@ -277,9 +277,9 @@
                         <div class="card-footer">
                             <button class="btn btn-primary btn-sm">Depositar</button>
                             <button class="btn btn-secondary btn-sm">Sacar</button>
-                        </div>
-                    </div>
-                    
+                </div>
+            </div>
+            
                     <!-- Inventory Card -->
                     <div class="card card-dashboard">
                         <div class="card-header">
@@ -301,16 +301,16 @@
                                     <div class="item-icon">💎</div>
                                     <div class="item-name">Cristais</div>
                                     <div class="item-quantity">89</div>
-                                </div>
+                </div>
                                 <div class="card-inventory">
                                     <div class="item-icon">🚀</div>
                                     <div class="item-name">Combustível</div>
                                     <div class="item-quantity">45</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
+                </div>
+                </div>
+                </div>
+            </div>
+            
                     <!-- Ships Card -->
                     <div class="card card-dashboard">
                         <div class="card-header">
@@ -327,14 +327,14 @@
                                     <div class="ship-image">🛸</div>
                                     <div class="ship-name">Miner Basic</div>
                                     <div class="ship-rarity rarity-common">Comum</div>
-                                </div>
-                            </div>
-                        </div>
+                </div>
+                </div>
+                </div>
                         <div class="card-footer">
                             <button class="btn btn-primary btn-sm">Ver Todas</button>
-                        </div>
-                    </div>
-                    
+                </div>
+            </div>
+            
                     <!-- Achievements Card -->
                     <div class="card card-dashboard">
                         <div class="card-header">
@@ -346,21 +346,21 @@
                                     <div class="achievement-icon">⭐</div>
                                     <div class="achievement-name">Primeiro Passo</div>
                                     <div class="achievement-desc">Complete sua primeira mineração</div>
-                                </div>
+                </div>
                                 <div class="card-inventory">
                                     <div class="achievement-icon">💎</div>
                                     <div class="achievement-name">Colecionador</div>
                                     <div class="achievement-desc">Colete 10 NFTs</div>
-                                </div>
+                </div>
                                 <div class="card-inventory">
                                     <div class="achievement-icon">🚀</div>
                                     <div class="achievement-name">Explorador</div>
                                     <div class="achievement-desc">Visite 5 planetas</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
+            </div>
+        </div>
+            </div>
+        </div>
             </div>
         </main>
         
@@ -372,19 +372,18 @@
                     <a href="#" class="footer-link">Suporte</a>
                     <a href="#" class="footer-link">Termos</a>
                     <a href="#" class="footer-link">Privacidade</a>
-                </div>
             </div>
+        </div>
         </footer>
     </div>
-
+    
     <!-- Scripts -->
-    <script src="/src/supabase-dev.js"></script>
     <script type="module" src="/src/simulation/background-simulation.js"></script>
     <script>
         // Configuração do Supabase
         const supabaseConfig = {
-            url: "https://cjrbhqlwfjebnjoyfjnc.supabase.co",
-            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4"
+            url: window.SUPABASE_URL,
+            anonKey: window.SUPABASE_ANON_KEY
         };
 
         // Inicializar Supabase

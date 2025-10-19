@@ -7,6 +7,36 @@ const path = require('path');
 
 const PORT = 3000;
 
+// Carregar variáveis de ambiente do .env
+function loadEnvFile() {
+    try {
+        const envFile = fs.readFileSync('.env', 'utf8');
+        const envVars = {};
+        
+        envFile.split('\n').forEach(line => {
+            line = line.trim();
+            if (line && !line.startsWith('#')) {
+                const [key, ...valueParts] = line.split('=');
+                if (key && valueParts.length > 0) {
+                    envVars[key.trim()] = valueParts.join('=').trim();
+                }
+            }
+        });
+        
+        console.log('✅ Variáveis de ambiente carregadas do .env');
+        console.log('🔍 SUPABASE_URL:', envVars.SUPABASE_URL ? '✅ Definida' : '❌ Não definida');
+        console.log('🔍 SUPABASE_ANON_KEY:', envVars.SUPABASE_ANON_KEY ? '✅ Definida' : '❌ Não definida');
+        return envVars;
+    } catch (error) {
+        console.warn('⚠️ Arquivo .env não encontrado, usando configurações padrão');
+        console.error('❌ Erro:', error.message);
+        return {};
+    }
+}
+
+// Carregar variáveis de ambiente
+const envVars = loadEnvFile();
+
 // Função para servir arquivos estáticos
 function serveFile(res, filePath, contentType) {
     fs.readFile(filePath, (err, data) => {
@@ -14,6 +44,32 @@ function serveFile(res, filePath, contentType) {
             res.writeHead(404);
             res.end('File not found');
             return;
+        }
+        
+        let content = data;
+        
+        // Se for um arquivo HTML, injetar variáveis de ambiente
+        if (filePath.endsWith('.html')) {
+            console.log(`🔧 Injetando variáveis em: ${filePath}`);
+            console.log(`🔍 SUPABASE_URL: ${envVars.SUPABASE_URL ? '✅ Definida' : '❌ Não definida'}`);
+            console.log(`🔍 SUPABASE_ANON_KEY: ${envVars.SUPABASE_ANON_KEY ? '✅ Definida' : '❌ Não definida'}`);
+            
+            const envScript = `
+        <script>
+            // Variáveis de ambiente injetadas pelo servidor
+            window.SUPABASE_CONFIG = {
+                url: '${envVars.SUPABASE_URL || ''}',
+                anonKey: '${envVars.SUPABASE_ANON_KEY || ''}',
+                redirectUrl: 'http://localhost:3000/auth-callback.html' // for local dev
+            };
+            window.NODE_ENV = '${envVars.NODE_ENV || 'development'}';
+            window.DEBUG_MODE = '${envVars.DEBUG_MODE || 'true'}';
+            window.GAME_VERSION = '${envVars.GAME_VERSION || '1.0.0'}';
+        </script>
+    `;
+            
+            // Injeta antes do fechamento do </head>
+            content = data.toString().replace('</head>', envScript + '\n</head>');
         }
         
         // Headers para fontes
@@ -24,7 +80,7 @@ function serveFile(res, filePath, contentType) {
         }
         
         res.writeHead(200, headers);
-        res.end(data);
+        res.end(content);
     });
 }
 

@@ -556,13 +556,12 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/src/supabase-dev.js"></script>
     <script type="module" src="/src/simulation/background-simulation.js"></script>
     <script>
         // Configuração do Supabase
         const supabaseConfig = {
-            url: "https://cjrbhqlwfjebnjoyfjnc.supabase.co",
-            anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4"
+            url: window.SUPABASE_URL,
+            anonKey: window.SUPABASE_ANON_KEY
         };
 
         // Inicializar Supabase
@@ -644,7 +643,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/auth-callback.html'
+                        redirectTo: 'http://localhost:3000/auth-callback.html'
                     }
                 });
 

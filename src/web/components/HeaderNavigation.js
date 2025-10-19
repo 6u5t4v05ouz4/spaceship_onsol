@@ -34,9 +34,10 @@ export default class HeaderNavigation {
       <nav class="header-nav">
         <ul class="nav-list">
           <li class="nav-item">
-            <a href="/game.html" class="nav-link nav-link-play" data-page="game" title="Jogar" target="_blank">
+            <a href="/game.html" class="nav-link nav-link-play disabled" data-page="game" title="Servidor não disponível" target="_blank">
               <span class="nav-icon">🎮</span>
               <span class="nav-text">Play</span>
+              <span class="play-status-indicator">⚠️</span>
             </a>
           </li>
           <li class="nav-item">
@@ -157,6 +158,9 @@ export default class HeaderNavigation {
 
     // Update header status dot
     this.updateHeaderStatusDot(container);
+    
+    // Initialize play button state
+    this.updatePlayButtonState(container);
 
     // Navigation links - prevent default and use router (except Play button)
     const navLinks = container.querySelectorAll('.nav-link');
@@ -297,6 +301,9 @@ export default class HeaderNavigation {
       } else {
         statusDot.className = 'status-dot offline';
       }
+      
+      // Also update play button state
+      this.updatePlayButtonState(container);
     };
 
     // Initial update
@@ -457,13 +464,48 @@ export default class HeaderNavigation {
           border-color: rgba(16, 185, 129, 0.5);
           color: white !important;
           font-weight: 600;
+          position: relative;
         }
 
-        .nav-link-play:hover {
+        .nav-link-play:hover:not(.disabled) {
           background: linear-gradient(135deg, #059669 0%, #047857 100%);
           border-color: rgba(16, 185, 129, 0.8);
           transform: translateY(-3px) scale(1.05);
           box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        /* Play Button - Disabled state */
+        .nav-link-play.disabled {
+          background: linear-gradient(135deg, #666, #444);
+          border-color: rgba(102, 102, 102, 0.5);
+          color: #999 !important;
+          cursor: not-allowed;
+          opacity: 0.6;
+          box-shadow: none;
+        }
+        
+        .nav-link-play.disabled:hover {
+          transform: none;
+          box-shadow: none;
+        }
+        
+        .play-status-indicator {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          font-size: 0.8em;
+          background: rgba(255, 0, 0, 0.8);
+          border-radius: 50%;
+          width: 16px;
+          height: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+        }
+        
+        .nav-link-play:not(.disabled) .play-status-indicator {
+          background: rgba(0, 255, 136, 0.8);
         }
 
         .nav-link-play .nav-icon {
@@ -677,5 +719,61 @@ export default class HeaderNavigation {
       `;
       document.head.appendChild(style);
     }
+  }
+
+  /**
+   * Updates the Play button state based on server status
+   */
+  updatePlayButtonState(container) {
+    const playButton = container.querySelector('.nav-link-play');
+    const statusIndicator = container.querySelector('.play-status-indicator');
+    
+    if (!playButton || !statusIndicator) return;
+    
+    // Check server status
+    const serverStatus = this.getServerStatus();
+    
+    if (serverStatus.isConnected && serverStatus.isAuthenticated) {
+      // Server is OK - enable play button
+      playButton.classList.remove('disabled');
+      playButton.title = 'Jogar';
+      statusIndicator.textContent = '✅';
+      
+      // Allow clicking
+      playButton.onclick = null;
+    } else {
+      // Server is not OK - disable play button
+      playButton.classList.add('disabled');
+      playButton.title = 'Servidor não disponível';
+      statusIndicator.textContent = '⚠️';
+      
+      // Prevent clicking
+      playButton.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        alert('Servidor não disponível. Verifique a conexão.');
+        return false;
+      };
+    }
+  }
+
+  /**
+   * Gets current server status
+   */
+  getServerStatus() {
+    // Try to get status from ServerStatus component
+    const serverStatusWidget = document.querySelector('.server-status-widget');
+    if (serverStatusWidget) {
+      const statusDot = serverStatusWidget.querySelector('[data-status-dot]');
+      const authDot = serverStatusWidget.querySelector('[data-auth-dot]');
+      
+      const isConnected = statusDot && statusDot.classList.contains('online');
+      const isAuthenticated = authDot && authDot.classList.contains('online');
+      
+      return { isConnected, isAuthenticated };
+    }
+    
+    // Fallback - assume disconnected
+    return { isConnected: false, isAuthenticated: false };
   }
 }

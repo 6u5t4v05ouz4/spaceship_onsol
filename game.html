@@ -60,15 +60,10 @@
         }
         
         // Carregar o jogo simples (MVP)
-        import('/game-only.js').then(() => {
-            console.log('✅ Game-only carregado com sucesso');
-            // Ocultar loading
-            const loading = document.getElementById('loading');
-            if (loading) {
-                loading.style.display = 'none';
-            }
+        import('/game-bundle.js').then(() => {
+            console.log('✅ Game Bundle carregado com sucesso');
         }).catch(err => {
-            console.error('❌ Erro ao carregar game-only:', err);
+            console.error('❌ Erro ao carregar game-bundle:', err);
             document.getElementById('loading').textContent = '❌ Erro ao carregar jogo';
         });
     </script>

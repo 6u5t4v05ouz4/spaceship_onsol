@@ -14,10 +14,15 @@ async function getProfileId(supabase, googleEmail) {
     .from('user_profiles')
     .select('id')
     .eq('google_email', googleEmail)
-    .single();
+    .maybeSingle(); // Use maybeSingle to handle no rows gracefully
 
   if (error) {
+    console.error('❌ Error getting profile ID:', error);
     throw new Error('Failed to get profile: ' + error.message);
+  }
+
+  if (!data) {
+    throw new Error('Profile not found for email: ' + googleEmail);
   }
 
   return data.id;

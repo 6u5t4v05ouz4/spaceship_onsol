@@ -22,8 +22,8 @@ export default class ShipManager {
             
         // Cria a nave base
         console.log('🔍 ShipManager: Criando sprite da nave...');
-        // Criar com física, posicionando no centro da tela
-        this.ship = this.scene.physics.add.sprite(400, 300, 'ship_idle');
+        // Criar com física, posicionando no centro do mundo compartilhado (0, 0)
+        this.ship = this.scene.physics.add.sprite(0, 0, 'ship_idle');
         console.log('✅ ShipManager: Sprite criado:', this.ship);
         
         // Verifica se a nave foi criada corretamente

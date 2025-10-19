@@ -242,6 +242,39 @@ export function isValidPassword(password) {
   return password && password.length >= 6;
 }
 
+/**
+ * Processa OAuth callback após redirecionamento do provedor
+ * Supabase SDK já gerencia a session automaticamente
+ * Apenas validamos que a session foi criada
+ * @returns {Promise<session>} - Sessão criada ou null
+ * @throws {Error} - Se não conseguir processar callback
+ */
+export async function handleOAuthCallback() {
+  try {
+    console.log('🔐 Processando OAuth callback...');
+
+    // Supabase SDK já processa automaticamente os query params
+    // Apenas verificar se session foi criada
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error('❌ Erro ao processar callback:', error);
+      throw new Error(translateError(error));
+    }
+
+    if (!session) {
+      console.error('❌ Nenhuma session criada após callback');
+      throw new Error('Falha ao processar autenticação. Tente novamente.');
+    }
+
+    console.log('✅ OAuth callback processado com sucesso!', session.user?.email);
+    return session;
+  } catch (error) {
+    console.error('❌ Erro no handleOAuthCallback:', error.message);
+    throw error;
+  }
+}
+
 // Exportar serviço
 export default {
   signIn,

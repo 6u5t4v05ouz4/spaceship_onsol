@@ -2,14 +2,17 @@ import { defineConfig } from 'vite';
 import { parse } from 'node:url';
 import { copyFileSync, existsSync } from 'fs';
 
-// Plugin para copiar game.html
-const copyGameHtmlPlugin = {
-  name: 'copy-game-html',
+// Plugin para copiar arquivos HTML
+const copyHtmlPlugin = {
+  name: 'copy-html-files',
   writeBundle() {
-    if (existsSync('game.html')) {
-      copyFileSync('game.html', 'dist/game.html');
-      console.log('✅ game.html copiado para dist/');
-    }
+    const htmlFiles = ['game.html', 'login.html'];
+    htmlFiles.forEach(file => {
+      if (existsSync(file)) {
+        copyFileSync(file, `dist/${file}`);
+        console.log(`✅ ${file} copiado para dist/`);
+      }
+    });
   }
 };
 
@@ -57,7 +60,7 @@ export default defineConfig({
 		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
 	},
   publicDir: 'public',
-  plugins: [spaFallbackPlugin, copyGameHtmlPlugin],
+  plugins: [spaFallbackPlugin, copyHtmlPlugin],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

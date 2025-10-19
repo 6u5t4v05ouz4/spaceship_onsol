@@ -3,7 +3,8 @@
  * Gerencia conexão WebSocket com o servidor Node.js
  */
 
-import { io } from 'socket.io-client';
+// Socket.io será carregado via script tag no HTML
+const io = window.io;
 
 // Supabase é global, carregado via script tag no HTML
 const getSupabase = () => {

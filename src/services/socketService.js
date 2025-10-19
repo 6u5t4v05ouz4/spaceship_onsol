@@ -4,7 +4,14 @@
  */
 
 import { io } from 'socket.io-client';
-import { supabase } from '../supabase-dev.js';
+
+// Supabase é global, carregado via script tag no HTML
+const getSupabase = () => {
+  if (typeof window !== 'undefined' && window.supabaseClient) {
+    return window.supabaseClient;
+  }
+  throw new Error('Supabase client not initialized');
+};
 
 class SocketService {
   constructor() {
@@ -226,6 +233,7 @@ class SocketService {
       return false;
     }
 
+    const supabase = getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {

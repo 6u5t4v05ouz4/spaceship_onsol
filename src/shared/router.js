@@ -11,6 +11,11 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
+// Disponibilizar Supabase globalmente para outros serviços
+if (typeof window !== 'undefined') {
+  window.supabaseClient = supabase;
+}
+
 /**
  * Verifica se usuário está autenticado
  */

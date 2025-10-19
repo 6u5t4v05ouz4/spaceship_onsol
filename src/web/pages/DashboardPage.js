@@ -252,6 +252,12 @@ export default class DashboardPage {
 
       const ctx = canvas.getContext('2d');
       
+      // Buscar tipo de nave do perfil do usuário
+      const userShipType = this.data.profile?.ship_type || 'default_idle';
+      const userShipRarity = this.data.profile?.ship_rarity || 'Comum';
+      
+      console.log('🚀 Renderizando nave do usuário:', { userShipType, userShipRarity });
+      
       // Definir características da nave padrão (Comum)
       const rarityLevels = {
         'Comum': {
@@ -296,14 +302,20 @@ export default class DashboardPage {
         }
       };
 
-      // Por padrão, usar nave Comum (pode ser expandido para buscar do NFT)
-      const selectedRarity = 'Comum';
+      // Usar raridade do perfil do usuário
+      const selectedRarity = userShipRarity;
       const shipData = rarityLevels[selectedRarity];
 
-      // Carregar sprite da nave
+      // Determinar qual sprite carregar baseado no tipo de nave
+      const shipSprites = {
+        'default_idle': '/assets/images/idle.png',
+        'nft_custom': '/assets/images/nft_ship.png' // Para futuras integrações NFT
+      };
+
+      // Carregar sprite da nave do usuário
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      img.src = '/assets/images/01.png';
+      img.src = shipSprites[userShipType] || shipSprites['default_idle'];
       
       await new Promise((resolve, reject) => {
         img.onload = () => {
@@ -319,15 +331,14 @@ export default class DashboardPage {
           ctx.lineWidth = 2;
           ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
           
-          // Desenhar primeiro frame da nave (frame 0: x=0, y=0, w=64, h=64)
-          const scale = 1.5;
-          const offsetX = (canvas.width - 64 * scale) / 2;
-          const offsetY = (canvas.height - 64 * scale) / 2;
+          // Desenhar nave idle (32x32 sprite)
+          const scale = 1; // Escala maior para nave pequena
+          const offsetX = (canvas.width - img.width * scale) / 2;
+          const offsetY = (canvas.height - img.height * scale) / 2;
           
           ctx.drawImage(
             img,
-            0, 0, 64, 64, // source: primeiro frame
-            offsetX, offsetY, 64 * scale, 64 * scale // destination: centralizado e escalado
+            offsetX, offsetY, img.width * scale, img.height * scale // destination: centralizado e escalado
           );
           
           resolve();

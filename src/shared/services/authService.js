@@ -289,14 +289,16 @@ export async function handleOAuthCallback() {
             avatar_url: user.user_metadata?.picture || null,
             level: 1,
             xp: 0,
-            coins: 100 // Bônus inicial
+            coins: 100, // Bônus inicial
+            ship_type: 'default_idle', // Nave padrão para usuários sem NFT
+            ship_rarity: 'Comum' // Raridade padrão
           }]);
 
         if (profileError) {
           console.error('❌ Erro ao criar profile:', profileError);
           // Não falhar o login por causa do profile, apenas logar
         } else {
-          console.log('✅ Profile criado com sucesso!');
+          console.log('✅ Profile criado com sucesso com nave padrão (idle.png)!');
         }
       } else {
         console.log('✅ Profile já existe, pulando criação');

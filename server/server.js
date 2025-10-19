@@ -119,7 +119,7 @@ app.get('/api/player/state', authMiddleware, async (req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN || 'https://spaceshiponsol.vercel.app',
     methods: ['GET', 'POST'],
     credentials: true
   },

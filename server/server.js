@@ -50,6 +50,11 @@ app.use(express.json());
 // Servir arquivos estáticos do frontend
 app.use(express.static(path.join(rootDir, 'dist')));
 
+// Servir game.html diretamente (não processado pelo Vite)
+app.get('/game.html', (req, res) => {
+  res.sendFile(path.join(rootDir, 'game.html'));
+});
+
 // =====================================================
 // HEALTH CHECK ENDPOINTS
 // =====================================================

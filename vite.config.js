@@ -49,8 +49,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000, // Aumenta limite de warning para 1MB
     rollupOptions: {
       input: {
-        main: 'index.html',
-        game: 'game.html'
+        main: 'index.html'
+        // game.html será servido diretamente pelo servidor Node.js
       },
       output: {
         manualChunks: {

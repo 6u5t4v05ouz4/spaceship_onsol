@@ -80,6 +80,17 @@ export function initRouter(container) {
     loadPage('missions');
   });
 
+  // Rota: /marketplace - Protegida
+  page('/marketplace', async () => {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      console.warn('⚠️ Acesso negado - redirecionando para login');
+      page.redirect('/login');
+      return;
+    }
+    loadPage('marketplace');
+  });
+
   // Rota: /auth-callback (OAuth callback) - Pública
   page('/auth-callback', () => {
     loadPage('auth-callback');
@@ -135,6 +146,9 @@ async function loadPage(pageName) {
         break;
       case 'missions':
         PageClass = (await import('../web/pages/MissionsPage.js')).default;
+        break;
+      case 'marketplace':
+        PageClass = (await import('../web/pages/MarketplacePage.js')).default;
         break;
       case 'auth-callback':
         PageClass = (await import('../web/pages/AuthCallbackPage.js')).default;

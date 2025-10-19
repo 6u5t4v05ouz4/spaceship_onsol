@@ -34,13 +34,15 @@ export async function getUserSettings(supabase, googleEmail) {
     // Get profile ID from email
     const profileId = await getProfileId(supabase, googleEmail);
 
+    // Query with explicit select to avoid RLS issues
     const { data, error } = await supabase
       .from('user_settings')
-      .select('*')
+      .select('id, user_id, notifications_enabled, sound_enabled, created_at, updated_at')
       .eq('user_id', profileId)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to avoid error when no rows
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+    if (error) {
+      console.error('❌ Supabase error:', error);
       throw new Error('Failed to load settings: ' + error.message);
     }
 

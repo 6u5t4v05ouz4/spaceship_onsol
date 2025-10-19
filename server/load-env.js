@@ -28,10 +28,15 @@ if (existsSync(envLocalPath)) {
     dotenv.config({ path: envPath });
     console.log('✅ .env carregado');
   } else {
-    console.error('❌ Nenhum arquivo .env encontrado!');
-    console.error('📂 Crie um arquivo .env.local em:', __dirname);
+    console.log('ℹ️  Nenhum arquivo .env encontrado, usando variáveis de ambiente do sistema');
   }
 }
+
+// Debug: mostrar variáveis disponíveis (sem valores sensíveis)
+console.log('🔍 Debug Environment Variables:');
+console.log('  - SUPABASE_URL:', process.env.SUPABASE_URL ? '✅ Definido' : '❌ Não definido');
+console.log('  - SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? '✅ Definido' : '❌ Não definido');
+console.log('  - SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Definido' : '❌ Não definido');
 
 // Validar variáveis críticas
 const requiredVars = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
@@ -39,7 +44,7 @@ const missing = requiredVars.filter(v => !process.env[v]);
 
 if (missing.length > 0) {
   console.error('❌ Variáveis de ambiente faltando:', missing.join(', '));
-  console.error('📝 Verifique seu arquivo .env.local');
+  console.error('📝 Verifique suas variáveis de ambiente no Railway');
   process.exit(1);
 }
 

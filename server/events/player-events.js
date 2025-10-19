@@ -114,10 +114,13 @@ export async function handleAuth(socket, data, io) {
 
     // 8. Notificar outros players no chunk
     socket.to(`chunk:${playerState.current_chunk}`).emit('player:joined', {
-      playerId: playerState.id,
+      id: playerState.id, // IMPORTANTE: usar 'id' não 'playerId'
       username: playerState.username,
       x: playerState.x,
       y: playerState.y,
+      health: playerState.health,
+      max_health: playerState.max_health,
+      current_chunk: playerState.current_chunk,
     });
   } catch (error) {
     logger.error('❌ Erro no handleAuth:', error);
@@ -211,12 +214,13 @@ export async function handleChunkEnter(socket, data, io) {
       .getPlayersInChunk(chunkId)
       .filter((p) => p.id !== player.id)
       .map((p) => ({
-        playerId: p.id,
+        id: p.id, // IMPORTANTE: usar 'id' não 'playerId'
         username: p.username,
         x: p.x,
         y: p.y,
         health: p.health,
         max_health: p.max_health,
+        current_chunk: p.current_chunk,
       }));
 
     // 7. Enviar dados do chunk
@@ -228,12 +232,13 @@ export async function handleChunkEnter(socket, data, io) {
 
     // 8. Notificar outros players
     socket.to(`chunk:${chunkId}`).emit('player:joined', {
-      playerId: player.id,
+      id: player.id, // IMPORTANTE: usar 'id' não 'playerId'
       username: player.username,
       x: player.x,
       y: player.y,
       health: player.health,
       max_health: player.max_health,
+      current_chunk: chunkId,
     });
 
     logger.debug(`✅ ${player.username} entrou no chunk ${chunkId} (${playersInChunk.length} players)`);

@@ -5,6 +5,7 @@
 
 import * as authService from '../../shared/services/authService.js';
 import * as settingsService from '../../shared/services/settingsService.js';
+import * as userInitService from '../../shared/services/userInitService.js';
 import { navigateTo } from '../../shared/router.js';
 import HeaderNavigation from '../components/HeaderNavigation.js';
 
@@ -161,6 +162,14 @@ export default class SettingsPage {
 
       this.userId = session.user.email; // Use email instead of id
       console.log('⚙️ Loading settings for user:', this.userId);
+
+      // Ensure user is initialized before loading settings
+      console.log('🔍 Ensuring user data is initialized...');
+      await userInitService.ensureUserInitialized(
+        this.supabase, 
+        session.user.email, 
+        session.user
+      );
 
       // Load settings
       this.settings = await settingsService.getUserSettings(this.supabase, this.userId);

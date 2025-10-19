@@ -4,6 +4,7 @@
 
 import * as authService from '../../shared/services/authService.js';
 import * as missionsService from '../../shared/services/missionsService.js';
+import * as userInitService from '../../shared/services/userInitService.js';
 import { navigateTo } from '../../shared/router.js';
 import HeaderNavigation from '../components/HeaderNavigation.js';
 
@@ -92,6 +93,14 @@ export default class MissionsPage {
         setTimeout(() => navigateTo('/login'), 1500);
         return;
       }
+
+      // Ensure user is initialized before loading missions
+      console.log('🔍 Ensuring user data is initialized...');
+      await userInitService.ensureUserInitialized(
+        this.supabase, 
+        session.user.email, 
+        session.user
+      );
 
       // Get user profile ID
       const { data: profile } = await this.supabase

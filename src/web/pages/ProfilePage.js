@@ -5,6 +5,7 @@
 
 import * as authService from '../../shared/services/authService.js';
 import * as profileService from '../../shared/services/profileService.js';
+import * as userInitService from '../../shared/services/userInitService.js';
 import { navigateTo } from '../../shared/router.js';
 import HeaderNavigation from '../components/HeaderNavigation.js';
 
@@ -192,6 +193,14 @@ export default class ProfilePage {
       const googleEmail = session.user.email;
       const googleUser = session.user;
       console.log('👤 Carregando perfil para:', googleEmail);
+
+      // Ensure user is initialized before loading profile
+      console.log('🔍 Ensuring user data is initialized...');
+      await userInitService.ensureUserInitialized(
+        this.supabase, 
+        googleEmail, 
+        googleUser
+      );
 
       // Buscar perfil
       this.profile = await profileService.getProfile(this.supabase, googleEmail);

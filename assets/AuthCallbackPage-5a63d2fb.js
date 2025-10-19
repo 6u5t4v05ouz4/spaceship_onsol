@@ -1,4 +1,4 @@
-import{g as i,h as s,n as c}from"./main-636eab80.js";import"./phaser-aaa04cbd.js";class p{constructor(){this.name="AuthCallbackPage",this.isProcessing=!1}render(){const e=document.createElement("div");return e.className="auth-callback-page",e.innerHTML=`
+import{g as i,h as s,n as c}from"./main-f94b3e91.js";import"./phaser-aaa04cbd.js";class p{constructor(){this.name="AuthCallbackPage",this.isProcessing=!1}render(){const e=document.createElement("div");return e.className="auth-callback-page",e.innerHTML=`
       <div class="background-primary"></div>
       <div class="stars-background"></div>
       

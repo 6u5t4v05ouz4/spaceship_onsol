@@ -305,6 +305,7 @@ body {
 
 /* Container principal da aplicação SPA */
 #app {
+    background: transparent !important;
     position: relative;
     z-index: var(--z-content); /* Acima da simulação */
     min-height: 100vh;

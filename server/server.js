@@ -247,6 +247,8 @@ async function startServer() {
       logger.info(`📊 Metrics: http://localhost:${PORT}/metrics`);
       logger.info(`🌐 Railway Public Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'Not set'}`);
       logger.info(`🔧 CORS Origin: ${process.env.CORS_ORIGIN || 'Not set'}`);
+      logger.info(`🔧 Process.env.PORT: ${process.env.PORT}`);
+      logger.info(`🔧 Server listening on: 0.0.0.0:${PORT}`);
     });
   } catch (error) {
     logger.error('❌ Failed to start server:', error);

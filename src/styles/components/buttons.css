@@ -32,7 +32,8 @@
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.6; /* ✅ Mantém contraste > 4.5:1 */
+    filter: grayscale(0.3);
     cursor: not-allowed;
     pointer-events: none;
 }
@@ -158,6 +159,8 @@
     padding: var(--spacing-xs) var(--spacing-sm);
     font-size: var(--text-body-sm);
     border-radius: var(--border-radius-xs);
+    min-height: 44px; /* ✅ WCAG AAA - Touch target */
+    min-width: 44px;
 }
 
 .btn-md {

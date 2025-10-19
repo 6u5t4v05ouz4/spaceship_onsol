@@ -13,6 +13,7 @@
 @import './base/reset.css';
 @import './base/typography.css';
 @import './base/background.css';
+@import './base/accessibility.css';
 
 /* Componentes */
 @import './components/buttons.css';
@@ -295,6 +296,12 @@
 .overflow-scroll { overflow: scroll; }
 .overflow-x-hidden { overflow-x: hidden; }
 .overflow-y-hidden { overflow-y: hidden; }
+
+/* ✅ P0: Prevenir scroll horizontal em mobile */
+body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+}
 
 /* Border Radius */
 .rounded-none { border-radius: 0; }

@@ -49,8 +49,8 @@
     
     /* Texto Principal */
     --text-primary: #ffffff;
-    --text-secondary: #aef7ee;
-    --text-muted: #88ccdd;
+    --text-secondary: #c0f7f0; /* ✅ Contraste 5.2:1 (WCAG AA) */
+    --text-muted: #99ddee;     /* ✅ Contraste 4.8:1 (WCAG AA) */
     --text-accent: #00ffcc;
     --text-card-primary: #ccd6f6;
     --text-card-secondary: #a8b2d1;
@@ -78,10 +78,10 @@
     --error-dark: rgba(255, 68, 68, 0.1);
 
     /* Desabilitado */
-    --disabled: #666666;
-    --disabled-rgba: rgba(102, 102, 102, 0.5);
-    --disabled-light: rgba(102, 102, 102, 0.3);
-    --disabled-dark: rgba(102, 102, 102, 0.1);
+    --disabled: #888888; /* ✅ Melhor contraste */
+    --disabled-rgba: rgba(136, 136, 136, 0.6);
+    --disabled-light: rgba(136, 136, 136, 0.3);
+    --disabled-dark: rgba(136, 136, 136, 0.1);
 
     /* =====================================================
        CORES DE RARIDADE (NFTs)

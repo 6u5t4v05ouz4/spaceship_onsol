@@ -492,6 +492,20 @@
 
     <!-- Scripts -->
     <script type="module">
+        // Importar Supabase PRIMEIRO
+        import { createClient } from '@supabase/supabase-js';
+        
+        // Criar cliente Supabase e disponibilizar globalmente
+        const supabase = createClient(
+            import.meta.env.VITE_SUPABASE_URL,
+            import.meta.env.VITE_SUPABASE_ANON_KEY
+        );
+        
+        if (typeof window !== 'undefined') {
+            window.supabaseClient = supabase;
+            console.log('✅ Supabase client inicializado globalmente');
+        }
+        
         // Importar o jogo completo modular
         import GameSceneModular from '/src/scenes/GameSceneModular.js';
         

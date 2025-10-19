@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Space Crypto Miner - Jogo</title>
+    <link rel="icon" href="/assets/icones/icone.png" />
+    
+    <!-- Novo Sistema CSS Modular -->
+    <link rel="stylesheet" href="/src/styles/main.css">
+    
+    <!-- Phaser.js -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
+    <style>
+        /* CSS específico do jogo */
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg-primary);
+        }
+        
+        .game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: var(--z-content);
+        }
+        
+        .game-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: var(--z-header);
+            pointer-events: none;
+        }
+        
+        .game-ui > * {
+            pointer-events: auto;
+        }
+        
+        .game-header {
+            position: absolute;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            right: var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: var(--z-header);
+        }
+        
+        .game-stats {
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: center;
+        }
+        
+        .stat-item {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: var(--text-primary);
+            font-family: var(--font-dashboard);
+            font-size: var(--text-body);
+        }
+        
+        .stat-icon {
+            font-size: var(--text-body-lg);
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            color: var(--primary-cyan);
+        }
+        
+        .game-controls {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+        
+        .game-menu-btn {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-sm);
+            color: var(--text-primary);
+            font-size: var(--text-body-lg);
+            cursor: pointer;
+            transition: var(--transition-normal);
+        }
+        
+        .game-menu-btn:hover {
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .game-sidebar {
+            position: absolute;
+            top: 80px;
+            right: var(--spacing-md);
+            width: 300px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: var(--transition-normal);
+        }
+        
+        .game-sidebar.open {
+            transform: translateX(0);
+        }
+        
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--primary-cyan-light);
+        }
+        
+        .sidebar-title {
+            font-family: var(--font-primary);
+            font-size: var(--text-md);
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow-secondary);
+            letter-spacing: var(--letter-spacing-sm);
+            text-transform: uppercase;
+        }
+        
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: var(--text-lg);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            padding: var(--spacing-xs);
+            border-radius: var(--border-radius-sm);
+        }
+        
+        .sidebar-close:hover {
+            color: var(--error);
+            background: var(--error-dark);
+        }
+        
+        .sidebar-section {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .sidebar-section-title {
+            font-family: var(--font-secondary);
+            font-size: var(--text-body);
+            color: var(--primary-cyan);
+            margin-bottom: var(--spacing-sm);
+            font-weight: 600;
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: var(--spacing-sm);
+        }
+        
+        .inventory-item {
+            background: var(--card-bg);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-sm);
+            padding: var(--spacing-sm);
+            text-align: center;
+            transition: var(--transition-normal);
+            cursor: pointer;
+        }
+        
+        .inventory-item:hover {
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .inventory-item.selected {
+            border-color: var(--primary-cyan);
+            background: var(--primary-cyan-dark);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+        }
+        
+        .item-icon {
+            font-size: var(--text-lg);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .item-count {
+            font-size: var(--text-body-sm);
+            color: var(--primary-cyan);
+            font-weight: 600;
+        }
+        
+        .game-pause-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: var(--z-modal);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition-normal);
+        }
+        
+        .game-pause-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .pause-menu {
+            background: var(--panel-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--primary-cyan-light);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .pause-title {
+            font-family: var(--font-primary);
+            font-size: var(--text-xl);
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow-secondary);
+            margin-bottom: var(--spacing-lg);
+            text-transform: uppercase;
+        }
+        
+        .pause-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: var(--z-modal);
+        }
+        
+        .loading-title {
+            font-family: var(--font-primary);
+            font-size: var(--text-xl);
+            color: var(--primary-cyan);
+            text-shadow: var(--text-glow-secondary);
+            margin-bottom: var(--spacing-lg);
+            text-transform: uppercase;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--primary-cyan-light);
+            border-top: 4px solid var(--primary-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .loading-text {
+            font-family: var(--font-secondary);
+            font-size: var(--text-body);
+            color: var(--text-secondary);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .game-header {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+                align-items: stretch;
+            }
+            
+            .game-stats {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .game-controls {
+                justify-content: center;
+            }
+            
+            .game-sidebar {
+                width: calc(100% - 2 * var(--spacing-md));
+                right: var(--spacing-md);
+                left: var(--spacing-md);
+            }
+            
+            .inventory-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-header {
+                top: var(--spacing-sm);
+                left: var(--spacing-sm);
+                right: var(--spacing-sm);
+            }
+            
+            .game-sidebar {
+                top: 60px;
+                right: var(--spacing-sm);
+                left: var(--spacing-sm);
+                width: calc(100% - 2 * var(--spacing-sm));
+            }
+            
+            .stat-item {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                font-size: var(--text-body-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Game Container -->
+    <div class="game-container">
+        <!-- Loading Screen -->
+        <div id="loadingScreen" class="loading-screen">
+            <h1 class="loading-title">SPACE CRYPTO MINER</h1>
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Carregando universo...</p>
+        </div>
+        
+        <!-- Game Canvas -->
+        <div id="gameCanvas" class="game-canvas"></div>
+        
+        <!-- Game UI -->
+        <div class="game-ui">
+            <!-- Game Header -->
+            <div class="game-header">
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <span class="stat-icon">💰</span>
+                        <span class="stat-value" id="coinsValue">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">⚡</span>
+                        <span class="stat-value" id="energyValue">100</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">🎯</span>
+                        <span class="stat-value" id="scoreValue">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">⏱️</span>
+                        <span class="stat-value" id="timeValue">00:00</span>
+                    </div>
+                </div>
+                
+                <div class="game-controls">
+                    <button class="game-menu-btn" onclick="toggleSidebar()" title="Inventário">
+                        🎒
+                    </button>
+                    <button class="game-menu-btn" onclick="pauseGame()" title="Pausar">
+                        ⏸️
+                    </button>
+                    <button class="game-menu-btn" onclick="exitGame()" title="Sair">
+                        🚪
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Game Sidebar -->
+            <div id="gameSidebar" class="game-sidebar">
+                <div class="sidebar-header">
+                    <h3 class="sidebar-title">Inventário</h3>
+                    <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h4 class="sidebar-section-title">Recursos</h4>
+                    <div class="inventory-grid">
+                        <div class="inventory-item selected">
+                            <div class="item-icon">💎</div>
+                            <div class="item-count">12</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div class="item-icon">⚡</div>
+                            <div class="item-count">8</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div class="item-icon">🔧</div>
+                            <div class="item-count">5</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div class="item-icon">🚀</div>
+                            <div class="item-count">3</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div class="item-icon">🛡️</div>
+                            <div class="item-count">2</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div class="item-icon">💊</div>
+                            <div class="item-count">1</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h4 class="sidebar-section-title">Naves</h4>
+                    <div class="inventory-grid">
+                        <div class="inventory-item selected">
+                            <div class="item-icon">🚀</div>
+                            <div class="item-count">1</div>
+                        </div>
+                        <div class="inventory-item">
+                            <div class="item-icon">🛸</div>
+                            <div class="item-count">1</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h4 class="sidebar-section-title">Ações</h4>
+                    <div class="flex flex-col gap-2">
+                        <button class="btn btn-primary btn-sm">🏪 Loja</button>
+                        <button class="btn btn-secondary btn-sm">⚙️ Configurações</button>
+                        <button class="btn btn-ghost btn-sm">📊 Estatísticas</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pause Overlay -->
+            <div id="pauseOverlay" class="game-pause-overlay">
+                <div class="pause-menu">
+                    <h2 class="pause-title">Jogo Pausado</h2>
+                    <div class="pause-buttons">
+                        <button class="btn btn-primary" onclick="resumeGame()">
+                            ▶️ Continuar
+                        </button>
+                        <button class="btn btn-secondary" onclick="openSettings()">
+                            ⚙️ Configurações
+                        </button>
+                        <button class="btn btn-ghost" onclick="exitGame()">
+                            🚪 Sair do Jogo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        // Importar Supabase PRIMEIRO
+        import { createClient } from '@supabase/supabase-js';
+        
+        // Criar cliente Supabase e disponibilizar globalmente
+        const supabase = createClient(
+            import.meta.env.VITE_SUPABASE_URL,
+            import.meta.env.VITE_SUPABASE_ANON_KEY
+        );
+        
+        if (typeof window !== 'undefined') {
+            window.supabaseClient = supabase;
+            console.log('✅ Supabase client inicializado globalmente');
+        }
+        
+        // Importar o jogo completo modular
+        import GameSceneModular from '/src/scenes/GameSceneModular.js';
+        
+        // Verificar se Phaser está disponível
+        if (typeof Phaser === 'undefined') {
+            console.error('❌ Phaser não está disponível!');
+        } else {
+            console.log('✅ Phaser disponível:', Phaser.VERSION);
+        }
+        
+        // Disponibilizar a cena globalmente
+        window.GameSceneModular = GameSceneModular;
+        
+        console.log('✅ GameSceneModular carregado:', !!GameSceneModular);
+        console.log('✅ GameSceneModular constructor:', GameSceneModular);
+        console.log('✅ GameSceneModular extends Phaser.Scene:', GameSceneModular.prototype instanceof Phaser.Scene);
+        
+        // Disparar evento quando o módulo estiver carregado
+        window.dispatchEvent(new CustomEvent('gameSceneLoaded'));
+    </script>
+    
+    <script>
+        // Configuração do jogo
+        let game = null;
+        let isPaused = false;
+        let gameStats = {
+            coins: 0,
+            energy: 100,
+            score: 0,
+            time: 0
+        };
+
+        // Configuração do Phaser PROFISSIONAL
+        const gameConfig = {
+            type: Phaser.AUTO,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            parent: 'gameCanvas',
+            backgroundColor: '#000000',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { x: 0, y: 0 },
+                    debug: false
+                }
+            },
+            scene: [], // Será preenchido dinamicamente
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            render: {
+                antialias: true,
+                pixelArt: false
+            }
+        };
+
+        // O GameSceneModular já contém todas as funções necessárias!
+
+        function updateUI() {
+            document.getElementById('coinsValue').textContent = gameStats.coins;
+            document.getElementById('energyValue').textContent = gameStats.energy;
+            document.getElementById('scoreValue').textContent = gameStats.score;
+            
+            const minutes = Math.floor(gameStats.time / 60);
+            const seconds = gameStats.time % 60;
+            document.getElementById('timeValue').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function gameOver() {
+            console.log('💀 Game Over!');
+            isPaused = true;
+            alert(`Game Over!\nPontuação: ${gameStats.score}\nTempo: ${Math.floor(gameStats.time / 60)}:${(gameStats.time % 60).toString().padStart(2, '0')}`);
+            exitGame();
+        }
+
+        // Funções de UI
+        function toggleSidebar() {
+            const sidebar = document.getElementById('gameSidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        function pauseGame() {
+            if (isPaused) return;
+            
+            isPaused = true;
+            document.getElementById('pauseOverlay').classList.add('show');
+            console.log('⏸️ Jogo pausado');
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            document.getElementById('pauseOverlay').classList.remove('show');
+            console.log('▶️ Jogo retomado');
+        }
+
+        function openSettings() {
+            console.log('⚙️ Abrindo configurações...');
+            // Implementar configurações
+            alert('Configurações em desenvolvimento');
+        }
+
+        function exitGame() {
+            if (confirm('Tem certeza que deseja sair do jogo?')) {
+                console.log('🚪 Saindo do jogo...');
+                if (game) {
+                    game.destroy(true);
+                }
+                window.location.href = '/dashboard.html';
+            }
+        }
+
+        // Redimensionamento da janela
+        function resizeGame() {
+            if (game) {
+                game.scale.resize(window.innerWidth, window.innerHeight);
+            }
+        }
+
+        // Inicialização
+        function initializeGame() {
+            console.log('🚀 Iniciando Space Crypto Miner...');
+            
+            // Verificar se Phaser está disponível
+            if (typeof Phaser === 'undefined') {
+                console.error('❌ Phaser não está disponível!');
+                return;
+            }
+            
+            // Verificar se GameSceneModular está disponível
+            if (!window.GameSceneModular) {
+                console.error('❌ GameSceneModular não está disponível!');
+                return;
+            }
+            
+            console.log('✅ GameSceneModular disponível:', window.GameSceneModular);
+            console.log('✅ GameSceneModular extends Phaser.Scene:', window.GameSceneModular.prototype instanceof Phaser.Scene);
+            
+            // Adicionar a cena à configuração
+            gameConfig.scene = [window.GameSceneModular];
+            console.log('✅ Configuração de scene atualizada:', gameConfig.scene);
+            
+            // Criar instância da cena para verificar se há problemas
+            try {
+                console.log('🔍 Criando instância da cena...');
+                const sceneInstance = new window.GameSceneModular();
+                console.log('✅ Instância da cena criada:', sceneInstance);
+                console.log('✅ Scene key:', sceneInstance.sys.settings.key);
+            } catch (error) {
+                console.error('❌ Erro ao criar instância da cena:', error);
+                console.error('❌ Detalhes do erro:', error.stack);
+                return;
+            }
+            
+            // Criar jogo Phaser
+            try {
+                console.log('🔍 Criando jogo Phaser...');
+                game = new Phaser.Game(gameConfig);
+                console.log('✅ Jogo inicializado com sucesso!');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar jogo:', error);
+                console.error('❌ Detalhes do erro:', error.stack);
+            }
+            
+            // Event listeners
+            window.addEventListener('resize', resizeGame);
+            
+            // Atualizar UI inicial
+            updateUI();
+        }
+        
+        // Aguardar carregamento do módulo
+        window.addEventListener('gameSceneLoaded', initializeGame);
+        
+        // Fallback para DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aguardar um pouco para o módulo carregar
+            setTimeout(() => {
+                if (window.GameSceneModular) {
+                    initializeGame();
+                } else {
+                    console.log('⏳ Aguardando carregamento do GameSceneModular...');
+                }
+            }, 100);
+        });
+
+        // Prevenir contexto do botão direito
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Prevenir seleção de texto
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

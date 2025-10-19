@@ -5,10 +5,14 @@
 
 import * as authService from '../../shared/services/authService.js';
 import { navigateTo } from '../../shared/router.js';
+import ServerStatus from './ServerStatus.js';
+import socketService from '../../services/socketService.js';
 
 export default class HeaderNavigation {
   constructor() {
     this.currentPage = '';
+    this.serverStatusComponent = null;
+    this.dropdownOpen = false;
   }
 
   /**
@@ -65,8 +69,20 @@ export default class HeaderNavigation {
               <span class="nav-text">Config</span>
             </a>
           </li>
+          <li class="nav-item">
+            <button class="nav-link nav-link-server" id="serverStatusBtn" data-page="server" title="Status do Servidor">
+              <span class="nav-icon">🌐</span>
+              <span class="nav-text">Servidor</span>
+              <span class="status-dot" id="headerStatusDot"></span>
+            </button>
+          </li>
         </ul>
       </nav>
+
+      <!-- Server Status Dropdown -->
+      <div id="serverStatusDropdown" class="server-status-dropdown" style="display: none;">
+        <div id="serverStatusContent"></div>
+      </div>
 
       <!-- User Actions -->
       <div class="header-actions">
@@ -113,6 +129,34 @@ export default class HeaderNavigation {
         this.toggleMobileMenu(container);
       });
     }
+
+    // Server status button
+    const serverStatusBtn = container.querySelector('#serverStatusBtn');
+    if (serverStatusBtn) {
+      serverStatusBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleServerStatusDropdown(container);
+      });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = container.querySelector('#serverStatusDropdown');
+      const btn = container.querySelector('#serverStatusBtn');
+      
+      if (dropdown && btn && this.dropdownOpen) {
+        if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+          this.closeServerStatusDropdown(container);
+        }
+      }
+    });
+
+    // Initialize server status component
+    this.initializeServerStatus(container);
+
+    // Update header status dot
+    this.updateHeaderStatusDot(container);
 
     // Navigation links - prevent default and use router (except Play button)
     const navLinks = container.querySelectorAll('.nav-link');
@@ -174,6 +218,98 @@ export default class HeaderNavigation {
         toggle.querySelector('.hamburger-icon').textContent = '✕';
       }
     }
+  }
+
+  /**
+   * Initialize server status component
+   */
+  initializeServerStatus(container) {
+    const contentDiv = container.querySelector('#serverStatusContent');
+    if (contentDiv && !this.serverStatusComponent) {
+      this.serverStatusComponent = new ServerStatus();
+      const statusElement = this.serverStatusComponent.render();
+      contentDiv.appendChild(statusElement);
+
+      // Auto-connect if not connected
+      if (!socketService.isConnected()) {
+        socketService.connect();
+      }
+    }
+  }
+
+  /**
+   * Toggle server status dropdown
+   */
+  toggleServerStatusDropdown(container) {
+    if (this.dropdownOpen) {
+      this.closeServerStatusDropdown(container);
+    } else {
+      this.openServerStatusDropdown(container);
+    }
+  }
+
+  /**
+   * Open server status dropdown
+   */
+  openServerStatusDropdown(container) {
+    const dropdown = container.querySelector('#serverStatusDropdown');
+    if (dropdown) {
+      dropdown.style.display = 'block';
+      this.dropdownOpen = true;
+
+      // Animate
+      setTimeout(() => {
+        dropdown.classList.add('open');
+      }, 10);
+    }
+  }
+
+  /**
+   * Close server status dropdown
+   */
+  closeServerStatusDropdown(container) {
+    const dropdown = container.querySelector('#serverStatusDropdown');
+    if (dropdown) {
+      dropdown.classList.remove('open');
+      
+      setTimeout(() => {
+        dropdown.style.display = 'none';
+        this.dropdownOpen = false;
+      }, 300);
+    }
+  }
+
+  /**
+   * Update header status dot
+   */
+  updateHeaderStatusDot(container) {
+    const statusDot = container.querySelector('#headerStatusDot');
+    if (!statusDot) return;
+
+    const updateDot = () => {
+      const isConnected = socketService.isConnected();
+      const isAuthenticated = socketService.isAuthenticated();
+
+      if (isAuthenticated) {
+        statusDot.className = 'status-dot online';
+      } else if (isConnected) {
+        statusDot.className = 'status-dot connecting';
+      } else {
+        statusDot.className = 'status-dot offline';
+      }
+    };
+
+    // Initial update
+    updateDot();
+
+    // Listen to socket events
+    window.addEventListener('socket:connected', updateDot);
+    window.addEventListener('socket:disconnected', updateDot);
+    window.addEventListener('socket:authenticated', updateDot);
+    window.addEventListener('socket:auth:error', updateDot);
+
+    // Update every 5 seconds
+    setInterval(updateDot, 5000);
   }
 
   /**
@@ -341,6 +477,75 @@ export default class HeaderNavigation {
 
         .nav-icon {
           font-size: 1.1rem;
+        }
+
+        /* Server Status Button */
+        .nav-link-server {
+          position: relative;
+          background: none;
+          border: 1px solid transparent;
+          cursor: pointer;
+        }
+
+        .nav-link-server .status-dot {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: var(--text-muted);
+        }
+
+        .nav-link-server .status-dot.online {
+          background-color: var(--success);
+          box-shadow: 0 0 8px var(--success);
+          animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        .nav-link-server .status-dot.connecting {
+          background-color: #ffa500;
+          box-shadow: 0 0 8px #ffa500;
+          animation: pulse-dot 1s ease-in-out infinite;
+        }
+
+        .nav-link-server .status-dot.offline {
+          background-color: var(--text-muted);
+        }
+
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
+        }
+
+        /* Server Status Dropdown */
+        .server-status-dropdown {
+          position: fixed;
+          top: 70px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.95);
+          backdrop-filter: blur(15px);
+          border: 1px solid rgba(0, 255, 204, 0.3);
+          border-radius: var(--border-radius-lg, 0.75rem);
+          padding: 0;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+          z-index: 999;
+          min-width: 320px;
+          max-width: 400px;
+          opacity: 0;
+          transform: translateY(-10px);
+          transition: all 0.3s ease;
+        }
+
+        .server-status-dropdown.open {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .server-status-dropdown .server-status-widget {
+          margin: 0;
+          border: none;
+          border-radius: 0;
         }
 
         /* Actions */

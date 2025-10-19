@@ -42,7 +42,11 @@ const server = createServer(app);
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN || 'https://your-app.railway.app',
+  origin: [
+    'https://spaceshiponsol.vercel.app',
+    'https://spaceship-onsol-production.up.railway.app',
+    process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN
+  ].filter(Boolean), // Remove valores undefined/null
   credentials: true
 }));
 app.use(express.json());
@@ -119,7 +123,11 @@ app.get('/api/player/state', authMiddleware, async (req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN || 'https://spaceshiponsol.vercel.app',
+    origin: [
+      'https://spaceshiponsol.vercel.app',
+      'https://spaceship-onsol-production.up.railway.app',
+      process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN
+    ].filter(Boolean), // Remove valores undefined/null
     methods: ['GET', 'POST'],
     credentials: true
   },

@@ -186,14 +186,14 @@ export default class DashboardPage {
     const { data, error } = await this.supabase
       .from('user_profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId) // user_profiles usa 'id' como PK
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
       throw new Error('Erro ao carregar perfil: ' + error.message);
     }
 
-    return data || { user_id: userId, username: 'Usuário', id: userId };
+    return data || { id: userId, display_name: 'Usuário' };
   }
 
   /**
@@ -255,39 +255,45 @@ export default class DashboardPage {
     const dataState = container.querySelector('#dataState');
     dataState.style.display = 'block';
 
-    // Profile
+    // Profile - usar campos reais: display_name, id
     if (this.data.profile) {
-      container.querySelector('#username').textContent = this.data.profile.username || 'Usuário';
-      container.querySelector('#userId').textContent = `ID: ${this.data.profile.user_id || this.data.profile.id}`;
+      container.querySelector('#username').textContent = this.data.profile.display_name || 'Usuário';
+      container.querySelector('#userId').textContent = `ID: ${this.data.profile.id}`;
     }
 
-    // Stats - Usar valores padrão se tabela vazia
+    // Stats - game_sessions não tem level/xp, mostrar valores padrão
     const gameData = this.data.gameData || {};
-    container.querySelector('#level').textContent = gameData.current_level || gameData.level || 0;
-    container.querySelector('#xp').textContent = gameData.experience || gameData.total_xp || 0;
-    container.querySelector('#coins').textContent = gameData.coins || gameData.balance || 0;
-    container.querySelector('#wins').textContent = gameData.wins || gameData.win_count || 0;
+    container.querySelector('#level').textContent = 0; // game_sessions não tem level
+    container.querySelector('#xp').textContent = 0; // game_sessions não tem xp
+    container.querySelector('#coins').textContent = 0; // usar player_wallet depois
+    container.querySelector('#wins').textContent = 0; // não há wins em game_sessions
 
-    // Ships/Wallet
+    // Wallet - usar campos reais: space_tokens, sol_tokens
     const shipsGrid = container.querySelector('#shipsGrid');
     if (this.data.ships.length > 0) {
-      shipsGrid.innerHTML = this.data.ships.map(ship => `
+      // player_wallet tem space_tokens e sol_tokens
+      const wallet = this.data.ships[0]; // só há 1 wallet por user
+      shipsGrid.innerHTML = `
         <div class="ship-card">
-          <div class="ship-name">${ship.wallet_address || ship.name || 'Wallet'}</div>
-          <div class="ship-rarity">${ship.balance || ship.rarity || 'N/A'}</div>
+          <div class="ship-name">💰 Space Tokens</div>
+          <div class="ship-rarity">${wallet.space_tokens || 0}</div>
         </div>
-      `).join('');
+        <div class="ship-card">
+          <div class="ship-name">◎ SOL Tokens</div>
+          <div class="ship-rarity">${wallet.sol_tokens || 0}</div>
+        </div>
+      `;
     } else {
-      shipsGrid.innerHTML = '<p class="empty-message">Nenhuma carteira encontrada</p>';
+      shipsGrid.innerHTML = '<p class="empty-message">Carteira não encontrada</p>';
     }
 
-    // Inventory
+    // Inventory - usar campos reais: resource_type_id, quantity
     const inventoryGrid = container.querySelector('#inventoryGrid');
     if (this.data.inventory.length > 0) {
       inventoryGrid.innerHTML = this.data.inventory.map(item => `
         <div class="inventory-item">
-          <div class="item-id">${item.item_name || item.item_id || 'Item'}</div>
-          <div class="item-qty">x${item.quantity || 1}</div>
+          <div class="item-id">Resource ${item.resource_type_id?.substring(0, 8) || 'N/A'}</div>
+          <div class="item-qty">x${item.quantity || 0}</div>
         </div>
       `).join('');
     } else {

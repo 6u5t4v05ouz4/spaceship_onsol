@@ -3,12 +3,21 @@
 // =====================================================
 
 import { createClient } from '@supabase/supabase-js';
-import 'dotenv/config';
+
+// Debug: verificar variáveis de ambiente
+const supabaseUrl = process.env.SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const anonKey = process.env.SUPABASE_ANON_KEY;
+
+console.log('🔍 Debug Supabase Config:');
+console.log('  - SUPABASE_URL:', supabaseUrl ? '✅ Definido' : '❌ NÃO DEFINIDO');
+console.log('  - SERVICE_ROLE_KEY:', serviceRoleKey ? `✅ Definido (${serviceRoleKey.substring(0, 20)}...)` : '❌ NÃO DEFINIDO');
+console.log('  - ANON_KEY:', anonKey ? `✅ Definido (${anonKey.substring(0, 20)}...)` : '❌ NÃO DEFINIDO');
 
 // Admin client (bypass RLS, usado para operações do servidor)
 export const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  supabaseUrl,
+  serviceRoleKey,
   {
     auth: {
       autoRefreshToken: false,

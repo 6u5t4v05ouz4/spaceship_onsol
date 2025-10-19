@@ -4,7 +4,8 @@
 // Version: 1.0.0
 // Node.js + Express + Socket.io + Supabase
 
-import 'dotenv/config';
+// IMPORTANTE: Carregar variáveis de ambiente PRIMEIRO
+import './load-env.js';
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';

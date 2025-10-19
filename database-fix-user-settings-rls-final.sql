@@ -54,6 +54,15 @@ CREATE POLICY "authenticated_users_update_own_settings"
     )
   );
 
+-- Grant permissions to authenticated and anon roles
+-- This is crucial - RLS policies won't work without these grants
+GRANT ALL ON user_settings TO authenticated;
+GRANT ALL ON user_settings TO anon;
+
+-- Also grant usage on sequences
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+
 -- Verify policies were created
 SELECT schemaname, tablename, policyname, permissive, roles, cmd
 FROM pg_policies

@@ -109,9 +109,7 @@ class BackgroundSimulation {
             this.container.style.opacity = '0.15';
             
             // Pausa automaticamente se estiver rodando
-            if (this.isActive && !this.isPaused) {
-                this.togglePause();
-            }
+            
         } else {
             // Restaura opacity baseado na página atual
             this.updateOpacityForCurrentPage();

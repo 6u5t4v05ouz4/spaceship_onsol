@@ -10,7 +10,8 @@ const getSupabase = () => {
   if (typeof window !== 'undefined' && window.supabaseClient) {
     return window.supabaseClient;
   }
-  throw new Error('Supabase client not initialized');
+  console.warn('⚠️ Supabase client not initialized yet');
+  return null;
 };
 
 class SocketService {
@@ -63,8 +64,10 @@ class SocketService {
         detail: { socketId: this.socket.id }
       }));
 
-      // Auto-autenticar se já temos sessão
-      this.authenticateIfNeeded();
+      // Auto-autenticar após pequeno delay para garantir que Supabase está pronto
+      setTimeout(() => {
+        this.authenticateIfNeeded();
+      }, 500);
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -249,6 +252,11 @@ class SocketService {
     }
 
     const supabase = getSupabase();
+    if (!supabase) {
+      console.error('❌ Supabase client não disponível');
+      return false;
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {

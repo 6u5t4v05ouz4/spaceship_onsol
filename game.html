@@ -7,7 +7,7 @@
     <link rel="icon" href="/assets/icones/icone.png" />
     
     <!-- Novo Sistema CSS Modular -->
-    <link rel="stylesheet" href="/src/styles/main.css">
+    <link rel="stylesheet" href="/main.css">
     
     <!-- Phaser.js -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
@@ -506,25 +506,18 @@
             console.log('✅ Supabase client inicializado globalmente');
         }
         
-        // Importar o jogo completo modular
-        import GameSceneModular from '/src/scenes/GameSceneModular.js';
-        
-        // Verificar se Phaser está disponível
-        if (typeof Phaser === 'undefined') {
-            console.error('❌ Phaser não está disponível!');
-        } else {
-            console.log('✅ Phaser disponível:', Phaser.VERSION);
-        }
-        
-        // Disponibilizar a cena globalmente
-        window.GameSceneModular = GameSceneModular;
-        
-        console.log('✅ GameSceneModular carregado:', !!GameSceneModular);
-        console.log('✅ GameSceneModular constructor:', GameSceneModular);
-        console.log('✅ GameSceneModular extends Phaser.Scene:', GameSceneModular.prototype instanceof Phaser.Scene);
-        
-        // Disparar evento quando o módulo estiver carregado
-        window.dispatchEvent(new CustomEvent('gameSceneLoaded'));
+        // Carregar o jogo via script tag (mais confiável para arquivos HTML estáticos)
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = '/src/scenes/GameSceneModular.js';
+        script.onload = () => {
+            console.log('✅ GameSceneModular carregado via script tag');
+            window.dispatchEvent(new CustomEvent('gameSceneLoaded'));
+        };
+        script.onerror = () => {
+            console.error('❌ Erro ao carregar GameSceneModular');
+        };
+        document.head.appendChild(script);
     </script>
     
     <script>

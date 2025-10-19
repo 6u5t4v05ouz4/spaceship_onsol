@@ -5,6 +5,8 @@
 
 import { supabaseAdmin, supabaseAnonClient } from '../config/supabase.js';
 import cacheManager from '../managers/cache-manager.js';
+import zoneManager from '../managers/zone-manager.js';
+import chunkGenerator from '../engines/chunk-generator.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -165,26 +167,13 @@ export async function handleChunkEnter(socket, data, io) {
       .eq('chunk_y', chunkY)
       .single();
 
-    // Se não existe, criar
+    // Se não existe, criar usando Chunk Generator
     if (fetchError && fetchError.code === 'PGRST116') {
-      const distance = Math.sqrt(chunkX * chunkX + chunkY * chunkY);
-      let zoneType = 'safe';
-
-      if (distance > 50) zoneType = 'hostile';
-      else if (distance > 20) zoneType = 'transition';
+      const chunkData = chunkGenerator.generateChunkData(chunkX, chunkY);
 
       const { data: newChunk, error: createError } = await supabaseAdmin
         .from('chunks')
-        .insert({
-          chunk_x: chunkX,
-          chunk_y: chunkY,
-          zone_type: zoneType,
-          distance_from_origin: distance,
-          loot_multiplier: 1.0 + distance * 0.01,
-          pvp_allowed: zoneType !== 'safe',
-          seed: chunkId,
-          biome_type: 'asteroid_field',
-        })
+        .insert(chunkData)
         .select()
         .single();
 
@@ -192,7 +181,22 @@ export async function handleChunkEnter(socket, data, io) {
         logger.error('❌ Erro ao criar chunk:', createError);
       } else {
         chunk = newChunk;
-        logger.info(`🆕 Chunk criado: ${chunkId} (${zoneType})`);
+        logger.info(`🆕 Chunk criado: ${chunkId} (${chunkData.zone_type}) - Bioma: ${chunkData.biome_type}`);
+
+        // Gerar asteroides para o novo chunk
+        const asteroids = chunkGenerator.generateAsteroids(chunkX, chunkY, newChunk.id);
+
+        if (asteroids.length > 0) {
+          const { error: asteroidsError } = await supabaseAdmin
+            .from('chunk_asteroids')
+            .insert(asteroids);
+
+          if (asteroidsError) {
+            logger.error('❌ Erro ao criar asteroides:', asteroidsError);
+          } else {
+            logger.info(`🪨 ${asteroids.length} asteroides criados para chunk ${chunkId}`);
+          }
+        }
       }
     }
 

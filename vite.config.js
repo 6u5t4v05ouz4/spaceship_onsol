@@ -1,5 +1,17 @@
 import { defineConfig } from 'vite';
 import { parse } from 'node:url';
+import { copyFileSync, existsSync } from 'fs';
+
+// Plugin para copiar game.html
+const copyGameHtmlPlugin = {
+  name: 'copy-game-html',
+  writeBundle() {
+    if (existsSync('game.html')) {
+      copyFileSync('game.html', 'dist/game.html');
+      console.log('✅ game.html copiado para dist/');
+    }
+  }
+};
 
 // Plugin SPA Fallback
 const spaFallbackPlugin = {
@@ -45,7 +57,7 @@ export default defineConfig({
 		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
 	},
   publicDir: 'public',
-  plugins: [spaFallbackPlugin],
+  plugins: [spaFallbackPlugin, copyGameHtmlPlugin],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

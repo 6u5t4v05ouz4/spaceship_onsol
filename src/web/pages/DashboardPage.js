@@ -65,30 +65,6 @@ export default class DashboardPage {
               </div>
             </section>
 
-            <!-- Navigation Menu -->
-            <section class="navigation-section">
-              <h3 class="section-title">
-                <span role="img" aria-label="Navegação">🧭</span> Navegação
-              </h3>
-              <div class="navigation-grid">
-                <button id="profileBtn" class="nav-btn" aria-label="Ir para perfil">
-                  <span class="nav-icon">👤</span>
-                  <span class="nav-text">Perfil</span>
-                </button>
-                <button id="configBtn" class="nav-btn" aria-label="Ir para configurações">
-                  <span class="nav-icon">⚙️</span>
-                  <span class="nav-text">Config</span>
-                </button>
-                <button id="missionsBtn" class="nav-btn" aria-label="Ir para missões">
-                  <span class="nav-icon">🎯</span>
-                  <span class="nav-text">Missões</span>
-                </button>
-                <button id="marketplaceBtn" class="nav-btn" aria-label="Ir para marketplace">
-                  <span class="nav-icon">🛒</span>
-                  <span class="nav-text">Marketplace</span>
-                </button>
-              </div>
-            </section>
 
             <!-- Stats Grid -->
             <section class="stats-section">
@@ -155,35 +131,6 @@ export default class DashboardPage {
       });
     }
 
-    // Navigation buttons
-    const profileBtn = container.querySelector('#profileBtn');
-    const configBtn = container.querySelector('#configBtn');
-    const missionsBtn = container.querySelector('#missionsBtn');
-    const marketplaceBtn = container.querySelector('#marketplaceBtn');
-
-    if (profileBtn) {
-      profileBtn.addEventListener('click', () => {
-        navigateTo('/profile');
-      });
-    }
-
-    if (configBtn) {
-      configBtn.addEventListener('click', () => {
-        navigateTo('/config');
-      });
-    }
-
-    if (missionsBtn) {
-      missionsBtn.addEventListener('click', () => {
-        navigateTo('/missions');
-      });
-    }
-
-    if (marketplaceBtn) {
-      marketplaceBtn.addEventListener('click', () => {
-        navigateTo('/marketplace');
-      });
-    }
 
     return container;
   }
@@ -582,55 +529,6 @@ export default class DashboardPage {
           margin: 0;
         }
 
-        .navigation-section {
-          margin-bottom: var(--spacing-xl, 2rem);
-        }
-
-        .navigation-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-          gap: var(--spacing-md, 1rem);
-        }
-
-        .nav-btn {
-          padding: var(--spacing-md, 1rem);
-          background: rgba(0, 255, 204, 0.08);
-          border: 1px solid rgba(0, 255, 204, 0.2);
-          border-radius: var(--border-radius-md, 0.5rem);
-          color: var(--text-primary, #ffffff);
-          cursor: pointer;
-          font-family: var(--font-secondary, Arial);
-          font-size: var(--text-sm, 0.875rem);
-          font-weight: 600;
-          transition: var(--transition-normal, 0.3s);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--spacing-xs, 0.25rem);
-          min-height: 80px;
-        }
-
-        .nav-btn:hover {
-          background: rgba(0, 255, 204, 0.15);
-          border-color: rgba(0, 255, 204, 0.4);
-          transform: translateY(-2px);
-          box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
-        }
-
-        .nav-btn:focus-visible {
-          outline: 2px solid var(--primary-cyan, #00ffcc);
-          outline-offset: 2px;
-        }
-
-        .nav-icon {
-          font-size: 1.5rem;
-          margin-bottom: var(--spacing-xs, 0.25rem);
-        }
-
-        .nav-text {
-          text-align: center;
-          line-height: 1.2;
-        }
 
         .section-title {
           font-size: 1.25rem;

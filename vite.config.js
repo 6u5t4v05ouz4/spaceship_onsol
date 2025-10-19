@@ -93,66 +93,38 @@ export default defineConfig({
       const devOrigin = process.env.DEV_REDIRECT_ORIGIN || `http://localhost:3000`;
       const devCallbackPath = process.env.DEV_REDIRECT_PATH || '/__dev/oauth-callback';
 
-      // 1) Dev callback endpoint: registre THIS URL no painel OAuth como Redirect URI:
-      //    http://localhost:3000/__dev/oauth-callback
-      // Ele captura ?code=...&state=... e redireciona para a origem de dev (ex.: /dashboard) mantendo query.
-      server.middlewares.use((req, res, next) => {
-        try {
-          const reqUrl = new URL(req.url, `http://${req.headers.host}`);
-          if (reqUrl.pathname === devCallbackPath) {
-            // Escolha destino local (poderia ser /dashboard ou outro)
-            const localTargetPath = process.env.DEV_POST_LOGIN_PATH || '/dashboard';
-            const target = new URL(localTargetPath, devOrigin);
-            // Preserve query (code, state, etc.)
-            target.search = reqUrl.search;
-            res.writeHead(302, { Location: target.toString() });
-            return res.end();
-          }
-        } catch (e) {
-          // ignore and continue to other middleware
-        }
-
-        // 2) Fallback existente: reescrever Location em respostas locais (mantive lógica)
-        const originalWriteHead = res.writeHead;
-        res.writeHead = function (statusCode, reasonOrHeaders, maybeHeaders) {
-          // Normalize headers object (node compat)
-          let headers = {};
-          if (typeof reasonOrHeaders === 'object' && reasonOrHeaders !== null) {
-            headers = reasonOrHeaders;
-          } else if (typeof maybeHeaders === 'object' && maybeHeaders !== null) {
-            headers = maybeHeaders;
+      // Middleware: SPA fallback - redireciona todas as rotas desconhecidas para index.html
+      // Isso permite que o router.js no frontend gerencie a navegação
+      return () => {
+        server.middlewares.use((req, res, next) => {
+          // Se a URL é um arquivo estático conhecido, deixa passar
+          if (req.url.includes('.') || req.url.startsWith('/node_modules')) {
+            return next();
           }
 
-          // Check Location header in headers argument
-          const locHeader = (headers && (headers.location || headers.Location)) || res.getHeader && (res.getHeader('location') || res.getHeader('Location'));
-          if (typeof locHeader === 'string' && locHeader.includes('://')) {
-            try {
-              const url = new URL(locHeader);
-              const devUrl = new URL(devOrigin);
-              if (url.origin !== devUrl.origin) {
-                url.protocol = devUrl.protocol;
-                url.host = devUrl.host;
-                const newLoc = url.toString();
-                if (headers && (headers.location || headers.Location)) {
-                  headers.location = newLoc;
-                  headers.Location = newLoc;
-                }
-                try { res.setHeader('Location', newLoc); } catch (e) { /* ignore */ }
-              }
-            } catch (e) { /* ignore malformed URL */ }
+          // OAuth dev callback
+          try {
+            const reqUrl = new URL(req.url, `http://${req.headers.host}`);
+            if (reqUrl.pathname === devCallbackPath) {
+              const localTargetPath = process.env.DEV_POST_LOGIN_PATH || '/dashboard';
+              const target = new URL(localTargetPath, devOrigin);
+              target.search = reqUrl.search;
+              res.writeHead(302, { Location: target.toString() });
+              return res.end();
+            }
+          } catch (e) {
+            // ignore and continue
           }
 
-          // Call original writeHead with original args (preserve behavior)
-          if (typeof reasonOrHeaders === 'object' && reasonOrHeaders !== null) {
-            return originalWriteHead.call(this, statusCode, reasonOrHeaders);
+          // Para rotas da SPA (não são arquivos estáticos), servir index.html
+          // Isso permite que o router do frontend gerencie a navegação
+          if (!req.url.startsWith('/@')) {
+            req.url = '/index.html';
           }
-          if (typeof maybeHeaders === 'object' && maybeHeaders !== null) {
-            return originalWriteHead.call(this, statusCode, reasonOrHeaders, maybeHeaders);
-          }
-          return originalWriteHead.call(this, statusCode);
-        };
-        next();
-      });
+
+          next();
+        });
+      };
     }
   }
 });

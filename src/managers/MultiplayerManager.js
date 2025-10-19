@@ -164,19 +164,31 @@ export default class MultiplayerManager {
    */
   handleChunkData(data) {
     console.log('📦 Chunk data recebido:', data);
+    console.log('📊 Players no chunk:', data.players?.length || 0);
+    console.log('🆔 Meu player ID:', this.playerId);
 
     // Limpar players antigos
     this.clearOtherPlayers();
 
     // Adicionar players do chunk
     if (data.players && data.players.length > 0) {
+      console.log('👥 Processando players do chunk...');
       data.players.forEach(player => {
+        console.log(`  - Player: ${player.username} (ID: ${player.id})`);
+        
         // Não adicionar o próprio player
         if (player.id !== this.playerId) {
+          console.log(`    ✅ Adicionando player ${player.username}`);
           this.addOtherPlayer(player);
+        } else {
+          console.log(`    ⏭️ Pulando (é você mesmo)`);
         }
       });
+    } else {
+      console.log('⚠️ Nenhum player no chunk ou data.players vazio');
     }
+
+    console.log('📊 Total de outros players após processamento:', this.otherPlayers.size);
 
     // TODO: Adicionar asteroides do chunk
     // if (data.asteroids && data.asteroids.length > 0) {
@@ -227,16 +239,44 @@ export default class MultiplayerManager {
   addOtherPlayer(data) {
     // Verificar se já existe
     if (this.otherPlayers.has(data.id)) {
+      console.log('⚠️ Player já existe:', data.username);
       return;
     }
 
     console.log('➕ Adicionando player:', data.username, `(${data.x}, ${data.y})`);
+    console.log('📊 Data completa:', data);
 
-    // Criar sprite do player
-    const sprite = this.scene.physics.add.sprite(data.x, data.y, 'enemy');
+    // Verificar se o sprite 'enemy' existe
+    if (!this.scene.textures.exists('enemy')) {
+      console.error('❌ Sprite "enemy" não encontrado! Usando fallback...');
+      // Tentar usar o sprite da nave do player
+      const fallbackSprite = this.scene.textures.exists('nave') ? 'nave' : null;
+      if (!fallbackSprite) {
+        console.error('❌ Nenhum sprite disponível para outros players!');
+        return;
+      }
+    }
+
+    // Criar sprite do player (usar 'nave' como fallback)
+    const spriteKey = this.scene.textures.exists('enemy') ? 'enemy' : 'nave';
+    console.log('🎨 Usando sprite:', spriteKey);
+    
+    const sprite = this.scene.physics.add.sprite(data.x, data.y, spriteKey);
     sprite.setScale(0.6);
-    sprite.play('enemy_thrust');
+    
+    // Tentar tocar animação se existir
+    try {
+      if (this.scene.anims.exists('enemy_thrust')) {
+        sprite.play('enemy_thrust');
+      } else if (this.scene.anims.exists('nave_thrust')) {
+        sprite.play('nave_thrust');
+      }
+    } catch (e) {
+      console.warn('⚠️ Animação não disponível:', e.message);
+    }
+    
     sprite.setDepth(10);
+    console.log('✅ Sprite criado:', sprite);
 
     // Criar texto do nome
     const nameText = this.scene.add.text(data.x, data.y - 40, data.username, {

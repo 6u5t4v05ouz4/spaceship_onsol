@@ -63,8 +63,11 @@
         }
         
         // Carregar o sistema completo do jogo
-        import('/scenes/GameSceneModular.js').then(() => {
+        import('/scenes/GameSceneModular.js').then((module) => {
             console.log('✅ GameSceneModular carregado com sucesso');
+            
+            // Obter a classe GameSceneModular do módulo
+            const GameSceneModular = module.default;
             
             // Configuração do jogo completa
             const config = {

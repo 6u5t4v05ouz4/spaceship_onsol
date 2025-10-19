@@ -389,6 +389,19 @@ class SocketService {
   getSocketId() {
     return this.socket?.id;
   }
+
+  /**
+   * Obtém ping atual (simulado por enquanto)
+   */
+  getPing() {
+    if (!this.socket || !this.socket.connected) {
+      return '--';
+    }
+    
+    // Por enquanto retorna um ping simulado baseado na conexão
+    // TODO: Implementar ping real com timestamp
+    return Math.floor(Math.random() * 50) + 20; // 20-70ms simulado
+  }
 }
 
 // Singleton

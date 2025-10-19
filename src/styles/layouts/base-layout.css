@@ -55,8 +55,6 @@
 .header {
     background: transparent;
     
-    -webkit-
-    
     padding: var(--spacing-md) var(--spacing-lg);
     position: sticky;
     top: 0;
@@ -171,8 +169,6 @@
 .sidebar {
     background: var(--panel-bg);
     
-    -webkit-
-    
     padding: var(--spacing-lg);
     overflow-y: auto;
     position: sticky;
@@ -268,8 +264,6 @@
    ===================================================== */
 .footer {
     background: var(--panel-bg);
-    
-    -webkit-
     
     padding: var(--spacing-lg);
     margin-top: auto;
@@ -391,7 +385,6 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.8);
     
-    -webkit-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -409,7 +402,6 @@
 .modal {
     background: var(--panel-bg);
     
-    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);

@@ -107,7 +107,6 @@
 .simulation-control-btn {
     background: transparent;
     
-    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-sm);

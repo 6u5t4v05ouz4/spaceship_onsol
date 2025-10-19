@@ -8,7 +8,6 @@
 .card {
     background: transparent;
     
-    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-md);
     padding: var(--spacing-lg);
@@ -44,7 +43,6 @@
     border-radius: var(--border-radius-xl);
     padding: var(--spacing-xxl);
     
-    -webkit-
     text-align: center;
     max-width: 500px;
     width: 100%;
@@ -63,7 +61,6 @@
 .card-dashboard {
     background: transparent;
     
-    -webkit-
     border: 1px solid var(--primary-cyan);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-lg);
@@ -84,7 +81,6 @@
 .card-game {
     background: var(--glass-bg);
     
-    -webkit-
     border: 1px solid var(--accent-blue-light);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
@@ -123,7 +119,6 @@
 .card-nft {
     background: transparent;
     
-    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-md);
     padding: var(--spacing-md);
@@ -170,7 +165,6 @@
 .card-stats {
     background: transparent;
     
-    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-md);

@@ -59,11 +59,39 @@
             console.log('✅ Supabase client inicializado globalmente');
         }
         
-        // Carregar o jogo simples (MVP)
-        import('/game-bundle.js').then(() => {
-            console.log('✅ Game Bundle carregado com sucesso');
+        // Carregar o sistema completo do jogo
+        import('/scenes/GameSceneModular.js').then(() => {
+            console.log('✅ GameSceneModular carregado com sucesso');
+            
+            // Configuração do jogo completa
+            const config = {
+                type: Phaser.AUTO,
+                width: window.innerWidth,
+                height: window.innerHeight,
+                backgroundColor: '#000000',
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                        gravity: { x: 0, y: 0 },
+                        debug: false
+                    }
+                },
+                scene: [GameSceneModular],
+                scale: {
+                    mode: Phaser.Scale.RESIZE,
+                    autoCenter: Phaser.Scale.CENTER_BOTH
+                }
+            };
+            
+            // Inicializar o jogo
+            const game = new Phaser.Game(config);
+            console.log('✅ Jogo completo inicializado:', game);
+            
+            // Ocultar loading
+            document.getElementById('loading').style.display = 'none';
+            
         }).catch(err => {
-            console.error('❌ Erro ao carregar game-bundle:', err);
+            console.error('❌ Erro ao carregar GameSceneModular:', err);
             document.getElementById('loading').textContent = '❌ Erro ao carregar jogo';
         });
     </script>

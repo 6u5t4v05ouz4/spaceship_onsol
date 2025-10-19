@@ -30,6 +30,12 @@ export default class HeaderNavigation {
       <nav class="header-nav">
         <ul class="nav-list">
           <li class="nav-item">
+            <a href="/game.html" class="nav-link nav-link-play" data-page="game" title="Jogar" target="_blank">
+              <span class="nav-icon">🎮</span>
+              <span class="nav-text">Play</span>
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="/dashboard" class="nav-link" data-page="dashboard" title="Dashboard">
               <span class="nav-icon">📊</span>
               <span class="nav-text">Dashboard</span>
@@ -108,9 +114,14 @@ export default class HeaderNavigation {
       });
     }
 
-    // Navigation links - prevent default and use router
+    // Navigation links - prevent default and use router (except Play button)
     const navLinks = container.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
+      // Skip Play button - let it open game.html in new tab
+      if (link.classList.contains('nav-link-play')) {
+        return;
+      }
+      
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const href = link.getAttribute('href');
@@ -302,6 +313,30 @@ export default class HeaderNavigation {
           background: rgba(0, 255, 204, 0.15);
           border-color: rgba(0, 255, 204, 0.4);
           box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+        }
+
+        /* Play Button - Special styling */
+        .nav-link-play {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          border-color: rgba(16, 185, 129, 0.5);
+          color: white !important;
+          font-weight: 600;
+        }
+
+        .nav-link-play:hover {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%);
+          border-color: rgba(16, 185, 129, 0.8);
+          transform: translateY(-3px) scale(1.05);
+          box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .nav-link-play .nav-icon {
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.2); }
         }
 
         .nav-icon {

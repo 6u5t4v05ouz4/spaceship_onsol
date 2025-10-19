@@ -267,42 +267,41 @@ export async function handleOAuthCallback() {
       throw new Error('Falha ao processar autenticação. Tente novamente.');
     }
 
-    // Criar profile automaticamente na primeira vez
+    // Inicializar todos os dados do usuário na primeira vez
     try {
-      console.log('👤 Verificando se profile existe...');
-
+      console.log('👤 Inicializando dados do usuário...');
+      
       const user = session.user;
-      const { data: existingProfile } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('google_email', user.email)
-        .single();
+      
+      // Call the initialize_user_data function
+      const { data: initResult, error: initError } = await supabase
+        .rpc('initialize_user_data', {
+          p_google_email: user.email,
+          p_display_name: user.user_metadata?.name || user.email.split('@')[0],
+          p_avatar_url: user.user_metadata?.picture || null,
+          p_auth_user_id: user.id
+        });
 
-      if (!existingProfile) {
-        console.log('📝 Criando profile automaticamente para primeiro login...');
-
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert([{
-            google_email: user.email,
-            display_name: user.user_metadata?.name || user.email.split('@')[0],
-            avatar_url: user.user_metadata?.picture || null,
-            ship_type: 'default_idle', // Nave padrão para usuários sem NFT
-            ship_rarity: 'Comum' // Raridade padrão
-          }]);
-
-        if (profileError) {
-          console.error('❌ Erro ao criar profile:', profileError);
-          // Não falhar o login por causa do profile, apenas logar
+      if (initError) {
+        console.error('❌ Erro ao inicializar dados do usuário:', initError);
+        // Não falhar o login, apenas logar o erro
+      } else if (initResult && initResult.length > 0) {
+        const result = initResult[0];
+        if (result.success) {
+          console.log('✅ Dados do usuário inicializados:', result.message);
+          console.log('📊 IDs criados:', {
+            profile_id: result.profile_id,
+            settings_id: result.settings_id,
+            stats_id: result.stats_id,
+            wallet_id: result.wallet_id
+          });
         } else {
-          console.log('✅ Profile criado com sucesso com nave padrão (idle.png)!');
+          console.error('❌ Falha na inicialização:', result.message);
         }
-      } else {
-        console.log('✅ Profile já existe, pulando criação');
       }
-    } catch (profileCheckError) {
-      console.error('⚠️ Erro ao verificar/criar profile:', profileCheckError);
-      // Não falhar o login por causa do profile
+    } catch (initCheckError) {
+      console.error('⚠️ Erro ao inicializar dados do usuário:', initCheckError);
+      // Não falhar o login
     }
 
     console.log('✅ OAuth callback processado com sucesso!', session.user?.email);

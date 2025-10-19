@@ -35,9 +35,14 @@ class SocketService {
       return;
     }
 
-    const serverUrl = import.meta.env.VITE_SERVER_URL || window.location.origin;
+    // ✅ CORREÇÃO: import.meta.env não está disponível no game.html
+    // Usar variáveis globais ou fallback para Railway
+    const serverUrl = window.VITE_SERVER_URL || 
+                     'https://spaceship-onsol-production.up.railway.app' || 
+                     window.location.origin;
+    
     console.log('🔌 Conectando ao servidor:', serverUrl);
-    console.log('🔍 VITE_SERVER_URL:', import.meta.env.VITE_SERVER_URL);
+    console.log('🔍 window.VITE_SERVER_URL:', window.VITE_SERVER_URL);
     console.log('🔍 window.location.origin:', window.location.origin);
     console.log('🔍 io disponível:', typeof io !== 'undefined');
 

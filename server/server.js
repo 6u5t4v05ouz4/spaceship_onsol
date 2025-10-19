@@ -10,6 +10,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import logger from './utils/logger.js';
 import { supabaseAdmin, validateSupabaseConnection } from './config/supabase.js';
 import { initRedis, closeRedis } from './config/redis.js';
@@ -24,6 +26,14 @@ import {
 import { handleAttack, handleRespawn } from './events/battle-events.js';
 
 // =====================================================
+// PATH SETUP
+// =====================================================
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.join(__dirname, '..');
+
+// =====================================================
 // EXPRESS SETUP
 // =====================================================
 
@@ -36,6 +46,9 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// Servir arquivos estáticos do frontend
+app.use(express.static(path.join(rootDir, 'dist')));
 
 // =====================================================
 // HEALTH CHECK ENDPOINTS
@@ -176,6 +189,20 @@ process.on('SIGINT', async () => {
     logger.info('✅ Server closed');
     process.exit(0);
   });
+});
+
+// =====================================================
+// SPA FALLBACK
+// =====================================================
+
+// Fallback para SPA - todas as rotas não encontradas servem index.html
+app.get('*', (req, res) => {
+  // Não servir index.html para arquivos estáticos
+  if (req.path.includes('.')) {
+    return res.status(404).send('File not found');
+  }
+  
+  res.sendFile(path.join(rootDir, 'dist', 'index.html'));
 });
 
 // =====================================================

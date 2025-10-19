@@ -1,0 +1,54 @@
+# Railway Ignore File
+# Arquivos e pastas que não devem ser enviados para o Railway
+
+# Desenvolvimento
+node_modules/
+.env.local
+.env.development
+.env.test
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
+.cache/
+.parcel-cache/
+.vite/
+
+# Build temporário
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentação
+docs/
+*.md
+!README.md
+
+# Backup
+backup/
+*.backup
+
+# Testes
+coverage/
+.nyc_output/
+
+# Outros
+*.tmp
+*.temp

@@ -11,7 +11,8 @@
     "dev-login": "vite --open /login",
     "build": "vite build",
     "preview": "vite preview",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build",
+    "start": "cd server && node server.js"
   },
   "keywords": [
     "game",

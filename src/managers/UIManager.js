@@ -42,6 +42,7 @@ export default class UIManager {
         this.createCargoDisplay();
         this.createSpeedDisplay();
         this.createRarityDisplay();
+        this.createCoordinatesDisplay();
     }
 
     createUIPanel() {
@@ -255,6 +256,73 @@ export default class UIManager {
         }).setScrollFactor(0).setDepth(20));
     }
 
+    createCoordinatesDisplay() {
+        // Painel de coordenadas no canto superior direito
+        const screenWidth = this.scene.game.config.width;
+        const panelWidth = 280;
+        const panelHeight = 140;
+        const startX = screenWidth - panelWidth - 16;
+        const startY = 16;
+        
+        // Painel de fundo
+        this.uiElements.set('coordsPanel', this.scene.add.rectangle(
+            startX, startY, panelWidth, panelHeight, 0x0a0a0f, 0.85
+        ).setOrigin(0, 0).setScrollFactor(0).setDepth(18));
+        
+        // Borda do painel
+        this.uiElements.set('coordsPanelBorder', this.scene.add.rectangle(
+            startX, startY, panelWidth, panelHeight, 0x00d4ff, 0
+        ).setOrigin(0, 0).setScrollFactor(0).setDepth(18)
+        .setStrokeStyle(2, 0x00d4ff, 0.8));
+        
+        const contentX = startX + 18;
+        let currentY = startY + 18;
+        
+        // Título
+        this.scene.add.text(contentX, currentY, '📍 POSIÇÃO', {
+            fontSize: '13px',
+            fill: '#00d4ff',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        }).setScrollFactor(0).setDepth(20);
+        currentY += 25;
+        
+        // Coordenadas X, Y
+        this.uiElements.set('coordsText', this.scene.add.text(contentX, currentY, 'X: 0 | Y: 0', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            fontFamily: 'Courier New, monospace',
+            fontStyle: 'bold'
+        }).setScrollFactor(0).setDepth(20));
+        currentY += 25;
+        
+        // Chunk atual
+        this.uiElements.set('chunkText', this.scene.add.text(contentX, currentY, 'Chunk: (0, 0)', {
+            fontSize: '14px',
+            fill: '#00ff88',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        }).setScrollFactor(0).setDepth(20));
+        currentY += 25;
+        
+        // Zona atual
+        this.uiElements.set('zoneText', this.scene.add.text(contentX, currentY, 'Zona: Safe', {
+            fontSize: '14px',
+            fill: '#00ff88',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        }).setScrollFactor(0).setDepth(20));
+        currentY += 25;
+        
+        // Players no chunk
+        this.uiElements.set('playersText', this.scene.add.text(contentX, currentY, 'Players: 0', {
+            fontSize: '12px',
+            fill: '#ffaa00',
+            fontFamily: 'Arial, sans-serif',
+            fontStyle: 'bold'
+        }).setScrollFactor(0).setDepth(20));
+    }
+
     // === UPDATE METHODS ===
     update() {
         this.updateHealthBar();
@@ -263,6 +331,7 @@ export default class UIManager {
         this.updateCargoDisplay();
         this.updateSpeedDisplay();
         this.updateRarityDisplay();
+        this.updateCoordinatesDisplay();
     }
 
     updateHealthBar() {
@@ -403,6 +472,68 @@ export default class UIManager {
         const raridade = this.getAttributeValue(this.gameState.shipMetadata.attributes, 'Raridade') || 'Comum';
         rarityText.setText(`⭐ ${raridade.toUpperCase()}`);
         rarityText.setColor(this.getRarityColor(raridade));
+    }
+
+    updateCoordinatesDisplay() {
+        const coordsText = this.uiElements.get('coordsText');
+        const chunkText = this.uiElements.get('chunkText');
+        const zoneText = this.uiElements.get('zoneText');
+        const playersText = this.uiElements.get('playersText');
+        
+        if (!coordsText || !chunkText || !zoneText || !playersText) return;
+        
+        // Obter posição da nave
+        const ship = this.scene.shipManager?.ship;
+        if (!ship) return;
+        
+        const x = Math.round(ship.x);
+        const y = Math.round(ship.y);
+        
+        // Atualizar coordenadas
+        coordsText.setText(`X: ${x} | Y: ${y}`);
+        
+        // Calcular chunk
+        const chunkX = Math.floor(x / 1000);
+        const chunkY = Math.floor(y / 1000);
+        chunkText.setText(`Chunk: (${chunkX}, ${chunkY})`);
+        
+        // Calcular distância da origem para determinar zona
+        const distance = Math.sqrt(chunkX * chunkX + chunkY * chunkY);
+        let zoneName = 'Safe';
+        let zoneColor = '#00ff88'; // Verde
+        
+        if (distance >= 50) {
+            zoneName = 'Hostile (PvP)';
+            zoneColor = '#ff4444'; // Vermelho
+        } else if (distance >= 20) {
+            zoneName = 'Transition';
+            zoneColor = '#ffaa00'; // Laranja
+        }
+        
+        zoneText.setText(`Zona: ${zoneName}`);
+        zoneText.setColor(zoneColor);
+        
+        // Contar players no chunk atual
+        const multiplayerManager = this.scene.multiplayerManager;
+        let playersInChunk = 1; // Você mesmo
+        
+        if (multiplayerManager && multiplayerManager.otherPlayers) {
+            const currentChunk = `${chunkX},${chunkY}`;
+            multiplayerManager.otherPlayers.forEach((player) => {
+                if (player.data && player.data.current_chunk === currentChunk) {
+                    playersInChunk++;
+                }
+            });
+        }
+        
+        playersText.setText(`Players: ${playersInChunk}`);
+        
+        // Mudar cor baseado na quantidade de players
+        if (playersInChunk > 1) {
+            playersText.setColor('#00ff88'); // Verde quando tem outros players
+        } else {
+            playersText.setColor('#ffaa00'); // Laranja quando está sozinho
+        }
     }
 
     // === CRYPTO DISPLAY ===

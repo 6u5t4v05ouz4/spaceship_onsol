@@ -6,9 +6,9 @@
    CARD BASE
    ===================================================== */
 .card {
-    background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    
+    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-md);
     padding: var(--spacing-lg);
@@ -32,19 +32,19 @@
     border-color: var(--primary-cyan);
     box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
     transform: translateY(-5px);
-    background: var(--card-bg-hover);
+    background: transparent;
 }
 
 /* =====================================================
    CARD DE PERFIL
    ===================================================== */
 .card-profile {
-    background: var(--primary-cyan-dark);
+    background: transparent;
     border: 2px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-xl);
     padding: var(--spacing-xxl);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    
+    -webkit-
     text-align: center;
     max-width: 500px;
     width: 100%;
@@ -61,9 +61,9 @@
    CARD DE DASHBOARD
    ===================================================== */
 .card-dashboard {
-    background: var(--panel-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    
+    -webkit-
     border: 1px solid var(--primary-cyan);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-lg);
@@ -75,7 +75,7 @@
     border-color: var(--primary-cyan);
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
     transform: translateY(-5px);
-    background: var(--panel-bg-hover);
+    background: transparent;
 }
 
 /* =====================================================
@@ -83,8 +83,8 @@
    ===================================================== */
 .card-game {
     background: var(--glass-bg);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    
+    -webkit-
     border: 1px solid var(--accent-blue-light);
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
@@ -121,9 +121,9 @@
    CARD DE NFT
    ===================================================== */
 .card-nft {
-    background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    
+    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-md);
     padding: var(--spacing-md);
@@ -134,7 +134,7 @@
 }
 
 .card-nft:hover {
-    background: var(--card-bg-hover);
+    background: transparent;
     border-color: var(--primary-cyan);
     transform: scale(1.05);
     box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
@@ -144,7 +144,7 @@
    CARD DE INVENTÁRIO
    ===================================================== */
 .card-inventory {
-    background: var(--primary-cyan-dark);
+    background: transparent;
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-sm);
@@ -168,9 +168,9 @@
    CARD DE ESTATÍSTICAS
    ===================================================== */
 .card-stats {
-    background: var(--panel-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    
+    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-md);
@@ -333,7 +333,7 @@
 .card-selected {
     border-color: var(--primary-cyan);
     box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
-    background: var(--primary-cyan-dark);
+    background: transparent;
 }
 
 .card-disabled {

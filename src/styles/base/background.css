@@ -105,9 +105,9 @@
 }
 
 .simulation-control-btn {
-    background: var(--panel-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    
+    -webkit-
     border: 1px solid var(--primary-cyan-light);
     border-radius: var(--border-radius-sm);
     padding: var(--spacing-sm);
@@ -258,35 +258,35 @@
 
 /* Background Glass */
 .bg-glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    
+    -webkit-
 }
 
 /* Background Card */
 .bg-card {
-    background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    
+    -webkit-
 }
 
 .bg-card-hover {
-    background: var(--card-bg-hover);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: transparent;
+    
+    -webkit-
 }
 
 /* Background Panel */
 .bg-panel {
-    background: var(--panel-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: transparent;
+    
+    -webkit-
 }
 
 .bg-panel-hover {
-    background: var(--panel-bg-hover);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: transparent;
+    
+    -webkit-
 }
 
 /* =====================================================

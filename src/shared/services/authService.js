@@ -245,7 +245,7 @@ export function isValidPassword(password) {
 /**
  * Processa OAuth callback após redirecionamento do provedor
  * Supabase SDK já gerencia a session automaticamente
- * Apenas validamos que a session foi criada
+ * Cria profile automaticamente na primeira vez
  * @returns {Promise<session>} - Sessão criada ou null
  * @throws {Error} - Se não conseguir processar callback
  */
@@ -265,6 +265,45 @@ export async function handleOAuthCallback() {
     if (!session) {
       console.error('❌ Nenhuma session criada após callback');
       throw new Error('Falha ao processar autenticação. Tente novamente.');
+    }
+
+    // Criar profile automaticamente na primeira vez
+    try {
+      console.log('👤 Verificando se profile existe...');
+
+      const user = session.user;
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('google_email', user.email)
+        .single();
+
+      if (!existingProfile) {
+        console.log('📝 Criando profile automaticamente para primeiro login...');
+
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert([{
+            google_email: user.email,
+            display_name: user.user_metadata?.name || user.email.split('@')[0],
+            avatar_url: user.user_metadata?.picture || null,
+            level: 1,
+            xp: 0,
+            coins: 100 // Bônus inicial
+          }]);
+
+        if (profileError) {
+          console.error('❌ Erro ao criar profile:', profileError);
+          // Não falhar o login por causa do profile, apenas logar
+        } else {
+          console.log('✅ Profile criado com sucesso!');
+        }
+      } else {
+        console.log('✅ Profile já existe, pulando criação');
+      }
+    } catch (profileCheckError) {
+      console.error('⚠️ Erro ao verificar/criar profile:', profileCheckError);
+      // Não falhar o login por causa do profile
     }
 
     console.log('✅ OAuth callback processado com sucesso!', session.user?.email);

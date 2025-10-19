@@ -66,11 +66,36 @@ export default class DashboardPage {
             <!-- User Profile -->
             <section class="profile-section">
               <div class="profile-card">
-                <div class="profile-avatar">👤</div>
+                <div id="profileAvatar" class="profile-avatar">👤</div>
                 <div class="profile-info">
                   <h2 id="username" class="profile-username"></h2>
-                  <p id="userId" class="profile-id"></p>
+                  <p id="userEmail" class="profile-email"></p>
                 </div>
+              </div>
+            </section>
+
+            <!-- Navigation Menu -->
+            <section class="navigation-section">
+              <h3 class="section-title">
+                <span role="img" aria-label="Navegação">🧭</span> Navegação
+              </h3>
+              <div class="navigation-grid">
+                <button id="profileBtn" class="nav-btn" aria-label="Ir para perfil">
+                  <span class="nav-icon">👤</span>
+                  <span class="nav-text">Perfil</span>
+                </button>
+                <button id="configBtn" class="nav-btn" aria-label="Ir para configurações">
+                  <span class="nav-icon">⚙️</span>
+                  <span class="nav-text">Config</span>
+                </button>
+                <button id="missionsBtn" class="nav-btn" aria-label="Ir para missões">
+                  <span class="nav-icon">🎯</span>
+                  <span class="nav-text">Missões</span>
+                </button>
+                <button id="marketplaceBtn" class="nav-btn" aria-label="Ir para marketplace">
+                  <span class="nav-icon">🛒</span>
+                  <span class="nav-text">Marketplace</span>
+                </button>
               </div>
             </section>
 
@@ -141,6 +166,36 @@ export default class DashboardPage {
       });
     }
 
+    // Navigation buttons
+    const profileBtn = container.querySelector('#profileBtn');
+    const configBtn = container.querySelector('#configBtn');
+    const missionsBtn = container.querySelector('#missionsBtn');
+    const marketplaceBtn = container.querySelector('#marketplaceBtn');
+
+    if (profileBtn) {
+      profileBtn.addEventListener('click', () => {
+        navigateTo('/profile');
+      });
+    }
+
+    if (configBtn) {
+      configBtn.addEventListener('click', () => {
+        navigateTo('/config');
+      });
+    }
+
+    if (missionsBtn) {
+      missionsBtn.addEventListener('click', () => {
+        navigateTo('/missions');
+      });
+    }
+
+    if (marketplaceBtn) {
+      marketplaceBtn.addEventListener('click', () => {
+        navigateTo('/marketplace');
+      });
+    }
+
     return container;
   }
 
@@ -190,20 +245,37 @@ export default class DashboardPage {
   }
 
   /**
-   * Buscar profile do Supabase
+   * Buscar profile do Supabase (com dados Google OAuth)
    */
   async fetchProfile(userId) {
+    // Primeiro buscar dados do Google OAuth da sessão atual
+    const session = await authService.getSession();
+    const googleUser = session?.user;
+
+    // Depois buscar profile do banco (que pode ter dados adicionais)
     const { data, error } = await this.supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', userId) // user_profiles usa 'id' como PK
+      .eq('google_email', googleUser?.email) // Buscar por email do Google
       .single();
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
       throw new Error('Erro ao carregar perfil: ' + error.message);
     }
 
-    return data || { id: userId, display_name: 'Usuário' };
+    // Combinar dados do Google OAuth com dados do banco
+    const profile = data || { id: userId };
+
+    // Sempre priorizar dados do Google OAuth
+    if (googleUser) {
+      profile.google_name = googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'Usuário';
+      profile.google_email = googleUser.email;
+      profile.google_picture = googleUser.user_metadata?.picture;
+      profile.display_name = profile.display_name || profile.google_name;
+      profile.avatar_url = profile.avatar_url || profile.google_picture;
+    }
+
+    return profile;
   }
 
   /**
@@ -265,10 +337,22 @@ export default class DashboardPage {
     const dataState = container.querySelector('#dataState');
     dataState.style.display = 'block';
 
-    // Profile - usar campos reais: display_name, id
+    // Profile - usar dados do Google OAuth
     if (this.data.profile) {
-      container.querySelector('#username').textContent = this.data.profile.display_name || 'Usuário';
-      container.querySelector('#userId').textContent = `ID: ${this.data.profile.id}`;
+      const username = this.data.profile.google_name || this.data.profile.display_name || 'Usuário';
+      const email = this.data.profile.google_email || 'email@exemplo.com';
+      const avatarUrl = this.data.profile.google_picture || this.data.profile.avatar_url;
+
+      container.querySelector('#username').textContent = username;
+      container.querySelector('#userEmail').textContent = email;
+
+      // Avatar do Google
+      const avatarElement = container.querySelector('#profileAvatar');
+      if (avatarUrl) {
+        avatarElement.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="google-avatar" />`;
+      } else {
+        avatarElement.textContent = '👤';
+      }
     }
 
     // Stats - usar player_stats e player_wallet
@@ -499,6 +583,22 @@ export default class DashboardPage {
 
         .profile-avatar {
           font-size: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          overflow: hidden;
+          background: rgba(0, 255, 204, 0.1);
+          border: 2px solid rgba(0, 255, 204, 0.3);
+        }
+
+        .google-avatar {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
         }
 
         .profile-username {
@@ -509,11 +609,61 @@ export default class DashboardPage {
           margin: 0 0 0.25rem 0;
         }
 
-        .profile-id {
+        .profile-email {
           color: var(--text-secondary, #b0b0b0);
           font-family: var(--font-secondary, Arial);
           font-size: 0.875rem;
           margin: 0;
+        }
+
+        .navigation-section {
+          margin-bottom: var(--spacing-xl, 2rem);
+        }
+
+        .navigation-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: var(--spacing-md, 1rem);
+        }
+
+        .nav-btn {
+          padding: var(--spacing-md, 1rem);
+          background: rgba(0, 255, 204, 0.08);
+          border: 1px solid rgba(0, 255, 204, 0.2);
+          border-radius: var(--border-radius-md, 0.5rem);
+          color: var(--text-primary, #ffffff);
+          cursor: pointer;
+          font-family: var(--font-secondary, Arial);
+          font-size: var(--text-sm, 0.875rem);
+          font-weight: 600;
+          transition: var(--transition-normal, 0.3s);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--spacing-xs, 0.25rem);
+          min-height: 80px;
+        }
+
+        .nav-btn:hover {
+          background: rgba(0, 255, 204, 0.15);
+          border-color: rgba(0, 255, 204, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+        }
+
+        .nav-btn:focus-visible {
+          outline: 2px solid var(--primary-cyan, #00ffcc);
+          outline-offset: 2px;
+        }
+
+        .nav-icon {
+          font-size: 1.5rem;
+          margin-bottom: var(--spacing-xs, 0.25rem);
+        }
+
+        .nav-text {
+          text-align: center;
+          line-height: 1.2;
         }
 
         .section-title {

@@ -24,10 +24,19 @@
     <div class="background-primary"></div>
     <div class="stars-background"></div>
     
+    <!-- Container para simulação de gameplay em background -->
+    <div id="simulation-container"></div>
+    
     <!-- Container principal para renderização SPA -->
     <div id="app" role="main"></div>
     
+    <!-- Phaser 3 CDN (para simulação de gameplay) -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
     <!-- Script de entrada principal (module type para ES6) -->
     <script type="module" src="/src/main.js"></script>
+    
+    <!-- Simulação de Gameplay em Background -->
+    <script type="module" src="/src/simulation/background-simulation.js"></script>
 </body>
 </html>

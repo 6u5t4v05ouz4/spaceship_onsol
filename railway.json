@@ -6,6 +6,6 @@
   "deploy": {
     "startCommand": "cd server && node server.js",
     "healthcheckPath": "/health",
-    "healthcheckTimeout": 300
+    "healthcheckTimeout": 50
   }
 }

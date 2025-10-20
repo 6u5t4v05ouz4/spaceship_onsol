@@ -101,30 +101,78 @@ export async function handleAuth(socket, data, io) {
     socket.playerId = playerState.id;
     socket.userId = user.id;
 
-    // 6. Entrar na room do chunk
-    socket.join(`chunk:${playerState.current_chunk}`);
-
-    // 7. Confirmar autenticação
+    // 6. Confirmar autenticação (NÃO entrar em room aqui; apenas autentica)
     socket.emit('auth:success', {
       playerId: playerState.id,
       playerState: playerState,
     });
 
     logger.info(`✅ Player autenticado: ${playerState.username} (${playerState.id})`);
-
-    // 8. Notificar outros players no chunk
-    socket.to(`chunk:${playerState.current_chunk}`).emit('player:joined', {
-      id: playerState.id, // IMPORTANTE: usar 'id' não 'playerId'
-      username: playerState.username,
-      x: playerState.x,
-      y: playerState.y,
-      health: playerState.health,
-      max_health: playerState.max_health,
-      current_chunk: playerState.current_chunk,
-    });
+    // Não emitimos player:joined aqui para evitar aparecer no mapa sem dar Play
   } catch (error) {
     logger.error('❌ Erro no handleAuth:', error);
     socket.emit('auth:error', { message: 'Erro interno ao autenticar' });
+  }
+}
+
+/**
+ * Handler: play:start
+ * Entra no jogo (room do chunk atual) e notifica presença
+ */
+export async function handlePlayStart(socket, data, io) {
+  try {
+    const player = cacheManager.getPlayerBySocket(socket.id);
+    if (!player) {
+      socket.emit('error', { message: 'Player não autenticado' });
+      return;
+    }
+
+    // Entrar na room do chunk atual
+    if (player.current_chunk) {
+      socket.join(`chunk:${player.current_chunk}`);
+    }
+
+    // Opcional: marcar flag em cache
+    player.is_in_game = true;
+
+    // Notificar outros players do chunk
+    socket.to(`chunk:${player.current_chunk}`).emit('player:joined', {
+      id: player.id,
+      username: player.username,
+      x: player.x,
+      y: player.y,
+      health: player.health,
+      max_health: player.max_health,
+      current_chunk: player.current_chunk,
+    });
+  } catch (error) {
+    logger.error('❌ Erro no handlePlayStart:', error);
+    socket.emit('error', { message: 'Erro ao iniciar jogo' });
+  }
+}
+
+/**
+ * Handler: play:stop
+ * Sai do jogo e notifica saída
+ */
+export async function handlePlayStop(socket, data, io) {
+  try {
+    const player = cacheManager.getPlayerBySocket(socket.id);
+    if (!player) {
+      return;
+    }
+
+    // Sair das rooms de chunk
+    if (player.current_chunk) {
+      socket.leave(`chunk:${player.current_chunk}`);
+      socket.to(`chunk:${player.current_chunk}`).emit('player:left', {
+        id: player.id,
+      });
+    }
+
+    player.is_in_game = false;
+  } catch (error) {
+    logger.error('❌ Erro no handlePlayStop:', error);
   }
 }
 
@@ -152,7 +200,7 @@ export async function handleChunkEnter(socket, data, io) {
 
       // Notificar saída
       socket.to(`chunk:${player.current_chunk}`).emit('player:left', {
-        playerId: player.id,
+        id: player.id,
       });
     }
 
@@ -261,7 +309,10 @@ export async function handlePlayerMove(socket, data, io) {
     }
 
     const { x, y, chunkX, chunkY } = data;
-    const newChunkId = `${chunkX},${chunkY}`;
+
+    // Se chunk não informado, manter chunk atual e apenas broadcast de movimento
+    const hasChunk = Number.isInteger(chunkX) && Number.isInteger(chunkY);
+    const newChunkId = hasChunk ? `${chunkX},${chunkY}` : player.current_chunk;
 
     // Validação básica
     if (typeof x !== 'number' || typeof y !== 'number') {
@@ -269,7 +320,7 @@ export async function handlePlayerMove(socket, data, io) {
     }
 
     // Verificar se mudou de chunk
-    const changedChunk = player.current_chunk !== newChunkId;
+    const changedChunk = hasChunk && player.current_chunk !== newChunkId;
 
     // Atualizar cache
     cacheManager.updatePosition(player.id, x, y, newChunkId);
@@ -281,18 +332,43 @@ export async function handlePlayerMove(socket, data, io) {
       // Sair da room antiga
       socket.leave(`chunk:${player.current_chunk}`);
       socket.to(`chunk:${player.current_chunk}`).emit('player:left', {
-        playerId: player.id,
+        id: player.id,
       });
 
       // Entrar na room nova
       socket.join(`chunk:${newChunkId}`);
 
-      // Carregar novo chunk
-      await handleChunkEnter(socket, { chunkX, chunkY }, io);
+      // Enviar dados básicos do novo chunk e anunciar entrada
+      socket.join(`chunk:${newChunkId}`);
+      socket.emit('chunk:data', {
+        chunk: { chunk_x: chunkX, chunk_y: chunkY, zone_type: 'safe' },
+        asteroids: [],
+        players: cacheManager
+          .getPlayersInChunk(newChunkId)
+          .filter((p) => p.id !== player.id)
+          .map((p) => ({
+            id: p.id,
+            username: p.username,
+            x: p.x,
+            y: p.y,
+            health: p.health,
+            max_health: p.max_health,
+            current_chunk: p.current_chunk,
+          })),
+      });
+      socket.to(`chunk:${newChunkId}`).emit('player:joined', {
+        id: player.id,
+        username: player.username,
+        x,
+        y,
+        health: player.health,
+        max_health: player.max_health,
+        current_chunk: newChunkId,
+      });
     } else {
       // Broadcast posição para outros players no chunk
       socket.to(`chunk:${newChunkId}`).emit('player:moved', {
-        playerId: player.id,
+        id: player.id,
         x,
         y,
       });
@@ -319,7 +395,7 @@ export async function handleDisconnect(socket, reason, io) {
     // 1. Notificar outros players no chunk
     if (player.current_chunk) {
       socket.to(`chunk:${player.current_chunk}`).emit('player:left', {
-        playerId: player.id,
+        id: player.id,
       });
     }
 
@@ -342,6 +418,8 @@ export async function handleDisconnect(socket, reason, io) {
 
 export default {
   handleAuth,
+  handlePlayStart,
+  handlePlayStop,
   handleChunkEnter,
   handlePlayerMove,
   handleDisconnect,

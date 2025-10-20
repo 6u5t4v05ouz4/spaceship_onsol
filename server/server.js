@@ -21,6 +21,8 @@ import chunkGenerator from './services/chunk-generator.js';
 import authMiddleware from './middleware/auth-middleware.js';
 import {
   handleAuth,
+  handlePlayStart,
+  handlePlayStop,
   handleChunkEnter,
   handlePlayerMove,
   handleDisconnect,
@@ -208,6 +210,16 @@ io.on('connection', (socket) => {
   // Event: chunk:enter (entrar em um chunk)
   socket.on('chunk:enter', (data) => {
     handleChunkEnter(socket, data, io);
+  });
+
+  // Event: play:start (entrar no gameplay)
+  socket.on('play:start', (data) => {
+    handlePlayStart(socket, data, io);
+  });
+
+  // Event: play:stop (sair do gameplay)
+  socket.on('play:stop', (data) => {
+    handlePlayStop(socket, data, io);
   });
 
   // Event: player:move (atualizar posição)

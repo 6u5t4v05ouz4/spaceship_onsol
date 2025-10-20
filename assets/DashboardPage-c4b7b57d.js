@@ -1,4 +1,4 @@
-import{n as g,g as f}from"./main-33517044.js";import{e as y}from"./userInitService-f8f32897.js";import{H as x}from"./HeaderNavigation-f12c572a.js";import"./phaser-23102255.js";class q{constructor(a){this.name="DashboardPage",this.supabase=a,this.data={profile:null,gameData:null,inventory:[],ships:[],achievements:[]}}render(){const a=document.createElement("div");a.className="dashboard-page",a.innerHTML=`
+import{n as g,g as f}from"./main-ae15378b.js";import{e as y}from"./userInitService-f8f32897.js";import{H as x}from"./HeaderNavigation-97490218.js";import"./phaser-23102255.js";class q{constructor(a){this.name="DashboardPage",this.supabase=a,this.data={profile:null,gameData:null,inventory:[],ships:[],achievements:[]}}render(){const a=document.createElement("div");a.className="dashboard-page",a.innerHTML=`
       <div class="background-primary"></div>
       <div class="stars-background"></div>
 

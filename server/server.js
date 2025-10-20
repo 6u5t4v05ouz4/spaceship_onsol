@@ -12,6 +12,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { initMultiplayer } from './multiplayer-handlers.js';
 
 // =====================================================
 // PATH SETUP
@@ -108,26 +109,55 @@ const io = new Server(server, {
   pingInterval: 25000
 });
 
-// Connection handler (simplified)
+// Connection handler (com multiplayer handlers)
 io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
 
-  // Simple ping-pong for connection testing
+  // Ping-pong para teste de conexão
   socket.on('ping', () => {
     socket.emit('pong', { timestamp: Date.now() });
   });
 
-  // Simple auth placeholder
-  socket.on('auth', (data) => {
-    console.log('🔐 Auth attempt:', data?.userId || 'unknown');
-    socket.emit('auth:success', {
-      userId: data?.userId || 'demo-user',
-      socketId: socket.id
+  // Importar handlers do multiplayer
+  import('./multiplayer-handlers.js').then(({
+    handleAuth,
+    handleChunkEnter,
+    handlePlayerMove,
+    handleAttack,
+    handleRespawn,
+    handleDisconnect
+  }) => {
+    // Event: auth (autenticação inicial)
+    socket.on('auth', (data) => {
+      handleAuth(socket, data, io);
     });
-  });
 
-  socket.on('disconnect', (reason) => {
-    console.log(`🔌 Client disconnected: ${socket.id}, reason: ${reason}`);
+    // Event: chunk:enter (entrar em um chunk)
+    socket.on('chunk:enter', (data) => {
+      handleChunkEnter(socket, data, io);
+    });
+
+    // Event: player:move (atualizar posição)
+    socket.on('player:move', (data) => {
+      handlePlayerMove(socket, data, io);
+    });
+
+    // Event: battle:attack (atacar outro jogador)
+    socket.on('battle:attack', (data) => {
+      handleAttack(socket, data, io);
+    });
+
+    // Event: battle:respawn (respawn após morte)
+    socket.on('battle:respawn', (data) => {
+      handleRespawn(socket, data, io);
+    });
+
+    // Event: disconnect (desconexão)
+    socket.on('disconnect', (reason) => {
+      handleDisconnect(socket, reason, io);
+    });
+  }).catch(error => {
+    console.error('❌ Erro ao carregar multiplayer handlers:', error);
   });
 });
 
@@ -196,7 +226,7 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     // Iniciar servidor IMEDIATAMENTE para não bloquear o healthcheck
-    server.listen(PORT, '0.0.0.0', () => {
+    server.listen(PORT, '0.0.0.0', async () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📡 WebSocket ready for connections`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -205,6 +235,20 @@ async function startServer() {
       console.log(`🔧 CORS Origin: ${process.env.CORS_ORIGIN || 'Not set'}`);
       console.log(`🔧 Process.env.PORT: ${process.env.PORT}`);
       console.log(`🔧 Server listening on: 0.0.0.0:${PORT}`);
+
+      // Inicializar sistema multiplayer em segundo plano
+      setTimeout(async () => {
+        try {
+          const multiplayerReady = await initMultiplayer();
+          if (multiplayerReady) {
+            console.log('✅ Multiplayer system ready');
+          } else {
+            console.log('⚠️ Multiplayer running in mock mode');
+          }
+        } catch (error) {
+          console.error('❌ Failed to initialize multiplayer:', error);
+        }
+      }, 1000);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

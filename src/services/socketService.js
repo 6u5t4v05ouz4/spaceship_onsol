@@ -271,8 +271,14 @@ class SocketService {
     }
 
     console.log('🔐 Autenticando com servidor...');
+
+    // Obter dados do usuário do Supabase
+    const { data: userData } = await supabase.auth.getUser();
+
     this.socket.emit('auth', {
       token: session.access_token,
+      userId: userData?.user?.id || `demo_${Date.now()}`,
+      username: userData?.user?.user_metadata?.username || userData?.user?.email?.split('@')[0] || `Player_${Date.now().toString(36)}`
     });
 
     return true;

@@ -1,4 +1,4 @@
-import{g as c,n as d}from"./main-261ff586.js";import{e as m}from"./userInitService-f8f32897.js";import{H as u}from"./HeaderNavigation-e41ffb9c.js";import"./phaser-23102255.js";async function f(n,e="all"){try{console.log("🛒 Fetching marketplace listings, category:",e);let t=n.from("marketplace_listings").select(`
+import{g as c,n as d}from"./main-7136b62e.js";import{e as m,H as u}from"./HeaderNavigation-381bcd64.js";import"./phaser-aaa04cbd.js";async function f(n,e="all"){try{console.log("🛒 Fetching marketplace listings, category:",e);let t=n.from("marketplace_listings").select(`
         *,
         seller:seller_id (
           id,
@@ -6,7 +6,7 @@ import{g as c,n as d}from"./main-261ff586.js";import{e as m}from"./userInitServi
           google_email,
           avatar_url
         )
-      `).eq("status","active").order("created_at",{ascending:!1});e&&e!=="all"&&(t=t.eq("category",e));const{data:r,error:a}=await t;if(a)throw console.error("❌ Error fetching listings:",a),new Error("Failed to load marketplace listings: "+a.message);return console.log(`✅ Found ${(r==null?void 0:r.length)||0} listings`),r||[]}catch(t){throw console.error("❌ Error in getMarketplaceListings:",t),t}}async function b(n,e,t){try{console.log("💰 Purchasing listing:",t,"for buyer:",e);const{data:r,error:a}=await n.rpc("purchase_marketplace_item",{p_buyer_email:e,p_listing_id:t});if(a)throw console.error("❌ Error purchasing item:",a),new Error("Failed to purchase item: "+a.message);if(!r||r.length===0)throw new Error("No response from purchase function");const s=r[0];if(!s.success)throw console.warn("⚠️ Purchase failed:",s.message),new Error(s.message);return console.log("✅ Purchase successful:",s.message),s}catch(r){throw console.error("❌ Error in purchaseListing:",r),r}}class w{constructor(e){this.name="MarketplacePage",this.supabase=e,this.listings=[],this.filter="all",this.userCoins=0,this.userId=null}render(){const e=document.createElement("div");return e.className="marketplace-page",e.innerHTML=`
+      `).eq("status","active").order("created_at",{ascending:!1});e&&e!=="all"&&(t=t.eq("category",e));const{data:r,error:a}=await t;if(a)throw console.error("❌ Error fetching listings:",a),new Error("Failed to load marketplace listings: "+a.message);return console.log(`✅ Found ${(r==null?void 0:r.length)||0} listings`),r||[]}catch(t){throw console.error("❌ Error in getMarketplaceListings:",t),t}}async function b(n,e,t){try{console.log("💰 Purchasing listing:",t,"for buyer:",e);const{data:r,error:a}=await n.rpc("purchase_marketplace_item",{p_buyer_email:e,p_listing_id:t});if(a)throw console.error("❌ Error purchasing item:",a),new Error("Failed to purchase item: "+a.message);if(!r||r.length===0)throw new Error("No response from purchase function");const s=r[0];if(!s.success)throw console.warn("⚠️ Purchase failed:",s.message),new Error(s.message);return console.log("✅ Purchase successful:",s.message),s}catch(r){throw console.error("❌ Error in purchaseListing:",r),r}}class k{constructor(e){this.name="MarketplacePage",this.supabase=e,this.listings=[],this.filter="all",this.userCoins=0,this.userId=null}render(){const e=document.createElement("div");return e.className="marketplace-page",e.innerHTML=`
       <div class="background-primary"></div>
       <div class="stars-background"></div>
 
@@ -439,4 +439,4 @@ import{g as c,n as d}from"./main-261ff586.js";import{e as m}from"./userInitServi
           font-size: 0.9rem;
         }
       }
-    `,document.head.appendChild(e)}}export{w as default};
+    `,document.head.appendChild(e)}}export{k as default};

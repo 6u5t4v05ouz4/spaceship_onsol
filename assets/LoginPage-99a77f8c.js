@@ -1,4 +1,4 @@
-import{s as n}from"./main-43c0e492.js";import"./phaser-23102255.js";class l{constructor(){this.name="LoginPage",this.isLoading=!1}render(){const a=document.createElement("div");return a.className="login-page",a.innerHTML=`
+import{s as n}from"./main-33517044.js";import"./phaser-23102255.js";class l{constructor(){this.name="LoginPage",this.isLoading=!1}render(){const a=document.createElement("div");return a.className="login-page",a.innerHTML=`
       <div class="background-primary"></div>
       <div class="stars-background"></div>
       

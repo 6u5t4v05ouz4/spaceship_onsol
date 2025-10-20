@@ -68,7 +68,7 @@ async function createTables() {
       )
     `);
 
-    // Tabela de elementos no chunk (asteroides, etc)
+    // Tabela de elementos no chunk (asteroides, cristais, etc)
     await client.query(`
       CREATE TABLE IF NOT EXISTS chunk_elements (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -80,6 +80,9 @@ async function createTables() {
         rotation FLOAT DEFAULT 0,
         scale FLOAT DEFAULT 1,
         health INTEGER DEFAULT 100,
+        asset_variant_id VARCHAR(50),
+        asset_frame VARCHAR(50),
+        rarity_level VARCHAR(20) DEFAULT 'common',
         data JSONB,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (chunk_x, chunk_y) REFERENCES chunks(chunk_x, chunk_y)
@@ -182,22 +185,65 @@ async function generateChunkElements(chunkX, chunkY, zoneType) {
   try {
     const elementCount = Math.floor(Math.random() * 5) + 3; // 3-7 elementos
 
+    // Calcular distância do centro para determinar raridade
+    const distance = Math.sqrt(chunkX * chunkX + chunkY * chunkY);
+
     for (let i = 0; i < elementCount; i++) {
       const x = Math.random() * 1000;
       const y = Math.random() * 1000;
       const type = Math.random() > 0.7 ? 'asteroid' : 'crystal';
 
-      await client.query(
-        `INSERT INTO chunk_elements (chunk_x, chunk_y, element_type, x, y, rotation, scale, data)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [chunkX, chunkY, type, x, y, Math.random() * Math.PI * 2, 0.5 + Math.random() * 0.5, JSON.stringify({
-          value: type === 'crystal' ? Math.floor(Math.random() * 50) + 10 : null,
+      // Determinar raridade baseada na distância
+      let rarity = 'common';
+      let assetVariant = type + '_common';
+      let assetFrame = null;
+      let elementData = {};
+
+      if (distance <= 10) {
+        rarity = 'common';
+        assetVariant = type + '_common';
+        assetFrame = type === 'asteroid' ?
+          `asteroid_small_${Math.floor(Math.random() * 3) + 1}` :
+          `crystal_basic_${Math.floor(Math.random() * 4) + 1}`;
+        elementData = {
+          value: type === 'crystal' ? Math.floor(Math.random() * 20) + 10 : null,
           size: type === 'asteroid' ? Math.random() > 0.5 ? 'large' : 'small' : null
-        })]
+        };
+      } else if (distance <= 30) {
+        rarity = 'rare';
+        assetVariant = type + '_rare';
+        assetFrame = type === 'asteroid' ?
+          `asteroid_small_rare_${Math.floor(Math.random() * 3) + 1}` :
+          `crystal_energy_${Math.floor(Math.random() * 4) + 1}`;
+        elementData = {
+          value: type === 'crystal' ? Math.floor(Math.random() * 40) + 20 : null,
+          size: type === 'asteroid' ? 'large' : null,
+          bonus: Math.random() > 0.8 ? 'enhanced' : null
+        };
+      } else {
+        rarity = 'legendary';
+        assetVariant = type + '_legendary';
+        assetFrame = type === 'asteroid' ?
+          `asteroid_small_legendary_${Math.floor(Math.random() * 3) + 1}` :
+          `crystal_quantum_${Math.floor(Math.random() * 4) + 1}`;
+        elementData = {
+          value: type === 'crystal' ? Math.floor(Math.random() * 80) + 50 : null,
+          size: type === 'asteroid' ? 'large' : null,
+          bonus: 'legendary',
+          special_effect: Math.random() > 0.7 ? 'glowing' : null
+        };
+      }
+
+      await client.query(
+        `INSERT INTO chunk_elements (chunk_x, chunk_y, element_type, x, y, rotation, scale,
+                                    asset_variant_id, asset_frame, rarity_level, data)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [chunkX, chunkY, type, x, y, Math.random() * Math.PI * 2, 0.5 + Math.random() * 0.5,
+         assetVariant, assetFrame, rarity, JSON.stringify(elementData)]
       );
     }
 
-    console.log(`✅ Gerados ${elementCount} elementos para chunk (${chunkX}, ${chunkY})`);
+    console.log(`✅ Gerados ${elementCount} elementos (${rarity}) para chunk (${chunkX}, ${chunkY})`);
   } finally {
     client.release();
   }

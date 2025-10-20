@@ -4,6 +4,8 @@
  */
 
 import socketService from '../services/socketService.js';
+import AssetManager from './AssetManager.js';
+import SpriteSheetManager from './SpriteSheetManager.js';
 
 export default class MultiplayerManager {
   constructor(scene) {
@@ -15,6 +17,11 @@ export default class MultiplayerManager {
     this.playerId = null;
     this.isConnected = false;
     this.isAuthenticated = false;
+
+    // Asset managers
+    this.assetManager = new AssetManager(scene);
+    this.spriteSheetManager = new SpriteSheetManager(scene);
+    this.chunkElements = new Map(); // Map<chunkKey, elementSprites>
   }
 
   /**
@@ -23,10 +30,14 @@ export default class MultiplayerManager {
   async init() {
     console.log('🌐 Inicializando Multiplayer Manager...');
 
+    // Inicializar asset managers primeiro
+    await this.spriteSheetManager.init();
+    await this.assetManager.init();
+
     // Conectar ao servidor se não estiver conectado
     if (!socketService.isConnected()) {
       socketService.connect();
-      
+
       // Aguardar conexão
       await new Promise((resolve) => {
         if (socketService.isConnected()) {
@@ -39,7 +50,7 @@ export default class MultiplayerManager {
             }
           };
           window.addEventListener('socket:connected', checkConnection);
-          
+
           // Timeout de 5 segundos
           setTimeout(() => {
             window.removeEventListener('socket:connected', checkConnection);
@@ -190,17 +201,37 @@ export default class MultiplayerManager {
   handleChunkData(data) {
     console.log('📦 Chunk data recebido:', data);
     console.log('📊 Players no chunk:', data.players?.length || 0);
+    console.log('📊 Asteroides no chunk:', data.asteroids?.length || 0);
+    console.log('📊 Cristais no chunk:', data.crystals?.length || 0);
     console.log('🆔 Meu player ID:', this.playerId);
 
     // Limpar players antigos
     this.clearOtherPlayers();
+
+    // Limpar elementos antigos do chunk
+    this.clearChunkElements(data.chunk.chunkX, data.chunk.chunkY);
+
+    // Preparar assets para o chunk
+    this.assetManager.preloadChunkAssets(data.chunk.chunkX, data.chunk.chunkY);
+
+    // Processar asteroides
+    if (data.asteroids && data.asteroids.length > 0) {
+      console.log('🌑 Processando asteroides do chunk...');
+      this.spawnChunkElements(data.asteroids, data.chunk.chunkX, data.chunk.chunkY, 'asteroid');
+    }
+
+    // Processar cristais
+    if (data.crystals && data.crystals.length > 0) {
+      console.log('💎 Processando cristais do chunk...');
+      this.spawnChunkElements(data.crystals, data.chunk.chunkX, data.chunk.chunkY, 'crystal');
+    }
 
     // Adicionar players do chunk
     if (data.players && data.players.length > 0) {
       console.log('👥 Processando players do chunk...');
       data.players.forEach(player => {
         console.log(`  - Player: ${player.username} (ID: ${player.id})`);
-        
+
         // Não adicionar o próprio player
         if (player.id !== this.playerId) {
           console.log(`    ✅ Adicionando player ${player.username}`);
@@ -214,11 +245,7 @@ export default class MultiplayerManager {
     }
 
     console.log('📊 Total de outros players após processamento:', this.otherPlayers.size);
-
-    // TODO: Adicionar asteroides do chunk
-    // if (data.asteroids && data.asteroids.length > 0) {
-    //   this.scene.spawnAsteroids(data.asteroids);
-    // }
+    console.log('📊 Total de elementos visíveis:', this.chunkElements.size);
   }
 
   /**
@@ -254,6 +281,129 @@ export default class MultiplayerManager {
         y: data.y,
         duration: this.positionUpdateInterval,
         ease: 'Linear'
+      });
+    }
+  }
+
+  /**
+   * Spawn de elementos do chunk
+   */
+  spawnChunkElements(elements, chunkX, chunkY, elementType) {
+    const chunkKey = `${chunkX},${chunkY}`;
+
+    if (!this.chunkElements.has(chunkKey)) {
+      this.chunkElements.set(chunkKey, []);
+    }
+
+    const chunkElementList = this.chunkElements.get(chunkKey);
+
+    elements.forEach(elementData => {
+      try {
+        // Criar sprite do elemento usando AssetManager
+        const sprite = this.assetManager.createElement({
+          ...elementData,
+          element_type: elementType,
+          chunk_x: chunkX,
+          chunk_y: chunkY
+        }, chunkX, chunkY);
+
+        // Adicionar à lista de elementos do chunk
+        chunkElementList.push({
+          id: elementData.id,
+          sprite,
+          type: elementType,
+          chunkX,
+          chunkY
+        });
+
+        console.log(`✅ Elemento spawnado: ${elementType} (${elementData.x}, ${elementData.y})`);
+
+      } catch (error) {
+        console.error(`❌ Erro ao spawnar elemento ${elementType}:`, error);
+      }
+    });
+  }
+
+  /**
+   * Limpa elementos de um chunk específico
+   */
+  clearChunkElements(chunkX, chunkY) {
+    const chunkKey = `${chunkX},${chunkY}`;
+    const elements = this.chunkElements.get(chunkKey);
+
+    if (elements) {
+      elements.forEach(element => {
+        if (element.sprite) {
+          element.sprite.destroy();
+        }
+      });
+      this.chunkElements.delete(chunkKey);
+      console.log(`🧹 Limpos elementos do chunk (${chunkX}, ${chunkY})`);
+    }
+  }
+
+  /**
+   * Remove um elemento específico
+   */
+  removeElement(elementId, chunkX, chunkY) {
+    const chunkKey = `${chunkX},${chunkY}`;
+    const elements = this.chunkElements.get(chunkKey);
+
+    if (elements) {
+      const index = elements.findIndex(el => el.id === elementId);
+      if (index !== -1) {
+        const element = elements[index];
+        if (element.sprite) {
+          element.sprite.destroy();
+        }
+        elements.splice(index, 1);
+
+        // Criar efeito de destruição
+        this.createElementDestroyEffect(element.sprite.x, element.sprite.y, element.type);
+
+        console.log(`💥 Elemento removido: ${element.type} (${elementId})`);
+      }
+    }
+  }
+
+  /**
+   * Cria efeito de destruição de elemento
+   */
+  createElementDestroyEffect(x, y, elementType) {
+    // Usar sprite sheet de explosões se disponível
+    if (this.scene.textures.exists('effects_explosions')) {
+      const explosion = this.scene.add.sprite(x, y, 'effects_explosions', 'explosion_small_1');
+      explosion.setScale(0.5);
+      explosion.setDepth(20);
+
+      // Animar explosão
+      this.scene.tweens.add({
+        targets: explosion,
+        scaleX: 1.2,
+        scaleY: 1.2,
+        alpha: 0,
+        duration: 300,
+        ease: 'Power2',
+        onComplete: () => {
+          explosion.destroy();
+        }
+      });
+    } else {
+      // Fallback: círculo de explosão simples
+      const explosion = this.scene.add.graphics();
+      explosion.fillStyle(0xFF8800, 0.8);
+      explosion.fillCircle(x, y, 20);
+
+      this.scene.tweens.add({
+        targets: explosion,
+        scaleX: 2,
+        scaleY: 2,
+        alpha: 0,
+        duration: 400,
+        ease: 'Power2',
+        onComplete: () => {
+          explosion.destroy();
+        }
       });
     }
   }
@@ -535,12 +685,29 @@ export default class MultiplayerManager {
    */
   destroy() {
     console.log('🧹 Limpando Multiplayer Manager...');
-    
+
     // Limpar todos os players
     this.clearOtherPlayers();
 
-    // Remover event listeners
-    // (não é possível remover listeners anônimos, então deixamos para o garbage collector)
+    // Limpar todos os elementos dos chunks
+    this.chunkElements.forEach((elements, chunkKey) => {
+      elements.forEach(element => {
+        if (element.sprite) {
+          element.sprite.destroy();
+        }
+      });
+    });
+    this.chunkElements.clear();
+
+    // Limpar asset managers
+    if (this.assetManager) {
+      this.assetManager.cleanup();
+    }
+    if (this.spriteSheetManager) {
+      this.spriteSheetManager.cleanup();
+    }
+
+    console.log('✅ Multiplayer Manager limpo');
   }
 }
 

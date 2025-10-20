@@ -261,8 +261,10 @@ process.on('SIGINT', async () => {
 // SPA FALLBACK
 // =====================================================
 
-// Servir arquivos estáticos do frontend (DEPOIS das rotas da API)
-app.use(express.static(path.join(rootDir, 'dist')));
+// Servir arquivos estáticos específicos (não interceptar rotas da API)
+app.use('/assets', express.static(path.join(rootDir, 'dist/assets')));
+app.use('/static', express.static(path.join(rootDir, 'dist/static')));
+app.use('/game.html', express.static(path.join(rootDir, 'game.html')));
 
 // Fallback para SPA - todas as rotas não encontradas servem index.html
 app.get('*', (req, res) => {

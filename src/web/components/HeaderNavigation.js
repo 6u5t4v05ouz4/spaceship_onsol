@@ -120,8 +120,10 @@ export default class HeaderNavigation {
     const multiplayerBtn = container.querySelector('.nav-link-multiplayer');
     if (multiplayerBtn) {
       console.log('✅ Botão multiplayer encontrado no header:', multiplayerBtn);
+      console.log('🔍 HTML do botão multiplayer:', multiplayerBtn.outerHTML);
     } else {
       console.error('❌ Botão multiplayer NÃO encontrado no header!');
+      console.log('🔍 HTML completo do header:', container.innerHTML);
     }
 
     return container;
@@ -530,16 +532,19 @@ export default class HeaderNavigation {
 
         /* Multiplayer Button - Destaque especial */
         .nav-link-multiplayer {
-          background: linear-gradient(135deg, #ff6b35, #f72585);
-          border-color: rgba(255, 107, 53, 0.5);
+          background: linear-gradient(135deg, #ff6b35, #f72585) !important;
+          border-color: rgba(255, 107, 53, 0.5) !important;
           color: white !important;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          position: relative;
-          overflow: hidden;
-          box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
-          animation: multiplayerGlow 2s ease-in-out infinite;
+          font-weight: 700 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.5px !important;
+          position: relative !important;
+          overflow: hidden !important;
+          box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3) !important;
+          animation: multiplayerGlow 2s ease-in-out infinite !important;
+          display: flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
         }
 
         .nav-link-multiplayer::before {

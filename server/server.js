@@ -16,6 +16,7 @@ import logger from './utils/logger.js';
 import { supabaseAdmin, validateSupabaseConnection } from './config/supabase.js';
 import { initRedis, closeRedis } from './config/redis.js';
 import cacheManager from './managers/cache-manager.js';
+import databaseService from './services/database-service.js';
 import authMiddleware from './middleware/auth-middleware.js';
 import {
   handleAuth,
@@ -72,19 +73,21 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/metrics', (req, res) => {
-  const stats = cacheManager.getStats();
-  
-  res.json({
-    playersOnline: stats.playersOnline,
-    totalUpdates: stats.totalUpdates,
-    totalCriticalUpdates: stats.totalCriticalUpdates,
-    pendingCriticalUpdates: stats.pendingCriticalUpdates,
-    pendingBatchUpdates: stats.pendingBatchUpdates,
-    lastSyncAt: stats.lastSyncAt,
-    memoryUsage: process.memoryUsage(),
-    uptime: process.uptime()
-  });
+app.get('/api/database/test', async (req, res) => {
+  try {
+    const elements = await databaseService.getChunkElements(0, 0);
+    res.json({
+      status: 'ok',
+      elements: elements,
+      count: elements.length
+    });
+  } catch (error) {
+    logger.error('❌ Erro ao testar database:', error);
+    res.status(500).json({
+      error: 'Database test failed',
+      message: error.message
+    });
+  }
 });
 
 // =====================================================
@@ -232,13 +235,16 @@ async function startServer() {
       logger.warn('⚠️  Supabase connection failed, but server will start anyway');
     }
     
-    // 2. Inicializar Redis (opcional)
+    // 2. Inicializar PostgreSQL
+    await databaseService.connect();
+    
+    // 3. Inicializar Redis (opcional)
     await initRedis();
     
-    // 3. Iniciar Cache Manager
+    // 4. Iniciar Cache Manager
     cacheManager.start();
     
-    // 4. Iniciar servidor
+    // 5. Iniciar servidor
     server.listen(PORT, '0.0.0.0', () => {
       logger.info(`🚀 Server running on port ${PORT}`);
       logger.info(`📡 WebSocket ready for connections`);

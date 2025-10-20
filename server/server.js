@@ -261,8 +261,13 @@ async function startServer() {
       logger.warn('⚠️  Supabase connection failed, but server will start anyway');
     }
     
-    // 2. Inicializar PostgreSQL
-    await databaseService.connect();
+    // 2. Inicializar PostgreSQL (opcional)
+    try {
+      await databaseService.connect();
+      logger.info('✅ PostgreSQL conectado com sucesso');
+    } catch (error) {
+      logger.warn('⚠️  PostgreSQL connection failed, server will start without database:', error.message);
+    }
     
     // 3. Inicializar Redis (opcional)
     await initRedis();

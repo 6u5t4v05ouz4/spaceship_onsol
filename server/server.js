@@ -74,7 +74,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/api/database/test', async (req, res) => {
+// Endpoint para executar SQL (apenas para desenvolvimento)
+app.post('/api/database/exec', async (req, res) => {
   try {
     if (!databaseService.pool) {
       return res.status(503).json({
@@ -83,20 +84,27 @@ app.get('/api/database/test', async (req, res) => {
       });
     }
     
+    const { sql } = req.body;
+    if (!sql) {
+      return res.status(400).json({
+        error: 'SQL query required',
+        message: 'Please provide a SQL query in the request body'
+      });
+    }
+    
     const client = await databaseService.pool.connect();
-    const result = await client.query('SELECT NOW() as current_time, version() as postgres_version');
+    const result = await client.query(sql);
     client.release();
     
     res.json({
       status: 'ok',
-      database: 'PostgreSQL',
-      current_time: result.rows[0].current_time,
-      version: result.rows[0].postgres_version
+      rows: result.rows,
+      rowCount: result.rowCount
     });
   } catch (error) {
-    logger.error('❌ Erro ao testar PostgreSQL:', error);
+    logger.error('❌ Erro ao executar SQL:', error);
     res.status(500).json({
-      error: 'Database connection failed',
+      error: 'SQL execution failed',
       message: error.message
     });
   }

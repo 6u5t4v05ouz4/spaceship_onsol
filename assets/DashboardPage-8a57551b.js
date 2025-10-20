@@ -1,4 +1,4 @@
-import{g,n as u}from"./main-90c558a4.js";import{e as b,H as x}from"./HeaderNavigation-7da445a9.js";import"./phaser-aaa04cbd.js";class k{constructor(a){this.name="DashboardPage",this.supabase=a,this.data={profile:null,gameData:null,inventory:[],ships:[],achievements:[]}}render(){const a=document.createElement("div");a.className="dashboard-page",a.innerHTML=`
+import{g,n as u}from"./main-d0ca86ab.js";import{e as b,H as x}from"./HeaderNavigation-64d23218.js";import"./phaser-aaa04cbd.js";class k{constructor(a){this.name="DashboardPage",this.supabase=a,this.data={profile:null,gameData:null,inventory:[],ships:[],achievements:[]}}render(){const a=document.createElement("div");a.className="dashboard-page",a.innerHTML=`
       <div class="background-primary"></div>
       <div class="stars-background"></div>
 

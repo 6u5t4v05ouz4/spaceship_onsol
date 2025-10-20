@@ -1,4 +1,4 @@
-import{g,n as u}from"./main-d0ca86ab.js";import{e as b,H as x}from"./HeaderNavigation-64d23218.js";import"./phaser-aaa04cbd.js";class k{constructor(a){this.name="DashboardPage",this.supabase=a,this.data={profile:null,gameData:null,inventory:[],ships:[],achievements:[]}}render(){const a=document.createElement("div");a.className="dashboard-page",a.innerHTML=`
+import{n as g,g as f}from"./main-b7ad45ee.js";import{e as y}from"./userInitService-f8f32897.js";import{H as x}from"./HeaderNavigation-8c71d598.js";import"./phaser-23102255.js";class q{constructor(a){this.name="DashboardPage",this.supabase=a,this.data={profile:null,gameData:null,inventory:[],ships:[],achievements:[]}}render(){const a=document.createElement("div");a.className="dashboard-page",a.innerHTML=`
       <div class="background-primary"></div>
       <div class="stars-background"></div>
 
@@ -170,6 +170,31 @@ import{g,n as u}from"./main-d0ca86ab.js";import{e as b,H as x}from"./HeaderNavig
               </div>
             </section>
 
+            <!-- Quick Actions Section -->
+            <section class="actions-section">
+              <h3 class="section-title">
+                <span role="img" aria-label="Ações">🎮</span> Ações Rápidas
+              </h3>
+              <div class="actions-grid">
+                <button class="action-btn multiplayer-btn" id="multiplayerBtn" title="Entrar no mundo multiplayer compartilhado">
+                  <div class="action-icon">🌐</div>
+                  <div class="action-content">
+                    <div class="action-title">MULTIPLAYER</div>
+                    <div class="action-description">Jogue com outros jogadores</div>
+                  </div>
+                  <div class="action-arrow">→</div>
+                </button>
+                <button class="action-btn solo-btn" id="soloBtn" title="Jogar modo solo">
+                  <div class="action-icon">🚀</div>
+                  <div class="action-content">
+                    <div class="action-title">MODO SOLO</div>
+                    <div class="action-description">Jogue individualmente</div>
+                  </div>
+                  <div class="action-arrow">→</div>
+                </button>
+              </div>
+            </section>
+
             <!-- Recent Activity Section -->
             <section class="activity-section">
               <h3 class="section-title">
@@ -182,12 +207,12 @@ import{g,n as u}from"./main-d0ca86ab.js";import{e as b,H as x}from"./HeaderNavig
           </div>
         </div>
       </div>
-    `,this.addStyles(),this.renderGlobalHeader(a),this.loadData(a);const i=a.querySelector("#retryBtn");return i&&i.addEventListener("click",()=>{this.loadData(a)}),a}renderGlobalHeader(a){const i=a.querySelector("#globalHeader");if(i){const r=new x().render();i.appendChild(r)}}async loadData(a){var i,e,r;this.showLoading(a);try{const t=await g();if(!t){this.showError(a,"Sessão expirada. Faça login novamente."),setTimeout(()=>u("/login"),1500);return}const s=t.user.id,o=t.user.email,d=t.user;console.log("📊 Carregando dados para usuário:",o),console.log("🔍 Ensuring user data is initialized..."),await b(this.supabase,o,d);const c=await this.fetchProfile(o);this.data.profile=c,this.data.profile.google_name||(this.data.profile.google_name=((i=d.user_metadata)==null?void 0:i.name)||((e=d.email)==null?void 0:e.split("@")[0])||"Usuário",this.data.profile.google_email=d.email,this.data.profile.google_picture=(r=d.user_metadata)==null?void 0:r.picture,this.data.profile.display_name=this.data.profile.display_name||this.data.profile.google_name);const l=await this.fetchPlayerStats(s);this.data.gameData=l||{};const p=await this.fetchInventory(s);this.data.inventory=p||[];const n=await this.fetchShips(s);this.data.ships=n||[],console.log("✅ Dados carregados:",this.data),this.hideLoading(a),this.renderData(a)}catch(t){console.error("❌ Erro ao carregar dados:",t),this.showError(a,t.message)}}async renderShipDisplay(a){var i,e;try{const r=a.querySelector("#shipCanvas");if(!r)return;const t=r.getContext("2d"),s=((i=this.data.profile)==null?void 0:i.ship_type)||"default_idle",o=((e=this.data.profile)==null?void 0:e.ship_rarity)||"Comum";console.log("🚀 Renderizando nave do usuário:",{userShipType:s,userShipRarity:o});const d={Comum:{speed:100,cargo:50,fuel:100,shield:100,color:"#CCCCCC",name:"Space Miner Comum"},Incomum:{speed:200,cargo:100,fuel:150,shield:200,color:"#00FF00",name:"Space Miner Incomum"},Raro:{speed:300,cargo:150,fuel:200,shield:300,color:"#0080FF",name:"Space Miner Raro"},Épico:{speed:400,cargo:175,fuel:250,shield:400,color:"#8000FF",name:"Space Miner Épico"},Lendário:{speed:500,cargo:200,fuel:300,shield:500,color:"#FF8000",name:"Space Miner Lendário"}},c=o,l=d[c],p={default_idle:"/assets/images/idle.png",nft_custom:"/assets/images/nft_ship.png"},n=new Image;n.crossOrigin="anonymous",n.src=p[s]||p.default_idle,await new Promise((v,h)=>{n.onload=()=>{t.clearRect(0,0,r.width,r.height),t.fillStyle="#0a0a1a",t.fillRect(0,0,r.width,r.height),t.strokeStyle=l.color,t.lineWidth=2,t.strokeRect(1,1,r.width-2,r.height-2);const m=1,f=(r.width-n.width*m)/2,y=(r.height-n.height*m)/2;t.drawImage(n,f,y,n.width*m,n.height*m),v()},n.onerror=h}),a.querySelector("#shipName").textContent=l.name,a.querySelector("#shipRarity").textContent=c,a.querySelector("#shipRarity").style.color=l.color,a.querySelector("#shipSpeed").textContent=l.speed,a.querySelector("#shipCargo").textContent=l.cargo,a.querySelector("#shipFuel").textContent=l.fuel,a.querySelector("#shipShield").textContent=l.shield,console.log("✅ Nave renderizada no dashboard:",c)}catch(r){console.error("❌ Erro ao renderizar nave:",r);const t=a.querySelector("#shipCanvas");if(t){const s=t.getContext("2d");s.fillStyle="#0a0a1a",s.fillRect(0,0,t.width,t.height),s.fillStyle="#00ffcc",s.font="20px Arial",s.textAlign="center",s.fillText("🚀",t.width/2,t.height/2+7)}}}async fetchProfile(a){var o,d,c;const i=await g(),e=i==null?void 0:i.user,{data:r,error:t}=await this.supabase.from("user_profiles").select("*").eq("google_email",e==null?void 0:e.email).single();if(t&&t.code!=="PGRST116")throw new Error("Erro ao carregar perfil: "+t.message);const s=r||{id:a};return e&&(s.google_name=((o=e.user_metadata)==null?void 0:o.name)||((d=e.email)==null?void 0:d.split("@")[0])||"Usuário",s.google_email=e.email,s.google_picture=(c=e.user_metadata)==null?void 0:c.picture,s.display_name=s.display_name||s.google_name,s.avatar_url=s.avatar_url||s.google_picture),s}async fetchPlayerStats(a){const{data:i,error:e}=await this.supabase.from("player_stats").select("*").eq("user_id",a).single();return e&&e.code!=="PGRST116"?(console.warn("Aviso ao carregar player stats:",e.message),null):i}async fetchInventory(a){const{data:i,error:e}=await this.supabase.from("player_inventory").select("*").eq("user_id",a);return e&&e.code!=="PGRST116"?(console.warn("Aviso ao carregar inventory:",e.message),[]):i||[]}async fetchShips(a){const{data:i,error:e}=await this.supabase.from("player_wallet").select("*").eq("user_id",a);return e&&e.code!=="PGRST116"?(console.warn("Aviso ao carregar ships:",e.message),[]):i||[]}renderData(a){const i=a.querySelector("#dataState");if(i.style.display="block",this.data.profile){const l=this.data.profile.google_name||this.data.profile.display_name||"Usuário",p=this.data.profile.google_email||"email@exemplo.com",n=this.data.profile.google_picture||this.data.profile.avatar_url;a.querySelector("#username").textContent=l,a.querySelector("#userEmail").textContent=p;const v=a.querySelector("#profileAvatar");n?v.innerHTML=`<img src="${n}" alt="Avatar" class="google-avatar" />`:v.textContent="👤"}this.renderShipDisplay(a);const e=this.data.gameData||{};a.querySelector("#sessionsCount").textContent=e.sessions_count||0;const r=Math.floor((e.total_play_time_seconds||0)/3600),t=Math.floor((e.total_play_time_seconds||0)%3600/60);a.querySelector("#playTime").textContent=r>0?`${r}h ${t}m`:`${t}m`,a.querySelector("#planetsDiscovered").textContent=e.planets_discovered||0,a.querySelector("#miningSessions").textContent=e.total_mining_sessions||0,a.querySelector("#totalBattles").textContent=e.total_battles||0,a.querySelector("#battlesWon").textContent=e.battles_won||0,a.querySelector("#itemsCrafted").textContent=e.total_items_crafted||0;const s=((e.distance_traveled||0)/1e3).toFixed(1);a.querySelector("#distanceTraveled").textContent=`${s} km`;const o=this.data.ships.length>0?this.data.ships[0]:null;a.querySelector("#spaceTokens").textContent=o?(o.space_tokens||0).toLocaleString():"0",a.querySelector("#solTokens").textContent=o?parseFloat(o.sol_tokens||0).toFixed(4):"0.0000",a.querySelector("#totalEarned").textContent=(e.total_tokens_earned||0).toLocaleString();const d=a.querySelector("#inventoryGrid");this.data.inventory.length>0?d.innerHTML=this.data.inventory.map(l=>{var p;return`
+    `,this.addStyles(),this.renderGlobalHeader(a),this.loadData(a);const r=a.querySelector("#retryBtn");r&&r.addEventListener("click",()=>{this.loadData(a)});const e=a.querySelector("#multiplayerBtn");e&&e.addEventListener("click",()=>{g("/multiplayer")});const i=a.querySelector("#soloBtn");return i&&i.addEventListener("click",()=>{window.location.href="/game.html"}),a}renderGlobalHeader(a){const r=a.querySelector("#globalHeader");if(r){const i=new x().render();r.appendChild(i)}}async loadData(a){var r,e,i;this.showLoading(a);try{const t=await f();if(!t){this.showError(a,"Sessão expirada. Faça login novamente."),setTimeout(()=>g("/login"),1500);return}const s=t.user.id,o=t.user.email,d=t.user;console.log("📊 Carregando dados para usuário:",o),console.log("🔍 Ensuring user data is initialized..."),await y(this.supabase,o,d);const c=await this.fetchProfile(o);this.data.profile=c,this.data.profile.google_name||(this.data.profile.google_name=((r=d.user_metadata)==null?void 0:r.name)||((e=d.email)==null?void 0:e.split("@")[0])||"Usuário",this.data.profile.google_email=d.email,this.data.profile.google_picture=(i=d.user_metadata)==null?void 0:i.picture,this.data.profile.display_name=this.data.profile.display_name||this.data.profile.google_name);const n=await this.fetchPlayerStats(s);this.data.gameData=n||{};const p=await this.fetchInventory(s);this.data.inventory=p||[];const l=await this.fetchShips(s);this.data.ships=l||[],console.log("✅ Dados carregados:",this.data),this.hideLoading(a),this.renderData(a)}catch(t){console.error("❌ Erro ao carregar dados:",t),this.showError(a,t.message)}}async renderShipDisplay(a){var r,e;try{const i=a.querySelector("#shipCanvas");if(!i)return;const t=i.getContext("2d"),s=((r=this.data.profile)==null?void 0:r.ship_type)||"default_idle",o=((e=this.data.profile)==null?void 0:e.ship_rarity)||"Comum";console.log("🚀 Renderizando nave do usuário:",{userShipType:s,userShipRarity:o});const d={Comum:{speed:100,cargo:50,fuel:100,shield:100,color:"#CCCCCC",name:"Space Miner Comum"},Incomum:{speed:200,cargo:100,fuel:150,shield:200,color:"#00FF00",name:"Space Miner Incomum"},Raro:{speed:300,cargo:150,fuel:200,shield:300,color:"#0080FF",name:"Space Miner Raro"},Épico:{speed:400,cargo:175,fuel:250,shield:400,color:"#8000FF",name:"Space Miner Épico"},Lendário:{speed:500,cargo:200,fuel:300,shield:500,color:"#FF8000",name:"Space Miner Lendário"}},c=o,n=d[c],p={default_idle:"/assets/images/idle.png",nft_custom:"/assets/images/nft_ship.png"},l=new Image;l.crossOrigin="anonymous",l.src=p[s]||p.default_idle,await new Promise((v,h)=>{l.onload=()=>{t.clearRect(0,0,i.width,i.height),t.fillStyle="#0a0a1a",t.fillRect(0,0,i.width,i.height),t.strokeStyle=n.color,t.lineWidth=2,t.strokeRect(1,1,i.width-2,i.height-2);const m=1,u=(i.width-l.width*m)/2,b=(i.height-l.height*m)/2;t.drawImage(l,u,b,l.width*m,l.height*m),v()},l.onerror=h}),a.querySelector("#shipName").textContent=n.name,a.querySelector("#shipRarity").textContent=c,a.querySelector("#shipRarity").style.color=n.color,a.querySelector("#shipSpeed").textContent=n.speed,a.querySelector("#shipCargo").textContent=n.cargo,a.querySelector("#shipFuel").textContent=n.fuel,a.querySelector("#shipShield").textContent=n.shield,console.log("✅ Nave renderizada no dashboard:",c)}catch(i){console.error("❌ Erro ao renderizar nave:",i);const t=a.querySelector("#shipCanvas");if(t){const s=t.getContext("2d");s.fillStyle="#0a0a1a",s.fillRect(0,0,t.width,t.height),s.fillStyle="#00ffcc",s.font="20px Arial",s.textAlign="center",s.fillText("🚀",t.width/2,t.height/2+7)}}}async fetchProfile(a){var o,d,c;const r=await f(),e=r==null?void 0:r.user,{data:i,error:t}=await this.supabase.from("user_profiles").select("*").eq("google_email",e==null?void 0:e.email).single();if(t&&t.code!=="PGRST116")throw new Error("Erro ao carregar perfil: "+t.message);const s=i||{id:a};return e&&(s.google_name=((o=e.user_metadata)==null?void 0:o.name)||((d=e.email)==null?void 0:d.split("@")[0])||"Usuário",s.google_email=e.email,s.google_picture=(c=e.user_metadata)==null?void 0:c.picture,s.display_name=s.display_name||s.google_name,s.avatar_url=s.avatar_url||s.google_picture),s}async fetchPlayerStats(a){const{data:r,error:e}=await this.supabase.from("player_stats").select("*").eq("user_id",a).single();return e&&e.code!=="PGRST116"?(console.warn("Aviso ao carregar player stats:",e.message),null):r}async fetchInventory(a){const{data:r,error:e}=await this.supabase.from("player_inventory").select("*").eq("user_id",a);return e&&e.code!=="PGRST116"?(console.warn("Aviso ao carregar inventory:",e.message),[]):r||[]}async fetchShips(a){const{data:r,error:e}=await this.supabase.from("player_wallet").select("*").eq("user_id",a);return e&&e.code!=="PGRST116"?(console.warn("Aviso ao carregar ships:",e.message),[]):r||[]}renderData(a){const r=a.querySelector("#dataState");if(r.style.display="block",this.data.profile){const n=this.data.profile.google_name||this.data.profile.display_name||"Usuário",p=this.data.profile.google_email||"email@exemplo.com",l=this.data.profile.google_picture||this.data.profile.avatar_url;a.querySelector("#username").textContent=n,a.querySelector("#userEmail").textContent=p;const v=a.querySelector("#profileAvatar");l?v.innerHTML=`<img src="${l}" alt="Avatar" class="google-avatar" />`:v.textContent="👤"}this.renderShipDisplay(a);const e=this.data.gameData||{};a.querySelector("#sessionsCount").textContent=e.sessions_count||0;const i=Math.floor((e.total_play_time_seconds||0)/3600),t=Math.floor((e.total_play_time_seconds||0)%3600/60);a.querySelector("#playTime").textContent=i>0?`${i}h ${t}m`:`${t}m`,a.querySelector("#planetsDiscovered").textContent=e.planets_discovered||0,a.querySelector("#miningSessions").textContent=e.total_mining_sessions||0,a.querySelector("#totalBattles").textContent=e.total_battles||0,a.querySelector("#battlesWon").textContent=e.battles_won||0,a.querySelector("#itemsCrafted").textContent=e.total_items_crafted||0;const s=((e.distance_traveled||0)/1e3).toFixed(1);a.querySelector("#distanceTraveled").textContent=`${s} km`;const o=this.data.ships.length>0?this.data.ships[0]:null;a.querySelector("#spaceTokens").textContent=o?(o.space_tokens||0).toLocaleString():"0",a.querySelector("#solTokens").textContent=o?parseFloat(o.sol_tokens||0).toFixed(4):"0.0000",a.querySelector("#totalEarned").textContent=(e.total_tokens_earned||0).toLocaleString();const d=a.querySelector("#inventoryGrid");this.data.inventory.length>0?d.innerHTML=this.data.inventory.map(n=>{var p;return`
         <div class="inventory-item">
           <div class="item-icon">📦</div>
           <div class="item-info">
-            <div class="item-name">Recurso #${((p=l.resource_type_id)==null?void 0:p.substring(0,8))||"N/A"}</div>
-            <div class="item-quantity">Quantidade: ${l.quantity||0}</div>
+            <div class="item-name">Recurso #${((p=n.resource_type_id)==null?void 0:p.substring(0,8))||"N/A"}</div>
+            <div class="item-quantity">Quantidade: ${n.quantity||0}</div>
           </div>
         </div>
       `}).join(""):d.innerHTML='<p class="empty-message">Inventário vazio - Comece a minerar!</p>';const c=a.querySelector("#recentActivity");e.sessions_count>0?c.innerHTML=`
@@ -216,7 +241,7 @@ import{g,n as u}from"./main-d0ca86ab.js";import{e as b,H as x}from"./HeaderNavig
           </div>
         </div>
         `:""}
-      `:c.innerHTML='<p class="empty-message">Nenhuma atividade recente - Comece a jogar!</p>'}showLoading(a){a.querySelector("#loadingState").style.display="flex",a.querySelector("#errorState").style.display="none",a.querySelector("#dataState").style.display="none"}showError(a,i){a.querySelector("#loadingState").style.display="none";const e=a.querySelector("#errorState");e.style.display="flex",e.setAttribute("role","alert"),e.setAttribute("aria-live","polite");const r=a.querySelector("#errorMessage");r.textContent=i,a.querySelector("#dataState").style.display="none";const t=document.createElement("div");t.className="sr-only",t.setAttribute("role","status"),t.setAttribute("aria-live","polite"),t.textContent=`Erro: ${i}`,document.body.appendChild(t),setTimeout(()=>t.remove(),1e3)}hideLoading(a){a.querySelector("#loadingState").style.display="none"}addStyles(){if(!document.querySelector('style[data-page="dashboard"]')){const a=document.createElement("style");a.setAttribute("data-page","dashboard"),a.textContent=`
+      `:c.innerHTML='<p class="empty-message">Nenhuma atividade recente - Comece a jogar!</p>'}showLoading(a){a.querySelector("#loadingState").style.display="flex",a.querySelector("#errorState").style.display="none",a.querySelector("#dataState").style.display="none"}showError(a,r){a.querySelector("#loadingState").style.display="none";const e=a.querySelector("#errorState");e.style.display="flex",e.setAttribute("role","alert"),e.setAttribute("aria-live","polite");const i=a.querySelector("#errorMessage");i.textContent=r,a.querySelector("#dataState").style.display="none";const t=document.createElement("div");t.className="sr-only",t.setAttribute("role","status"),t.setAttribute("aria-live","polite"),t.textContent=`Erro: ${r}`,document.body.appendChild(t),setTimeout(()=>t.remove(),1e3)}hideLoading(a){a.querySelector("#loadingState").style.display="none"}addStyles(){if(!document.querySelector('style[data-page="dashboard"]')){const a=document.createElement("style");a.setAttribute("data-page","dashboard"),a.textContent=`
         .dashboard-page {
           position: relative;
           width: 100%;
@@ -734,5 +759,153 @@ import{g,n as u}from"./main-d0ca86ab.js";import{e as b,H as x}from"./HeaderNavig
           .inventory-grid {
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
           }
+
+          /* Quick Actions Section */
+          .actions-section {
+            margin-bottom: var(--spacing-xl, 2rem);
+          }
+
+          .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md, 1rem);
+            margin-top: var(--spacing-md, 1rem);
+          }
+
+          .action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md, 1rem);
+            padding: var(--spacing-lg, 1.5rem);
+            background: rgba(0, 255, 204, 0.08);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            border-radius: var(--border-radius-lg, 1rem);
+            color: var(--color-white, #ffffff);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+          }
+
+          .action-btn:hover::before {
+            left: 100%;
+          }
+
+          .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 204, 0.3);
+            border-color: rgba(0, 255, 204, 0.4);
+          }
+
+          /* Multiplayer Button - Destaque especial */
+          .multiplayer-btn {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(247, 37, 133, 0.2));
+            border: 1px solid rgba(255, 107, 53, 0.4);
+          }
+
+          .multiplayer-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.3), rgba(247, 37, 133, 0.3));
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+          }
+
+          .multiplayer-btn .action-icon {
+            background: linear-gradient(135deg, #ff6b35, #f72585);
+            color: white;
+            font-size: 1.5rem;
+            animation: pulse 2s ease-in-out infinite;
+          }
+
+          /* Solo Button */
+          .solo-btn {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.2));
+            border: 1px solid rgba(52, 152, 219, 0.4);
+          }
+
+          .solo-btn:hover {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3), rgba(41, 128, 185, 0.3));
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+          }
+
+          .solo-btn .action-icon {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            font-size: 1.5rem;
+          }
+
+          .action-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: var(--border-radius-md, 0.5rem);
+            flex-shrink: 0;
+          }
+
+          .action-content {
+            flex: 1;
+          }
+
+          .action-title {
+            font-size: var(--text-lg, 1.25rem);
+            font-weight: 700;
+            font-family: var(--font-primary, Arial);
+            margin-bottom: var(--spacing-xs, 0.25rem);
+            color: var(--color-white, #ffffff);
+          }
+
+          .action-description {
+            font-size: var(--text-sm, 0.875rem);
+            color: var(--text-secondary, #b0b0b0);
+            line-height: 1.4;
+          }
+
+          .action-arrow {
+            font-size: 1.5rem;
+            color: var(--primary-cyan, #00ffcc);
+            transition: transform 0.3s ease;
+          }
+
+          .action-btn:hover .action-arrow {
+            transform: translateX(5px);
+          }
+
+          /* Responsive Design for Actions */
+          @media (max-width: 768px) {
+            .actions-grid {
+              grid-template-columns: 1fr;
+              gap: var(--spacing-sm, 0.5rem);
+            }
+
+            .action-btn {
+              padding: var(--spacing-md, 1rem);
+            }
+
+            .action-icon {
+              width: 50px;
+              height: 50px;
+              font-size: 1.2rem;
+            }
+
+            .action-title {
+              font-size: var(--text-base, 1rem);
+            }
+
+            .action-description {
+              font-size: var(--text-xs, 0.75rem);
+            }
+          }
         }
-      `,document.head.appendChild(a)}}}export{k as default};
+      `,document.head.appendChild(a)}}}export{q as default};

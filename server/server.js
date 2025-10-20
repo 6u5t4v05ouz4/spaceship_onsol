@@ -76,16 +76,27 @@ app.get('/health', (req, res) => {
 
 app.get('/api/database/test', async (req, res) => {
   try {
-    const elements = await databaseService.getChunkElements(0, 0);
+    if (!databaseService.pool) {
+      return res.status(503).json({
+        error: 'Database not connected',
+        message: 'PostgreSQL connection not available'
+      });
+    }
+    
+    const client = await databaseService.pool.connect();
+    const result = await client.query('SELECT NOW() as current_time, version() as postgres_version');
+    client.release();
+    
     res.json({
       status: 'ok',
-      elements: elements,
-      count: elements.length
+      database: 'PostgreSQL',
+      current_time: result.rows[0].current_time,
+      version: result.rows[0].postgres_version
     });
   } catch (error) {
-    logger.error('❌ Erro ao testar database:', error);
+    logger.error('❌ Erro ao testar PostgreSQL:', error);
     res.status(500).json({
-      error: 'Database test failed',
+      error: 'Database connection failed',
       message: error.message
     });
   }
@@ -96,6 +107,19 @@ app.get('/api/chunk/:chunkX/:chunkY/elements', async (req, res) => {
   try {
     const chunkX = parseInt(req.params.chunkX);
     const chunkY = parseInt(req.params.chunkY);
+    
+    // Se PostgreSQL não estiver conectado, retornar elementos vazios
+    if (!databaseService.pool) {
+      logger.warn('⚠️ PostgreSQL não conectado, retornando elementos vazios');
+      return res.json({
+        status: 'ok',
+        chunkX,
+        chunkY,
+        elements: [],
+        count: 0,
+        warning: 'Database not connected'
+      });
+    }
     
     // Gerar elementos se não existirem
     const elements = await chunkGenerator.generateChunkElements(chunkX, chunkY);

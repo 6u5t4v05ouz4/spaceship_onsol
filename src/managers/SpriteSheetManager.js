@@ -920,12 +920,6 @@ export default class SpriteSheetManager {
     }
   }
 
-  
-        ctx.arc(centerX - size * 0.5, centerY, 3, 0, Math.PI * 2);
-    ctx.arc(centerX + size * 0.5, centerY, 3, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
   /**
    * Desenha uma explosão
    */

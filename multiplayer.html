@@ -131,8 +131,33 @@
         async function checkAuthentication() {
             try {
                 console.log('🔐 Verificando autenticação...');
+                console.log('🌐 URL atual:', window.location.href);
+                console.log('📱 User agent:', navigator.userAgent);
+
+                // Primeiro, verificar se conseguimos acessar a janela pai (opener)
+                if (window.opener && !window.opener.closed) {
+                    console.log('🔗 Janela pai detectada, tentando comunicação...');
+                    try {
+                        // Tentar pegar a sessão da janela pai via localStorage compartilhado
+                        const openerData = localStorage.getItem('supabase.auth.token');
+                        if (openerData) {
+                            console.log('💾 Dados da janela pai encontrados:', openerData);
+                        }
+                    } catch (err) {
+                        console.warn('⚠️ Não foi possível acessar dados da janela pai:', err);
+                    }
+                }
+
+                // Mostrar todos os itens do localStorage para debugging
+                console.log('📦 Itens no localStorage:');
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    console.log(`  - ${key}: ${value ? 'presente' : 'vazio'}`);
+                }
 
                 // Tentar pegar sessão atual
+                console.log('🔍 Tentando getSession...');
                 const { data: { session }, error } = await supabase.auth.getSession();
 
                 console.log('📋 Sessão encontrada:', session);
@@ -143,53 +168,98 @@
                 }
 
                 if (!session) {
-                    console.warn('⚠️ Nenhuma sessão ativa encontrada');
+                    console.warn('⚠️ Nenhuma sessão ativa encontrada, tentando refresh...');
 
-                    // Tentar refresh da sessão usando refresh token do localStorage
+                    // Tentar refresh da sessão
+                    console.log('🔄 Tentando refreshSession...');
                     const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
 
                     console.log('🔄 Refresh session result:', refreshData);
                     console.log('❌ Refresh session error:', refreshError);
 
                     if (refreshError || !refreshData.session) {
-                        console.error('❌ Falha ao refresh sessão, tentando pegar dados do localStorage...');
+                        console.error('❌ Falha ao refresh, tentando método alternativo...');
 
-                        // Tentar recuperar dados diretamente do localStorage como fallback
-                        try {
-                            const storedSession = localStorage.getItem('supabase.auth.token');
-                            if (storedSession) {
-                                const sessionData = JSON.parse(storedSession);
-                                console.log('💾 Sessão recuperada do localStorage:', sessionData);
+                        // Método alternativo: tentar recuperar dados de múltiplas fontes
+                        let sessionData = null;
 
-                                if (sessionData.access_token) {
-                                    console.log('✅ Token encontrado, tentando validar...');
+                        // Tentar diferentes chaves do localStorage
+                        const possibleKeys = [
+                            'supabase.auth.token',
+                            'supabase.auth.expires_at',
+                            'sb-cjrbhqlwfjebnjoyfjnc-auth-token'
+                        ];
 
-                                    // Validar o token pegando o usuário
-                                    const { data: userData, error: userError } = await supabase.auth.getUser(sessionData.access_token);
-
-                                    if (!userError && userData.user) {
-                                        console.log('✅ Usuário validado com sucesso:', userData.user.email);
-                                        window.userSession = {
-                                            user: userData.user,
-                                            access_token: sessionData.access_token,
-                                            refresh_token: sessionData.refresh_token
-                                        };
-                                        return true;
+                        for (const key of possibleKeys) {
+                            const data = localStorage.getItem(key);
+                            if (data) {
+                                console.log(`💾 Encontrado dado em ${key}:`, data);
+                                try {
+                                    sessionData = JSON.parse(data);
+                                    if (sessionData.access_token) {
+                                        console.log('✅ Token encontrado em:', key);
+                                        break;
                                     }
+                                } catch (e) {
+                                    console.warn(`⚠️ Erro ao parsear ${key}:`, e);
                                 }
                             }
-                        } catch (storageError) {
-                            console.error('❌ Erro ao acessar localStorage:', storageError);
+                        }
+
+                        if (sessionData && sessionData.access_token) {
+                            console.log('✅ Dados de sessão encontrados, validando token...');
+
+                            // Criar nova instância do cliente com o token encontrado
+                            const tempSupabase = createClient(
+                                'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+                                sessionData.access_token,
+                                {
+                                    auth: {
+                                        persistSession: false,
+                                        autoRefreshToken: false
+                                    }
+                                }
+                            );
+
+                            // Validar o token
+                            const { data: userData, error: userError } = await tempSupabase.auth.getUser(sessionData.access_token);
+
+                            if (!userError && userData.user) {
+                                console.log('✅ Token validado com sucesso:', userData.user.email);
+
+                                // Restaurar sessão no cliente principal
+                                await supabase.auth.setSession({
+                                    access_token: sessionData.access_token,
+                                    refresh_token: sessionData.refresh_token || sessionData.access_token
+                                });
+
+                                // Tentar pegar a sessão novamente
+                                const { data: { session: restoredSession } } = await supabase.auth.getSession();
+                                if (restoredSession) {
+                                    console.log('✅ Sessão restaurada com sucesso!');
+                                    window.userSession = restoredSession;
+                                    document.getElementById('playerName').textContent = restoredSession.user.email.split('@')[0];
+                                    return true;
+                                }
+                            } else {
+                                console.error('❌ Token inválido:', userError);
+                            }
                         }
 
                         // Se chegou aqui, não há autenticação válida
+                        console.error('❌ Nenhuma autenticação válida encontrada');
+
+                        // Mostrar mensagem de erro mais detalhada
                         document.getElementById('loading').innerHTML = `
-                            <div style="text-align: center; color: white;">
+                            <div style="text-align: center; color: white; max-width: 500px; margin: 0 auto;">
                                 <h2>❌ Acesso Negado</h2>
                                 <p>Você precisa estar autenticado para jogar multiplayer.</p>
-                                <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">Dica: Faça login primeiro e depois clique no botão multiplayer novamente.</p>
+                                <div style="background: rgba(255,0,0,0.1); border: 1px solid #ff6b35; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                                    <p style="font-size: 12px; margin: 0;"><strong>Dica:</strong> Faça login na aba principal e depois clique no botão multiplayer novamente.</p>
+                                    <p style="font-size: 10px; opacity: 0.7; margin: 10px 0 0 0;">Se o problema persistir, tente abrir o multiplayer na mesma aba onde você fez login.</p>
+                                </div>
                                 <div style="margin-top: 20px;">
-                                    <button onclick="window.opener ? window.close() : window.location.href='/login'" style="
+                                    <button onclick="window.opener ? window.close() : window.location.href='/'" style="
                                         background: #00ff00;
                                         border: none;
                                         padding: 10px 20px;
@@ -199,7 +269,7 @@
                                         margin-right: 10px;
                                         color: black;
                                     ">Fechar esta aba</button>
-                                    <button onclick="window.location.href='/login'" style="
+                                    <button onclick="window.location.href='/'" style="
                                         background: #ff6b35;
                                         border: none;
                                         padding: 10px 20px;
@@ -207,11 +277,14 @@
                                         cursor: pointer;
                                         font-family: 'Courier New', monospace;
                                         color: white;
-                                    ">Ir para Login</button>
+                                    ">Ir para Home</button>
                                 </div>
                             </div>
                         `;
                         return false;
+                    } else {
+                        console.log('✅ Refresh session funcionou!');
+                        session = refreshData.session;
                     }
                 }
 

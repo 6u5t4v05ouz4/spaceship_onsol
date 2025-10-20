@@ -280,9 +280,13 @@ export default class DashboardPage {
   renderGlobalHeader(container) {
     const headerContainer = container.querySelector('#globalHeader');
     if (headerContainer) {
+      console.log('🔍 DashboardPage: Renderizando header global...');
       const headerNav = new HeaderNavigation();
       const headerElement = headerNav.render();
       headerContainer.appendChild(headerElement);
+      console.log('✅ Header global renderizado:', headerElement);
+    } else {
+      console.error('❌ Container #globalHeader não encontrado!');
     }
   }
 

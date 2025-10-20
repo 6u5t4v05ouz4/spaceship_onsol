@@ -21,6 +21,7 @@ export default class HeaderNavigation {
   render() {
     const container = document.createElement('header');
     container.className = 'global-header';
+    console.log('🔍 HeaderNavigation: Renderizando header com botão multiplayer...');
     container.innerHTML = `
       <!-- Logo/Brand -->
       <div class="header-brand">
@@ -114,6 +115,14 @@ export default class HeaderNavigation {
 
     // Atualizar estado ativo baseado na página atual
     this.updateActivePage();
+
+    // Debug: verificar se o botão multiplayer foi renderizado
+    const multiplayerBtn = container.querySelector('.nav-link-multiplayer');
+    if (multiplayerBtn) {
+      console.log('✅ Botão multiplayer encontrado no header:', multiplayerBtn);
+    } else {
+      console.error('❌ Botão multiplayer NÃO encontrado no header!');
+    }
 
     return container;
   }

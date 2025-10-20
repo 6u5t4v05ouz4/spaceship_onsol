@@ -17,6 +17,7 @@ import { supabaseAdmin, validateSupabaseConnection } from './config/supabase.js'
 import { initRedis, closeRedis } from './config/redis.js';
 import cacheManager from './managers/cache-manager.js';
 import databaseService from './services/database-service.js';
+import chunkGenerator from './services/chunk-generator.js';
 import authMiddleware from './middleware/auth-middleware.js';
 import {
   handleAuth,
@@ -85,6 +86,31 @@ app.get('/api/database/test', async (req, res) => {
     logger.error('❌ Erro ao testar database:', error);
     res.status(500).json({
       error: 'Database test failed',
+      message: error.message
+    });
+  }
+});
+
+// Endpoint para buscar elementos do chunk
+app.get('/api/chunk/:chunkX/:chunkY/elements', async (req, res) => {
+  try {
+    const chunkX = parseInt(req.params.chunkX);
+    const chunkY = parseInt(req.params.chunkY);
+    
+    // Gerar elementos se não existirem
+    const elements = await chunkGenerator.generateChunkElements(chunkX, chunkY);
+    
+    res.json({
+      status: 'ok',
+      chunkX,
+      chunkY,
+      elements: elements,
+      count: elements.length
+    });
+  } catch (error) {
+    logger.error('❌ Erro ao buscar elementos do chunk:', error);
+    res.status(500).json({
+      error: 'Failed to get chunk elements',
       message: error.message
     });
   }

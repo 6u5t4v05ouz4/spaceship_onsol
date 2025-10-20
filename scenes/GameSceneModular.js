@@ -25,6 +25,7 @@ import MiningManager from '../managers/MiningManager.js';
 import BackgroundManager from '../managers/BackgroundManager.js';
 import GameOverManager from '../managers/GameOverManager.js';
 import RocketManager from '../managers/RocketManager.js';
+import SharedElementsManager from '../managers/SharedElementsManager.js';
 import MultiplayerManager from '../managers/MultiplayerManager.js';
 
 export default class GameSceneModular extends Phaser.Scene {
@@ -275,6 +276,10 @@ export default class GameSceneModular extends Phaser.Scene {
         console.log('🔍 Inicializando MultiplayerManager...');
         this.multiplayerManager = new MultiplayerManager(this);
         console.log('✅ MultiplayerManager inicializado');
+        
+        console.log('🔍 Inicializando SharedElementsManager...');
+        this.sharedElementsManager = new SharedElementsManager(this);
+        console.log('✅ SharedElementsManager inicializado');
     }
 
     setupScene(data) {

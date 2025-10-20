@@ -212,14 +212,41 @@ export default class HeaderNavigation {
     // Initialize play button state
     this.updatePlayButtonState(container);
 
-    // Navigation links - prevent default and use router (except Play button)
+    // Navigation links - prevent default and use router (except Play and Multiplayer buttons)
     const navLinks = container.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
       // Skip Play button - let it open game.html in new tab
       if (link.classList.contains('nav-link-play')) {
         return;
       }
-      
+
+      // Handle Multiplayer button - open multiplayer.html in new window
+      if (link.classList.contains('nav-link-multiplayer')) {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('🌐 Abrindo jogo multiplayer em nova janela...');
+
+          // Abrir multiplayer.html em nova janela com configurações otimizadas
+          const multiplayerWindow = window.open(
+            '/multiplayer.html',
+            'space_crypto_multiplayer',
+            'width=1200,height=800,scrollbars=no,resizable=yes,location=no,menubar=no,status=no,toolbar=no'
+          );
+
+          // Verificar se a janela foi aberta corretamente
+          if (!multiplayerWindow || multiplayerWindow.closed || typeof multiplayerWindow.closed === 'undefined') {
+            // Fallback para mesma aba se popup for bloqueado
+            console.warn('⚠️ Popup bloqueado, abrindo na mesma aba...');
+            window.location.href = '/multiplayer.html';
+          } else {
+            console.log('✅ Janela multiplayer aberta com sucesso');
+            // Focar na nova janela
+            multiplayerWindow.focus();
+          }
+        });
+        return;
+      }
+
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const href = link.getAttribute('href');

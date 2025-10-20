@@ -309,27 +309,7 @@ const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {
-    // 1. Validar conexão Supabase
-    const supabaseOk = await validateSupabaseConnection();
-    if (!supabaseOk) {
-      logger.warn('⚠️  Supabase connection failed, but server will start anyway');
-    }
-    
-    // 2. Inicializar PostgreSQL (opcional)
-    try {
-      await databaseService.connect();
-      logger.info('✅ PostgreSQL conectado com sucesso');
-    } catch (error) {
-      logger.warn('⚠️  PostgreSQL connection failed, server will start without database:', error.message);
-    }
-    
-    // 3. Inicializar Redis (opcional)
-    await initRedis();
-    
-    // 4. Iniciar Cache Manager
-    cacheManager.start();
-    
-    // 5. Iniciar servidor
+    // Iniciar servidor IMEDIATAMENTE para não bloquear o healthcheck
     server.listen(PORT, '0.0.0.0', () => {
       logger.info(`🚀 Server running on port ${PORT}`);
       logger.info(`📡 WebSocket ready for connections`);
@@ -341,6 +321,39 @@ async function startServer() {
       logger.info(`🔧 Process.env.PORT: ${process.env.PORT}`);
       logger.info(`🔧 Server listening on: 0.0.0.0:${PORT}`);
     });
+
+    // Inicializações em segundo plano (não bloqueiam o healthcheck)
+    ;(async () => {
+      try {
+        const supabaseOk = await validateSupabaseConnection();
+        if (!supabaseOk) {
+          logger.warn('⚠️  Supabase connection failed, but server continues running');
+        }
+      } catch (err) {
+        logger.warn('⚠️  Supabase validation threw error:', err?.message || err);
+      }
+
+      try {
+        await databaseService.connect();
+        logger.info('✅ PostgreSQL conectado com sucesso');
+      } catch (error) {
+        logger.warn('⚠️  PostgreSQL connection failed, server will run without database:', error.message);
+      }
+
+      try {
+        await initRedis();
+        logger.info('✅ Redis inicializado');
+      } catch (err) {
+        logger.warn('⚠️  Redis init failed, continuing without Redis:', err?.message || err);
+      }
+
+      try {
+        cacheManager.start();
+        logger.info('✅ Cache Manager iniciado');
+      } catch (err) {
+        logger.warn('⚠️  Falha ao iniciar Cache Manager:', err?.message || err);
+      }
+    })();
   } catch (error) {
     logger.error('❌ Failed to start server:', error);
     process.exit(1);

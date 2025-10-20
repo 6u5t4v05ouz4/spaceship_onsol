@@ -38,7 +38,7 @@ class SocketService {
     // ✅ CORREÇÃO: import.meta.env não está disponível no game.html
     // Usar variáveis globais ou fallback para Railway
     const serverUrl = window.VITE_SERVER_URL || 
-                     'https://spaceship-onsol-production.up.railway.app' || 
+                     'https://spaceshiponsol-production-5493.up.railway.app' || 
                      window.location.origin;
     
     console.log('🔌 Conectando ao servidor:', serverUrl);

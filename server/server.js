@@ -53,8 +53,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Servir arquivos estáticos do frontend
-app.use(express.static(path.join(rootDir, 'dist')));
+// Servir arquivos estáticos do frontend (DEPOIS das rotas da API)
+// app.use(express.static(path.join(rootDir, 'dist')));
 
 // Servir game.html diretamente (não processado pelo Vite)
 app.get('/game.html', (req, res) => {
@@ -236,6 +236,9 @@ process.on('SIGINT', async () => {
 // =====================================================
 // SPA FALLBACK
 // =====================================================
+
+// Servir arquivos estáticos do frontend (DEPOIS das rotas da API)
+app.use(express.static(path.join(rootDir, 'dist')));
 
 // Fallback para SPA - todas as rotas não encontradas servem index.html
 app.get('*', (req, res) => {

@@ -1,5 +1,5 @@
 // =====================================================
-// SPACE CRYPTO MINER - Real-time Server
+// SPACE CRYPTO MINER - Real-time Server (Simplified)
 // =====================================================
 // Version: 1.0.0
 // Node.js + Express + Socket.io + Supabase
@@ -12,22 +12,6 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import logger from './utils/logger.js';
-import { supabaseAdmin, validateSupabaseConnection } from './config/supabase.js';
-import { initRedis, closeRedis } from './config/redis.js';
-import cacheManager from './managers/cache-manager.js';
-import databaseService from './services/database-service.js';
-import chunkGenerator from './services/chunk-generator.js';
-import authMiddleware from './middleware/auth-middleware.js';
-import {
-  handleAuth,
-  handlePlayStart,
-  handlePlayStop,
-  handleChunkEnter,
-  handlePlayerMove,
-  handleDisconnect,
-} from './events/player-events.js';
-import { handleAttack, handleRespawn } from './events/battle-events.js';
 
 // =====================================================
 // PATH SETUP
@@ -76,112 +60,37 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Endpoint para executar SQL (apenas para desenvolvimento)
-app.post('/api/database/exec', async (req, res) => {
-  try {
-    if (!databaseService.pool) {
-      return res.status(503).json({
-        error: 'Database not connected',
-        message: 'PostgreSQL connection not available'
-      });
-    }
-    
-    const { sql } = req.body;
-    if (!sql) {
-      return res.status(400).json({
-        error: 'SQL query required',
-        message: 'Please provide a SQL query in the request body'
-      });
-    }
-    
-    const client = await databaseService.pool.connect();
-    const result = await client.query(sql);
-    client.release();
-    
-    res.json({
-      status: 'ok',
-      rows: result.rows,
-      rowCount: result.rowCount
-    });
-  } catch (error) {
-    logger.error('❌ Erro ao executar SQL:', error);
-    res.status(500).json({
-      error: 'SQL execution failed',
-      message: error.message
-    });
-  }
+// =====================================================
+// API ENDPOINTS (Simplified)
+// =====================================================
+
+// Endpoint de exemplo para teste
+app.get('/api/test', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'API working',
+    timestamp: Date.now()
+  });
 });
 
-// Endpoint para buscar elementos do chunk
-app.get('/api/chunk/:chunkX/:chunkY/elements', async (req, res) => {
-  try {
-    const chunkX = parseInt(req.params.chunkX);
-    const chunkY = parseInt(req.params.chunkY);
-    
-    // Se PostgreSQL não estiver conectado, retornar elementos vazios
-    if (!databaseService.pool) {
-      logger.warn('⚠️ PostgreSQL não conectado, retornando elementos vazios');
-      return res.json({
-        status: 'ok',
-        chunkX,
-        chunkY,
-        elements: [],
-        count: 0,
-        warning: 'Database not connected'
-      });
+// Endpoint de informações do servidor
+app.get('/api/info', (req, res) => {
+  res.json({
+    status: 'ok',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT,
+    timestamp: Date.now(),
+    features: {
+      websocket: true,
+      static_files: true,
+      spa_fallback: true
     }
-    
-    // Gerar elementos se não existirem
-    const elements = await chunkGenerator.generateChunkElements(chunkX, chunkY);
-    
-    res.json({
-      status: 'ok',
-      chunkX,
-      chunkY,
-      elements: elements,
-      count: elements.length
-    });
-  } catch (error) {
-    logger.error('❌ Erro ao buscar elementos do chunk:', error);
-    res.status(500).json({
-      error: 'Failed to get chunk elements',
-      message: error.message
-    });
-  }
+  });
 });
 
 // =====================================================
-// PROTECTED ENDPOINTS (Exemplo)
-// =====================================================
-
-// Endpoint protegido de exemplo
-app.get('/api/player/state', authMiddleware, async (req, res) => {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from('player_state')
-      .select('*')
-      .eq('user_id', req.userId)
-      .single();
-
-    if (error) {
-      return res.status(404).json({
-        error: 'Not Found',
-        message: 'Player state não encontrado',
-      });
-    }
-
-    res.json(data);
-  } catch (error) {
-    logger.error('❌ Erro ao buscar player state:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Erro ao buscar estado do jogador',
-    });
-  }
-});
-
-// =====================================================
-// SOCKET.IO SETUP
+// SOCKET.IO SETUP (Simplified)
 // =====================================================
 
 const io = new Server(server, {
@@ -189,7 +98,8 @@ const io = new Server(server, {
     origin: [
       'https://spaceshiponsol.vercel.app',
       'https://spaceship-onsol-production.up.railway.app',
-      process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN
+      process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN,
+      'http://localhost:5173'
     ].filter(Boolean), // Remove valores undefined/null
     methods: ['GET', 'POST'],
     credentials: true
@@ -198,81 +108,45 @@ const io = new Server(server, {
   pingInterval: 25000
 });
 
-// Connection handler
+// Connection handler (simplified)
 io.on('connection', (socket) => {
-  logger.info(`🔌 Client connected: ${socket.id}`);
+  console.log(`🔌 Client connected: ${socket.id}`);
 
-  // Event: auth (autenticação inicial)
+  // Simple ping-pong for connection testing
+  socket.on('ping', () => {
+    socket.emit('pong', { timestamp: Date.now() });
+  });
+
+  // Simple auth placeholder
   socket.on('auth', (data) => {
-    handleAuth(socket, data, io);
+    console.log('🔐 Auth attempt:', data?.userId || 'unknown');
+    socket.emit('auth:success', {
+      userId: data?.userId || 'demo-user',
+      socketId: socket.id
+    });
   });
 
-  // Event: chunk:enter (entrar em um chunk)
-  socket.on('chunk:enter', (data) => {
-    handleChunkEnter(socket, data, io);
-  });
-
-  // Event: play:start (entrar no gameplay)
-  socket.on('play:start', (data) => {
-    handlePlayStart(socket, data, io);
-  });
-
-  // Event: play:stop (sair do gameplay)
-  socket.on('play:stop', (data) => {
-    handlePlayStop(socket, data, io);
-  });
-
-  // Event: player:move (atualizar posição)
-  socket.on('player:move', (data) => {
-    handlePlayerMove(socket, data, io);
-  });
-
-  // Event: battle:attack (atacar outro jogador)
-  socket.on('battle:attack', (data) => {
-    handleAttack(socket, data, io);
-  });
-
-  // Event: battle:respawn (respawn após morte)
-  socket.on('battle:respawn', (data) => {
-    handleRespawn(socket, data, io);
-  });
-
-  // Event: disconnect (desconexão)
   socket.on('disconnect', (reason) => {
-    handleDisconnect(socket, reason, io);
+    console.log(`🔌 Client disconnected: ${socket.id}, reason: ${reason}`);
   });
 });
 
 // =====================================================
-// GRACEFUL SHUTDOWN
+// GRACEFUL SHUTDOWN (Simplified)
 // =====================================================
 
-process.on('SIGTERM', async () => {
-  logger.warn('⚠️  SIGTERM received, shutting down gracefully...');
-  
-  // Parar cache manager (sync final)
-  cacheManager.stop();
-  
-  // Fechar Redis
-  await closeRedis();
-  
+process.on('SIGTERM', () => {
+  console.log('⚠️  SIGTERM received, shutting down gracefully...');
   server.close(() => {
-    logger.info('✅ Server closed');
+    console.log('✅ Server closed');
     process.exit(0);
   });
 });
 
-process.on('SIGINT', async () => {
-  logger.warn('⚠️  SIGINT received, shutting down gracefully...');
-  
-  // Parar cache manager (sync final)
-  cacheManager.stop();
-  
-  // Fechar Redis
-  await closeRedis();
-  
+process.on('SIGINT', () => {
+  console.log('⚠️  SIGINT received, shutting down gracefully...');
   server.close(() => {
-    logger.info('✅ Server closed');
+    console.log('✅ Server closed');
     process.exit(0);
   });
 });
@@ -323,51 +197,17 @@ async function startServer() {
   try {
     // Iniciar servidor IMEDIATAMENTE para não bloquear o healthcheck
     server.listen(PORT, '0.0.0.0', () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      logger.info(`📡 WebSocket ready for connections`);
-      logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
-      logger.info(`📊 Metrics: http://localhost:${PORT}/metrics`);
-      logger.info(`🌐 Railway Public Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'Not set'}`);
-      logger.info(`🔧 CORS Origin: ${process.env.CORS_ORIGIN || 'Not set'}`);
-      logger.info(`🔧 Process.env.PORT: ${process.env.PORT}`);
-      logger.info(`🔧 Server listening on: 0.0.0.0:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📡 WebSocket ready for connections`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`🌐 Railway Public Domain: ${process.env.RAILWAY_PUBLIC_DOMAIN || 'Not set'}`);
+      console.log(`🔧 CORS Origin: ${process.env.CORS_ORIGIN || 'Not set'}`);
+      console.log(`🔧 Process.env.PORT: ${process.env.PORT}`);
+      console.log(`🔧 Server listening on: 0.0.0.0:${PORT}`);
     });
-
-    // Inicializações em segundo plano (não bloqueiam o healthcheck)
-    ;(async () => {
-      try {
-        const supabaseOk = await validateSupabaseConnection();
-        if (!supabaseOk) {
-          logger.warn('⚠️  Supabase connection failed, but server continues running');
-        }
-      } catch (err) {
-        logger.warn('⚠️  Supabase validation threw error:', err?.message || err);
-      }
-
-      try {
-        await databaseService.connect();
-        logger.info('✅ PostgreSQL conectado com sucesso');
-      } catch (error) {
-        logger.warn('⚠️  PostgreSQL connection failed, server will run without database:', error.message);
-      }
-
-      try {
-        await initRedis();
-        logger.info('✅ Redis inicializado');
-      } catch (err) {
-        logger.warn('⚠️  Redis init failed, continuing without Redis:', err?.message || err);
-      }
-
-      try {
-        cacheManager.start();
-        logger.info('✅ Cache Manager iniciado');
-      } catch (err) {
-        logger.warn('⚠️  Falha ao iniciar Cache Manager:', err?.message || err);
-      }
-    })();
   } catch (error) {
-    logger.error('❌ Failed to start server:', error);
+    console.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 }

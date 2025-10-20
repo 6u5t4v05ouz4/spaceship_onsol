@@ -183,70 +183,257 @@ async function generateChunkElements(chunkX, chunkY, zoneType) {
 
   const client = await pool.connect();
   try {
-    const elementCount = Math.floor(Math.random() * 5) + 3; // 3-7 elementos
+    // Importar mapeamento de recursos
+    const { SPAWN_CONFIG, RESOURCE_TYPES, PLANET_TYPES, NPC_SHIP_TYPES, STATION_TYPES } = await import('../src/data/resource-mapping.js');
 
     // Calcular distância do centro para determinar raridade
     const distance = Math.sqrt(chunkX * chunkX + chunkY * chunkY);
 
+    // Obter configuração de spawn baseada na zona
+    const spawnConfig = SPAWN_CONFIG[zoneType] || SPAWN_CONFIG.safe;
+    const availableElements = spawnConfig.elements;
+    const rarityConfig = spawnConfig.resource_rarity;
+
+    // Gerar elementos variados
+    const elementCount = Math.floor(Math.random() * 8) + 4; // 4-11 elementos
+
     for (let i = 0; i < elementCount; i++) {
       const x = Math.random() * 1000;
       const y = Math.random() * 1000;
-      const type = Math.random() > 0.7 ? 'asteroid' : 'crystal';
 
-      // Determinar raridade baseada na distância
-      let rarity = 'common';
-      let assetVariant = type + '_common';
-      let assetFrame = null;
+      // Selecionar tipo de elemento baseado na configuração
+      const elementType = availableElements[Math.floor(Math.random() * availableElements.length)];
+
+      // Determinar raridade baseada na distância e configuração
+      const rarity = selectRarity(distance, rarityConfig);
+
+      // Gerar dados específicos do elemento
       let elementData = {};
+      let assetVariant = null;
+      let assetFrame = null;
 
-      if (distance <= 10) {
-        rarity = 'common';
-        assetVariant = type + '_common';
-        assetFrame = type === 'asteroid' ?
-          `asteroid_small_${Math.floor(Math.random() * 3) + 1}` :
-          `crystal_basic_${Math.floor(Math.random() * 4) + 1}`;
-        elementData = {
-          value: type === 'crystal' ? Math.floor(Math.random() * 20) + 10 : null,
-          size: type === 'asteroid' ? Math.random() > 0.5 ? 'large' : 'small' : null
-        };
-      } else if (distance <= 30) {
-        rarity = 'rare';
-        assetVariant = type + '_rare';
-        assetFrame = type === 'asteroid' ?
-          `asteroid_small_rare_${Math.floor(Math.random() * 3) + 1}` :
-          `crystal_energy_${Math.floor(Math.random() * 4) + 1}`;
-        elementData = {
-          value: type === 'crystal' ? Math.floor(Math.random() * 40) + 20 : null,
-          size: type === 'asteroid' ? 'large' : null,
-          bonus: Math.random() > 0.8 ? 'enhanced' : null
-        };
-      } else {
-        rarity = 'legendary';
-        assetVariant = type + '_legendary';
-        assetFrame = type === 'asteroid' ?
-          `asteroid_small_legendary_${Math.floor(Math.random() * 3) + 1}` :
-          `crystal_quantum_${Math.floor(Math.random() * 4) + 1}`;
-        elementData = {
-          value: type === 'crystal' ? Math.floor(Math.random() * 80) + 50 : null,
-          size: type === 'asteroid' ? 'large' : null,
-          bonus: 'legendary',
-          special_effect: Math.random() > 0.7 ? 'glowing' : null
-        };
+      switch (elementType) {
+        case 'asteroid':
+          const asteroidSize = distance <= 10 ? 'small' : distance <= 30 ? 'medium' : 'large';
+          elementData = {
+            size: asteroidSize,
+            health: asteroidSize === 'small' ? 50 : asteroidSize === 'medium' ? 100 : 150,
+            composition: generateAsteroidComposition(rarity)
+          };
+          assetVariant = `asteroid_${rarity}`;
+          assetFrame = `asteroid_${asteroidSize}_${Math.floor(Math.random() * 3) + 1}`;
+          break;
+
+        case 'crystal':
+          const crystalValue = Math.floor(getCrystalValueByRarity(rarity));
+          elementData = {
+            value: crystalValue,
+            energy: crystalValue * 0.8,
+            purity: getPurityByRarity(rarity)
+          };
+          assetVariant = `crystal_${getCrystalTypeByRarity(rarity)}`;
+          assetFrame = `crystal_${getCrystalTypeByRarity(rarity)}_${Math.floor(Math.random() * 4) + 1}`;
+          break;
+
+        case 'resource':
+          const resourceType = selectResourceType(rarity);
+          const resource = RESOURCE_TYPES.METALS[resourceType] ||
+                          RESOURCE_TYPES.FUELS[resourceType] ||
+                          RESOURCE_TYPES.OXYGEN[resourceType];
+          elementData = {
+            resource_type: resourceType,
+            amount: Math.floor(Math.random() * 10) + 5,
+            purity: getPurityByRarity(rarity)
+          };
+          assetVariant = `resource_${resourceType}`;
+          assetFrame = `${resourceType}_${Math.floor(Math.random() * 3) + 1}`;
+          break;
+
+        case 'planet':
+          // Planetas são raros e grandes
+          if (Math.random() < 0.05) { // 5% de chance
+            const planetType = selectPlanetType(rarity);
+            elementData = {
+              planet_type: planetType,
+              size: 'large',
+              gravity: Math.random() * 2 + 0.5,
+              atmosphere: Math.random() > 0.5,
+              resources: generatePlanetResources(planetType, rarity)
+            };
+            assetVariant = `planet_${planetType}`;
+            assetFrame = `planet_${planetType}_${Math.floor(Math.random() * 2) + 1}`;
+          } else {
+            continue; // Skip planet generation if not lucky
+          }
+          break;
+
+        case 'npc_trader':
+        case 'npc_miner':
+        case 'npc_patrol':
+        case 'npc_scavenger':
+        case 'npc_explorer':
+          const npcType = elementType.replace('npc_', '');
+          const npc = NPC_SHIP_TYPES[npcType];
+          elementData = {
+            ship_type: npcType,
+            behavior: npc.behavior,
+            cargo: generateNPCCargo(npcType),
+            credits: Math.floor(Math.random() * 1000) + 100,
+            reputation: Math.floor(Math.random() * 100)
+          };
+          assetVariant = `npc_ships`;
+          assetFrame = `npc_${npcType}_1`;
+          break;
+
+        case 'station_trading_post':
+        case 'station_mining_station':
+        case 'station_research_outpost':
+        case 'station_military_base':
+        case 'station_refueling_station':
+          const stationType = elementType.replace('station_', '');
+          const station = STATION_TYPES[stationType];
+          elementData = {
+            station_type: stationType,
+            services: station.services,
+            docking_fee: Math.floor(Math.random() * 50) + 10,
+            reputation: Math.floor(Math.random() * 100)
+          };
+          assetVariant = `space_stations`;
+          assetFrame = `station_${stationType}`;
+          break;
       }
 
       await client.query(
         `INSERT INTO chunk_elements (chunk_x, chunk_y, element_type, x, y, rotation, scale,
                                     asset_variant_id, asset_frame, rarity_level, data)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-        [chunkX, chunkY, type, x, y, Math.random() * Math.PI * 2, 0.5 + Math.random() * 0.5,
+        [chunkX, chunkY, elementType, x, y, Math.random() * Math.PI * 2, 0.5 + Math.random() * 0.5,
          assetVariant, assetFrame, rarity, JSON.stringify(elementData)]
       );
     }
 
-    console.log(`✅ Gerados ${elementCount} elementos (${rarity}) para chunk (${chunkX}, ${chunkY})`);
+    console.log(`✅ Gerados ${elementCount} elementos diversos para chunk (${chunkX}, ${chunkY})`);
   } finally {
     client.release();
   }
+}
+
+// Funções auxiliares para geração de elementos
+function selectRarity(distance, rarityConfig) {
+  const random = Math.random();
+  let cumulative = 0;
+
+  for (const [rarity, chance] of Object.entries(rarityConfig)) {
+    cumulative += chance;
+    if (random < cumulative) {
+      return rarity;
+    }
+  }
+  return 'common';
+}
+
+function generateAsteroidComposition(rarity) {
+  const baseCompositions = {
+    common: { iron: 0.7, copper: 0.2, aluminum: 0.1 },
+    uncommon: { iron: 0.4, copper: 0.3, aluminum: 0.2, titanium: 0.1 },
+    rare: { copper: 0.3, aluminum: 0.3, titanium: 0.3, platinum: 0.1 },
+    epic: { titanium: 0.4, platinum: 0.3, iron: 0.2, copper: 0.1 },
+    legendary: { platinum: 0.5, titanium: 0.3, aluminum: 0.2 }
+  };
+
+  return baseCompositions[rarity] || baseCompositions.common;
+}
+
+function getCrystalValueByRarity(rarity) {
+  const values = {
+    common: Math.random() * 20 + 10,
+    uncommon: Math.random() * 30 + 30,
+    rare: Math.random() * 40 + 60,
+    epic: Math.random() * 50 + 100,
+    legendary: Math.random() * 80 + 150,
+    mythic: Math.random() * 100 + 250
+  };
+  return values[rarity] || values.common;
+}
+
+function getCrystalTypeByRarity(rarity) {
+  const types = {
+    common: 'basic',
+    uncommon: 'basic',
+    rare: 'energy',
+    epic: 'quantum',
+    legendary: 'quantum',
+    mythic: 'quantum'
+  };
+  return types[rarity] || 'basic';
+}
+
+function getPurityByRarity(rarity) {
+  const purities = {
+    common: Math.random() * 30 + 60,
+    uncommon: Math.random() * 20 + 70,
+    rare: Math.random() * 15 + 80,
+    epic: Math.random() * 10 + 85,
+    legendary: Math.random() * 5 + 90,
+    mythic: Math.random() * 3 + 95
+  };
+  return purities[rarity] || 70;
+}
+
+function selectResourceType(rarity) {
+  const commonResources = ['iron', 'copper', 'hydrogen', 'liquid_oxygen'];
+  const uncommonResources = ['aluminum', 'deuterium', 'compressed_oxygen', 'basic_missiles'];
+  const rareResources = ['titanium', 'antimatter', 'air_crystal', 'guided_missiles'];
+  const epicResources = ['platinum', 'energy_crystal', 'power_crystal', 'energy_missiles'];
+  const legendaryResources = ['plasma_torpedoes'];
+  const mythicResources = ['space_crystal', 'stellar_essence', 'reality_fragment'];
+
+  let resourcePool = commonResources;
+  if (rarity === 'uncommon') resourcePool = uncommonResources;
+  else if (rarity === 'rare') resourcePool = rareResources;
+  else if (rarity === 'epic') resourcePool = epicResources;
+  else if (rarity === 'legendary') resourcePool = legendaryResources;
+  else if (rarity === 'mythic') resourcePool = mythicResources;
+
+  return resourcePool[Math.floor(Math.random() * resourcePool.length)];
+}
+
+function selectPlanetType(rarity) {
+  const types = {
+    common: ['rocky', 'icy'],
+    uncommon: ['rocky', 'icy', 'desert'],
+    rare: ['desert', 'crystal'],
+    epic: ['crystal', 'gas'],
+    legendary: ['gas', 'crystal'],
+    mythic: ['gas']
+  };
+
+  const typePool = types[rarity] || types.common;
+  return typePool[Math.floor(Math.random() * typePool.length)];
+}
+
+function generatePlanetResources(planetType, rarity) {
+  const resources = {
+    rocky: { iron: 50, copper: 30, aluminum: 20 },
+    icy: { liquid_oxygen: 60, hydrogen: 30, iron: 10 },
+    desert: { aluminum: 40, copper: 35, deuterium: 25 },
+    crystal: { titanium: 30, energy_crystal: 20, air_crystal: 15 },
+    gas: { platinum: 25, power_crystal: 15, stellar_essence: 10 }
+  };
+
+  return resources[planetType] || resources.rocky;
+}
+
+function generateNPCCargo(npcType) {
+  const cargo = {
+    trader: { credits: 500, resources: ['iron', 'copper'] },
+    miner: { resources: ['hydrogen', 'deuterium'] },
+    patrol: { weapons: ['basic_missiles', 'energy_missiles'] },
+    scavenger: { scrap: true, random: true },
+    explorer: { data: true, fuel: true }
+  };
+
+  return cargo[npcType] || {};
 }
 
 /**

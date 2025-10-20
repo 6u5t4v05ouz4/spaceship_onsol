@@ -1,0 +1,496 @@
+/* =====================================================
+   MULTIPLAYER GAME PAGE - ESTILOS ESPECÍFICOS
+   ===================================================== */
+
+/* Container Principal do Jogo */
+.multiplayer-game-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Loading State */
+.game-loading-state {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.loading-content {
+  text-align: center;
+  color: var(--color-white);
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.loading-content .spinner {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: spin 2s linear infinite;
+}
+
+.loading-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+}
+
+.loading-content p {
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+.loading-progress {
+  margin-top: 1.5rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+#loadingText {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Error State */
+.game-error-state {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.error-content {
+  text-align: center;
+  color: var(--color-white);
+  max-width: 450px;
+  padding: 2rem;
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: var(--border-radius-lg);
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-error);
+}
+
+.error-message {
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.retry-btn, .back-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.retry-btn {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.retry-btn:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+}
+
+.back-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Game Canvas Container */
+.game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.game-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Game UI Overlay */
+.game-ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Player Info */
+.player-info {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.player-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.player-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-name {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: var(--color-white);
+}
+
+.player-location {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Multiplayer Stats */
+.multiplayer-stats {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-white);
+}
+
+.stat-icon {
+  font-size: 1rem;
+}
+
+.stat-label {
+  opacity: 0.8;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+/* Controls Help */
+.controls-help {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  pointer-events: auto;
+}
+
+.help-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--color-white);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.help-toggle:hover {
+  background: var(--color-primary);
+  transform: scale(1.1);
+}
+
+.help-content {
+  position: absolute;
+  bottom: 50px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--border-radius-lg);
+  padding: 1rem;
+  min-width: 200px;
+  backdrop-filter: blur(10px);
+}
+
+.help-content h4 {
+  margin: 0 0 1rem 0;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+}
+
+.control-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-white);
+}
+
+.control-item kbd {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-family: monospace;
+}
+
+/* Disconnect Button */
+.disconnect-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--color-white);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  z-index: 101;
+  pointer-events: auto;
+}
+
+.disconnect-btn:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.1);
+}
+
+/* Animações */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .player-info {
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .player-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+  }
+
+  .player-name {
+    font-size: 0.8rem;
+  }
+
+  .player-location {
+    font-size: 0.7rem;
+  }
+
+  .multiplayer-stats {
+    top: 0.5rem;
+    right: 60px; /* Espaço para o botão de desconectar */
+    padding: 0.5rem 0.75rem;
+  }
+
+  .stat-item {
+    font-size: 0.75rem;
+  }
+
+  .help-content {
+    bottom: 60px;
+    left: auto;
+    right: 0;
+    min-width: 180px;
+  }
+
+  .disconnect-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .retry-btn, .back-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-content {
+    padding: 1rem;
+  }
+
+  .loading-content .spinner {
+    font-size: 3rem;
+  }
+
+  .loading-content h2 {
+    font-size: 1.2rem;
+  }
+
+  .multiplayer-stats {
+    font-size: 0.7rem;
+  }
+
+  .controls-help {
+    bottom: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .help-toggle {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Efeitos de Brilho para Elementos Importantes */
+.player-info, .multiplayer-stats {
+  box-shadow: 0 0 20px rgba(0, 150, 255, 0.3);
+}
+
+.player-info:hover, .multiplayer-stats:hover {
+  box-shadow: 0 0 30px rgba(0, 150, 255, 0.5);
+}
+
+/* Transições Suaves */
+.game-ui-overlay > * {
+  transition: all 0.3s ease;
+}
+
+/* Indicadores de Status */
+.stat-value {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Loading States Específicos */
+.loading-content .spinner {
+  text-shadow: 0 0 20px rgba(0, 150, 255, 0.8);
+}
+
+.error-content {
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+}

@@ -203,6 +203,10 @@ export default class MultiplayerManager {
     console.log('📊 Players no chunk:', data.players?.length || 0);
     console.log('📊 Asteroides no chunk:', data.asteroids?.length || 0);
     console.log('📊 Cristais no chunk:', data.crystals?.length || 0);
+    console.log('📊 Recursos no chunk:', data.resources?.length || 0);
+    console.log('📊 Planetas no chunk:', data.planets?.length || 0);
+    console.log('📊 NPCs no chunk:', data.npcs?.length || 0);
+    console.log('📊 Estações no chunk:', data.stations?.length || 0);
     console.log('🆔 Meu player ID:', this.playerId);
 
     // Limpar players antigos
@@ -224,6 +228,34 @@ export default class MultiplayerManager {
     if (data.crystals && data.crystals.length > 0) {
       console.log('💎 Processando cristais do chunk...');
       this.spawnChunkElements(data.crystals, data.chunk.chunkX, data.chunk.chunkY, 'crystal');
+    }
+
+    // Processar recursos minerais
+    if (data.resources && data.resources.length > 0) {
+      console.log('⛏️ Processando recursos minerais do chunk...');
+      this.spawnChunkElements(data.resources, data.chunk.chunkX, data.chunk.chunkY, 'resource');
+    }
+
+    // Processar planetas
+    if (data.planets && data.planets.length > 0) {
+      console.log('🪐 Processando planetas do chunk...');
+      this.spawnChunkElements(data.planets, data.chunk.chunkX, data.chunk.chunkY, 'planet');
+    }
+
+    // Processar NPCs
+    if (data.npcs && data.npcs.length > 0) {
+      console.log('🚀 Processando NPCs do chunk...');
+      data.npcs.forEach(npc => {
+        this.spawnNPC(npc, data.chunk.chunkX, data.chunk.chunkY);
+      });
+    }
+
+    // Processar estações espaciais
+    if (data.stations && data.stations.length > 0) {
+      console.log('🏭 Processando estações espaciais do chunk...');
+      data.stations.forEach(station => {
+        this.spawnSpaceStation(station, data.chunk.chunkX, data.chunk.chunkY);
+      });
     }
 
     // Adicionar players do chunk
@@ -336,6 +368,14 @@ export default class MultiplayerManager {
         if (element.sprite) {
           element.sprite.destroy();
         }
+        // Limpar textos de NPCs
+        if (element.text) {
+          element.text.destroy();
+        }
+        // Limpar textos de estações
+        if (element.texts) {
+          element.texts.forEach(text => text.destroy());
+        }
       });
       this.chunkElements.delete(chunkKey);
       console.log(`🧹 Limpos elementos do chunk (${chunkX}, ${chunkY})`);
@@ -353,13 +393,24 @@ export default class MultiplayerManager {
       const index = elements.findIndex(el => el.id === elementId);
       if (index !== -1) {
         const element = elements[index];
+        const x = element.sprite?.x || 0;
+        const y = element.sprite?.y || 0;
+
         if (element.sprite) {
           element.sprite.destroy();
+        }
+        // Limpar textos de NPCs
+        if (element.text) {
+          element.text.destroy();
+        }
+        // Limpar textos de estações
+        if (element.texts) {
+          element.texts.forEach(text => text.destroy());
         }
         elements.splice(index, 1);
 
         // Criar efeito de destruição
-        this.createElementDestroyEffect(element.sprite.x, element.sprite.y, element.type);
+        this.createElementDestroyEffect(x, y, element.type);
 
         console.log(`💥 Elemento removido: ${element.type} (${elementId})`);
       }
@@ -663,6 +714,108 @@ export default class MultiplayerManager {
   }
 
   /**
+   * Spawn de NPC
+   */
+  spawnNPC(npcData, chunkX, chunkY) {
+    const chunkKey = `${chunkX},${chunkY}`;
+
+    if (!this.chunkElements.has(chunkKey)) {
+      this.chunkElements.set(chunkKey, []);
+    }
+
+    const chunkElementList = this.chunkElements.get(chunkKey);
+
+    try {
+      // Criar sprite do NPC usando AssetManager
+      const sprite = this.assetManager.createElement({
+        ...npcData,
+        element_type: npcData.ship_type ? `npc_${npcData.ship_type}` : 'npc_trader',
+        chunk_x: chunkX,
+        chunk_y: chunkY
+      }, chunkX, chunkY);
+
+      // Adicionar informações flutuantes do NPC
+      const npcText = this.scene.add.text(sprite.x, sprite.y - 30, npcData.behavior || 'neutral', {
+        fontSize: '12px',
+        fill: npcData.behavior === 'hostile' ? '#ff0000' :
+               npcData.behavior === 'friendly' ? '#00ff00' : '#ffff00',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        padding: { x: 4, y: 2 }
+      }).setOrigin(0.5).setDepth(1000);
+
+      // Adicionar à lista de elementos do chunk
+      chunkElementList.push({
+        id: npcData.id,
+        sprite,
+        text: npcText,
+        type: 'npc',
+        chunkX,
+        chunkY
+      });
+
+      console.log(`✅ NPC spawnado: ${npcData.ship_type} (${npcData.x}, ${npcData.y})`);
+
+    } catch (error) {
+      console.error(`❌ Erro ao spawnar NPC:`, error);
+    }
+  }
+
+  /**
+   * Spawn de estação espacial
+   */
+  spawnSpaceStation(stationData, chunkX, chunkY) {
+    const chunkKey = `${chunkX},${chunkY}`;
+
+    if (!this.chunkElements.has(chunkKey)) {
+      this.chunkElements.set(chunkKey, []);
+    }
+
+    const chunkElementList = this.chunkElements.get(chunkKey);
+
+    try {
+      // Criar sprite da estação usando AssetManager
+      const sprite = this.assetManager.createElement({
+        ...stationData,
+        element_type: stationData.station_type ? `station_${stationData.station_type}` : 'station_trading_post',
+        chunk_x: chunkX,
+        chunk_y: chunkY
+      }, chunkX, chunkY);
+
+      // Adicionar informações flutuantes da estação
+      const stationText = this.scene.add.text(sprite.x, sprite.y - 50, stationData.station_type?.replace('_', ' ') || 'trading post', {
+        fontSize: '14px',
+        fill: '#00ffff',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        padding: { x: 6, y: 3 }
+      }).setOrigin(0.5).setDepth(1000);
+
+      // Adicionar ícones de serviços
+      const servicesText = this.scene.add.text(sprite.x, sprite.y - 35,
+        (stationData.services || []).slice(0, 3).join(' • '), {
+        fontSize: '10px',
+        fill: '#ffffff',
+        backgroundColor: 'rgba(0,0,100,0.6)',
+        padding: { x: 4, y: 2 }
+      }).setOrigin(0.5).setDepth(1000);
+
+      // Adicionar à lista de elementos do chunk
+      chunkElementList.push({
+        id: stationData.id,
+        sprite,
+        texts: [stationText, servicesText],
+        type: 'station',
+        chunkX,
+        chunkY
+      });
+
+      console.log(`✅ Estação spawnada: ${stationData.station_type} (${stationData.x}, ${stationData.y})`);
+
+    } catch (error) {
+      console.error(`❌ Erro ao spawnar estação:`, error);
+    }
+  }
+
+  /**
    * Update (chamado a cada frame)
    */
   update() {
@@ -677,6 +830,18 @@ export default class MultiplayerManager {
       if (player.sprite && player.healthBar) {
         player.healthBar.setPosition(player.sprite.x, player.sprite.y - 50);
       }
+    });
+
+    // Atualizar textos de NPCs e estações
+    this.chunkElements.forEach((elements) => {
+      elements.forEach(element => {
+        if (element.type === 'npc' && element.text && element.sprite) {
+          element.text.setPosition(element.sprite.x, element.sprite.y - 30);
+        } else if (element.type === 'station' && element.texts && element.sprite) {
+          element.texts[0].setPosition(element.sprite.x, element.sprite.y - 50);
+          element.texts[1].setPosition(element.sprite.x, element.sprite.y - 35);
+        }
+      });
     });
   }
 
@@ -694,6 +859,14 @@ export default class MultiplayerManager {
       elements.forEach(element => {
         if (element.sprite) {
           element.sprite.destroy();
+        }
+        // Limpar textos de NPCs
+        if (element.text) {
+          element.text.destroy();
+        }
+        // Limpar textos de estações
+        if (element.texts) {
+          element.texts.forEach(text => text.destroy());
         }
       });
     });

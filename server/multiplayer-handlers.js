@@ -126,7 +126,9 @@ export async function handleChunkEnter(socket, data, io) {
         y: e.y,
         rotation: e.rotation,
         scale: e.scale,
-        size: e.data?.size || 'small'
+        size: e.data?.size || 'small',
+        health: e.data?.health || 100,
+        composition: e.data?.composition || {}
       }));
 
     const crystals = elements
@@ -135,7 +137,68 @@ export async function handleChunkEnter(socket, data, io) {
         id: e.id,
         x: e.x,
         y: e.y,
-        value: e.data?.value || 10
+        rotation: e.rotation,
+        scale: e.scale,
+        value: e.data?.value || 10,
+        energy: e.data?.energy || 8,
+        purity: e.data?.purity || 70
+      }));
+
+    const resources = elements
+      .filter(e => e.element_type === 'resource')
+      .map(e => ({
+        id: e.id,
+        x: e.x,
+        y: e.y,
+        rotation: e.rotation,
+        scale: e.scale,
+        resource_type: e.data?.resource_type || 'iron',
+        amount: e.data?.amount || 5,
+        purity: e.data?.purity || 70
+      }));
+
+    const planets = elements
+      .filter(e => e.element_type === 'planet')
+      .map(e => ({
+        id: e.id,
+        x: e.x,
+        y: e.y,
+        rotation: e.rotation,
+        scale: e.scale || 2.0, // Planetas são maiores
+        planet_type: e.data?.planet_type || 'rocky',
+        size: e.data?.size || 'large',
+        gravity: e.data?.gravity || 1.0,
+        atmosphere: e.data?.atmosphere || false,
+        resources: e.data?.resources || {}
+      }));
+
+    const npcs = elements
+      .filter(e => e.element_type && e.element_type.startsWith('npc_'))
+      .map(e => ({
+        id: e.id,
+        x: e.x,
+        y: e.y,
+        rotation: e.rotation,
+        scale: e.scale,
+        ship_type: e.data?.ship_type || 'trader',
+        behavior: e.data?.behavior || 'neutral',
+        cargo: e.data?.cargo || {},
+        credits: e.data?.credits || 100,
+        reputation: e.data?.reputation || 50
+      }));
+
+    const stations = elements
+      .filter(e => e.element_type && e.element_type.startsWith('station_'))
+      .map(e => ({
+        id: e.id,
+        x: e.x,
+        y: e.y,
+        rotation: e.rotation,
+        scale: e.scale || 1.5,
+        station_type: e.data?.station_type || 'trading_post',
+        services: e.data?.services || [],
+        docking_fee: e.data?.docking_fee || 20,
+        reputation: e.data?.reputation || 50
       }));
 
     // Preparar dados dos players (excluindo o próprio jogador)
@@ -160,6 +223,10 @@ export async function handleChunkEnter(socket, data, io) {
       },
       asteroids,
       crystals,
+      resources,
+      planets,
+      npcs,
+      stations,
       players: otherPlayers,
       timestamp: Date.now()
     });

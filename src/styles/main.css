@@ -23,6 +23,9 @@
 /* Layouts */
 @import './layouts/base-layout.css';
 
+/* Páginas */
+@import './pages/multiplayer-game.css';
+
 /* =====================================================
    UTILITÁRIOS GLOBAIS
    ===================================================== */

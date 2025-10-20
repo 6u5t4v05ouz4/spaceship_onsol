@@ -34,6 +34,13 @@ export default class HeaderNavigation {
       <nav class="header-nav">
         <ul class="nav-list">
           <li class="nav-item">
+            <a href="/multiplayer" class="nav-link nav-link-multiplayer" data-page="multiplayer" title="Jogo Multiplayer">
+              <span class="nav-icon">🌐</span>
+              <span class="nav-text">MULTIPLAYER</span>
+              <span class="multiplayer-indicator">🔴 LIVE</span>
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="/game.html" class="nav-link nav-link-play disabled" data-page="game" title="Servidor não disponível" target="_blank">
               <span class="nav-icon">🎮</span>
               <span class="nav-text">Play</span>
@@ -512,9 +519,79 @@ export default class HeaderNavigation {
           animation: pulse 2s ease-in-out infinite;
         }
 
+        /* Multiplayer Button - Destaque especial */
+        .nav-link-multiplayer {
+          background: linear-gradient(135deg, #ff6b35, #f72585);
+          border-color: rgba(255, 107, 53, 0.5);
+          color: white !important;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+          animation: multiplayerGlow 2s ease-in-out infinite;
+        }
+
+        .nav-link-multiplayer::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          animation: multiplayerShimmer 3s ease-in-out infinite;
+        }
+
+        .nav-link-multiplayer:hover {
+          transform: translateY(-3px) scale(1.05);
+          box-shadow: 0 6px 25px rgba(255, 107, 53, 0.5);
+          background: linear-gradient(135deg, #ff8c42, #ff4c7d);
+        }
+
+        .nav-link-multiplayer .nav-icon {
+          font-size: 1.3rem;
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        .multiplayer-indicator {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: #ff0000;
+          color: white;
+          font-size: 0.6rem;
+          font-weight: 900;
+          padding: 2px 4px;
+          border-radius: 4px;
+          text-transform: uppercase;
+          animation: liveBlink 1.5s ease-in-out infinite;
+          box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+        }
+
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.2); }
+        }
+
+        @keyframes multiplayerGlow {
+          0%, 100% {
+            box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+          }
+          50% {
+            box-shadow: 0 4px 30px rgba(255, 107, 53, 0.6);
+          }
+        }
+
+        @keyframes multiplayerShimmer {
+          0% { left: -100%; }
+          50%, 100% { left: 100%; }
+        }
+
+        @keyframes liveBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
         }
 
         .nav-icon {

@@ -199,6 +199,31 @@ export default class DashboardPage {
               </div>
             </section>
 
+            <!-- Quick Actions Section -->
+            <section class="actions-section">
+              <h3 class="section-title">
+                <span role="img" aria-label="Ações">🎮</span> Ações Rápidas
+              </h3>
+              <div class="actions-grid">
+                <button class="action-btn multiplayer-btn" id="multiplayerBtn" title="Entrar no mundo multiplayer compartilhado">
+                  <div class="action-icon">🌐</div>
+                  <div class="action-content">
+                    <div class="action-title">MULTIPLAYER</div>
+                    <div class="action-description">Jogue com outros jogadores</div>
+                  </div>
+                  <div class="action-arrow">→</div>
+                </button>
+                <button class="action-btn solo-btn" id="soloBtn" title="Jogar modo solo">
+                  <div class="action-icon">🚀</div>
+                  <div class="action-content">
+                    <div class="action-title">MODO SOLO</div>
+                    <div class="action-description">Jogue individualmente</div>
+                  </div>
+                  <div class="action-arrow">→</div>
+                </button>
+              </div>
+            </section>
+
             <!-- Recent Activity Section -->
             <section class="activity-section">
               <h3 class="section-title">
@@ -226,6 +251,22 @@ export default class DashboardPage {
     if (retryBtn) {
       retryBtn.addEventListener('click', () => {
         this.loadData(container);
+      });
+    }
+
+    // Configurar botões de ação
+    const multiplayerBtn = container.querySelector('#multiplayerBtn');
+    if (multiplayerBtn) {
+      multiplayerBtn.addEventListener('click', () => {
+        navigateTo('/multiplayer');
+      });
+    }
+
+    const soloBtn = container.querySelector('#soloBtn');
+    if (soloBtn) {
+      soloBtn.addEventListener('click', () => {
+        // Redirecionar para o jogo solo existente
+        window.location.href = '/game.html';
       });
     }
 
@@ -1198,6 +1239,154 @@ export default class DashboardPage {
           .ships-grid,
           .inventory-grid {
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          }
+
+          /* Quick Actions Section */
+          .actions-section {
+            margin-bottom: var(--spacing-xl, 2rem);
+          }
+
+          .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md, 1rem);
+            margin-top: var(--spacing-md, 1rem);
+          }
+
+          .action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md, 1rem);
+            padding: var(--spacing-lg, 1.5rem);
+            background: rgba(0, 255, 204, 0.08);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            border-radius: var(--border-radius-lg, 1rem);
+            color: var(--color-white, #ffffff);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+          }
+
+          .action-btn:hover::before {
+            left: 100%;
+          }
+
+          .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 204, 0.3);
+            border-color: rgba(0, 255, 204, 0.4);
+          }
+
+          /* Multiplayer Button - Destaque especial */
+          .multiplayer-btn {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(247, 37, 133, 0.2));
+            border: 1px solid rgba(255, 107, 53, 0.4);
+          }
+
+          .multiplayer-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.3), rgba(247, 37, 133, 0.3));
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+          }
+
+          .multiplayer-btn .action-icon {
+            background: linear-gradient(135deg, #ff6b35, #f72585);
+            color: white;
+            font-size: 1.5rem;
+            animation: pulse 2s ease-in-out infinite;
+          }
+
+          /* Solo Button */
+          .solo-btn {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.2));
+            border: 1px solid rgba(52, 152, 219, 0.4);
+          }
+
+          .solo-btn:hover {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3), rgba(41, 128, 185, 0.3));
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+          }
+
+          .solo-btn .action-icon {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            font-size: 1.5rem;
+          }
+
+          .action-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: var(--border-radius-md, 0.5rem);
+            flex-shrink: 0;
+          }
+
+          .action-content {
+            flex: 1;
+          }
+
+          .action-title {
+            font-size: var(--text-lg, 1.25rem);
+            font-weight: 700;
+            font-family: var(--font-primary, Arial);
+            margin-bottom: var(--spacing-xs, 0.25rem);
+            color: var(--color-white, #ffffff);
+          }
+
+          .action-description {
+            font-size: var(--text-sm, 0.875rem);
+            color: var(--text-secondary, #b0b0b0);
+            line-height: 1.4;
+          }
+
+          .action-arrow {
+            font-size: 1.5rem;
+            color: var(--primary-cyan, #00ffcc);
+            transition: transform 0.3s ease;
+          }
+
+          .action-btn:hover .action-arrow {
+            transform: translateX(5px);
+          }
+
+          /* Responsive Design for Actions */
+          @media (max-width: 768px) {
+            .actions-grid {
+              grid-template-columns: 1fr;
+              gap: var(--spacing-sm, 0.5rem);
+            }
+
+            .action-btn {
+              padding: var(--spacing-md, 1rem);
+            }
+
+            .action-icon {
+              width: 50px;
+              height: 50px;
+              font-size: 1.2rem;
+            }
+
+            .action-title {
+              font-size: var(--text-base, 1rem);
+            }
+
+            .action-description {
+              font-size: var(--text-xs, 0.75rem);
+            }
           }
         }
       `;

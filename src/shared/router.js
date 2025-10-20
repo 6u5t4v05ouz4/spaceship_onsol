@@ -96,6 +96,17 @@ export function initRouter(container) {
     loadPage('marketplace');
   });
 
+  // Rota: /multiplayer - Protegida (Jogo Multiplayer)
+  page('/multiplayer', async () => {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      console.warn('⚠️ Acesso negado - redirecionando para login');
+      page.redirect('/login');
+      return;
+    }
+    loadPage('multiplayer');
+  });
+
   // Rota: /auth-callback (OAuth callback) - Pública
   page('/auth-callback', () => {
     loadPage('auth-callback');
@@ -158,14 +169,17 @@ async function loadPage(pageName) {
       case 'auth-callback':
         PageClass = (await import('../web/pages/AuthCallbackPage.js')).default;
         break;
+      case 'multiplayer':
+        PageClass = (await import('../web/pages/MultiplayerGamePage.js')).default;
+        break;
       default:
         throw new Error(`Página desconhecida: ${pageName}`);
     }
 
     // Criar instância da página - passar Supabase para páginas que precisam
     let pageInstance;
-    if (pageName === 'dashboard' || pageName === 'profile' || pageName === 'config' || pageName === 'missions' || pageName === 'marketplace') {
-      // Dashboard, Profile, Config, Missions e Marketplace precisam de Supabase para acessar banco
+    if (pageName === 'dashboard' || pageName === 'profile' || pageName === 'config' || pageName === 'missions' || pageName === 'marketplace' || pageName === 'multiplayer') {
+      // Dashboard, Profile, Config, Missions, Marketplace e Multiplayer precisam de Supabase para acessar banco
       pageInstance = new PageClass(supabase);
     } else {
       pageInstance = new PageClass();

@@ -62,6 +62,55 @@ export default class AssetManager {
         texturePath: '/assets/spritesheets/crystals/quantum_crystals.png',
         atlasPath: '/assets/spritesheets/crystals/quantum_crystals.json'
       },
+      // Recursos minerais
+      {
+        key: 'resources_metals',
+        texturePath: '/assets/spritesheets/resources/metals.png',
+        atlasPath: '/assets/spritesheets/resources/metals.json'
+      },
+      {
+        key: 'resources_fuels',
+        texturePath: '/assets/spritesheets/resources/fuels.png',
+        atlasPath: '/assets/spritesheets/resources/fuels.json'
+      },
+      {
+        key: 'resources_oxygen',
+        texturePath: '/assets/spritesheets/resources/oxygen.png',
+        atlasPath: '/assets/spritesheets/resources/oxygen.json'
+      },
+      {
+        key: 'resources_crystals',
+        texturePath: '/assets/spritesheets/resources/crystals.png',
+        atlasPath: '/assets/spritesheets/resources/crystals.json'
+      },
+      {
+        key: 'resources_projectiles',
+        texturePath: '/assets/spritesheets/resources/projectiles.png',
+        atlasPath: '/assets/spritesheets/resources/projectiles.json'
+      },
+      {
+        key: 'resources_special',
+        texturePath: '/assets/spritesheets/resources/special.png',
+        atlasPath: '/assets/spritesheets/resources/special.json'
+      },
+      // Planetas
+      {
+        key: 'planets',
+        texturePath: '/assets/spritesheets/planets/planets.png',
+        atlasPath: '/assets/spritesheets/planets/planets.json'
+      },
+      // Naves NPCs
+      {
+        key: 'npc_ships',
+        texturePath: '/assets/spritesheets/npcs/npc_ships.png',
+        atlasPath: '/assets/spritesheets/npcs/npc_ships.json'
+      },
+      // Estações espaciais
+      {
+        key: 'space_stations',
+        texturePath: '/assets/spritesheets/stations/space_stations.png',
+        atlasPath: '/assets/spritesheets/stations/space_stations.json'
+      },
       // Efeitos
       {
         key: 'effects_explosions',
@@ -137,8 +186,101 @@ export default class AssetManager {
           const tier = value <= 20 ? 'basic' : value <= 50 ? 'energy' : 'quantum';
           return `crystal_${tier}_${Math.floor(Math.random() * 2) + 1}`;
         }
+      },
+      // Recursos minerais
+      resource: {
+        getSpriteSheet: (distance) => {
+          const resourceType = elementData?.resource_type || 'iron';
+
+          // Mapear tipos de recursos para sprite sheets
+          if (['iron', 'copper', 'aluminum', 'titanium', 'platinum'].includes(resourceType)) {
+            return 'resources_metals';
+          } else if (['hydrogen', 'deuterium', 'antimatter'].includes(resourceType)) {
+            return 'resources_fuels';
+          } else if (['liquid_oxygen', 'compressed_oxygen', 'air_crystal'].includes(resourceType)) {
+            return 'resources_oxygen';
+          } else if (['energy_crystal', 'power_crystal'].includes(resourceType)) {
+            return 'resources_crystals';
+          } else if (['basic_missiles', 'guided_missiles', 'energy_missiles', 'plasma_torpedoes'].includes(resourceType)) {
+            return 'resources_projectiles';
+          } else {
+            return 'resources_special';
+          }
+        },
+        getFrame: (data) => {
+          const resourceType = data?.resource_type || 'iron';
+          const variant = Math.floor(Math.random() * 3) + 1;
+          return `${resourceType}_${variant}`;
+        }
+      },
+      // Planetas
+      planet: {
+        getSpriteSheet: (distance) => 'planets',
+        getFrame: (data) => {
+          const planetType = data?.planet_type || 'rocky';
+          const variant = Math.floor(Math.random() * 2) + 1;
+          return `planet_${planetType}_${variant}`;
+        }
+      },
+      // Naves NPCs - mapeamento individual
+      npc_trader: {
+        getSpriteSheet: (distance) => 'npc_ships',
+        getFrame: (data) => 'npc_trader_1'
+      },
+      npc_miner: {
+        getSpriteSheet: (distance) => 'npc_ships',
+        getFrame: (data) => 'npc_miner_1'
+      },
+      npc_patrol: {
+        getSpriteSheet: (distance) => 'npc_ships',
+        getFrame: (data) => 'npc_patrol_1'
+      },
+      npc_scavenger: {
+        getSpriteSheet: (distance) => 'npc_ships',
+        getFrame: (data) => 'npc_scavenger_1'
+      },
+      npc_explorer: {
+        getSpriteSheet: (distance) => 'npc_ships',
+        getFrame: (data) => 'npc_explorer_1'
+      },
+      // Estações espaciais - mapeamento individual
+      station_trading_post: {
+        getSpriteSheet: (distance) => 'space_stations',
+        getFrame: (data) => 'station_trading_post'
+      },
+      station_mining_station: {
+        getSpriteSheet: (distance) => 'space_stations',
+        getFrame: (data) => 'station_mining'
+      },
+      station_research_outpost: {
+        getSpriteSheet: (distance) => 'space_stations',
+        getFrame: (data) => 'station_research'
+      },
+      station_military_base: {
+        getSpriteSheet: (distance) => 'space_stations',
+        getFrame: (data) => 'station_military'
+      },
+      station_refueling_station: {
+        getSpriteSheet: (distance) => 'space_stations',
+        getFrame: (data) => 'station_refuel'
       }
     };
+
+    // Para tipos que começam com npc_
+    if (elementType.startsWith('npc_')) {
+      return {
+        spriteSheet: 'npc_ships',
+        frame: `npc_${elementType.replace('npc_', '')}_1`
+      };
+    }
+
+    // Para tipos que começam com station_
+    if (elementType.startsWith('station_')) {
+      return {
+        spriteSheet: 'space_stations',
+        frame: `station_${elementType.replace('station_', '')}`
+      };
+    }
 
     const assetConfig = assetMap[elementType];
     if (!assetConfig) {

@@ -118,12 +118,44 @@ export default class HeaderNavigation {
 
     // Debug: verificar se o botão multiplayer foi renderizado
     const multiplayerBtn = container.querySelector('.nav-link-multiplayer');
+    const navList = container.querySelector('.nav-list');
+    const allNavLinks = container.querySelectorAll('.nav-link');
+    
+    console.log('🔍 Debug HeaderNavigation:');
+    console.log('- Container:', container);
+    console.log('- Nav List:', navList);
+    console.log('- Todos os nav-links:', allNavLinks.length, allNavLinks);
+    console.log('- Botão multiplayer:', multiplayerBtn);
+    
     if (multiplayerBtn) {
       console.log('✅ Botão multiplayer encontrado no header:', multiplayerBtn);
       console.log('🔍 HTML do botão multiplayer:', multiplayerBtn.outerHTML);
+      console.log('🔍 Estilos computados:', window.getComputedStyle(multiplayerBtn));
+      
+      // Forçar visibilidade com estilos inline para debug
+      multiplayerBtn.style.display = 'flex';
+      multiplayerBtn.style.visibility = 'visible';
+      multiplayerBtn.style.opacity = '1';
+      multiplayerBtn.style.background = 'linear-gradient(135deg, #ff6b35, #f72585)';
+      multiplayerBtn.style.color = 'white';
+      multiplayerBtn.style.padding = '8px 16px';
+      multiplayerBtn.style.border = '2px solid #ff6b35';
+      multiplayerBtn.style.borderRadius = '8px';
+      multiplayerBtn.style.fontWeight = 'bold';
+      multiplayerBtn.style.position = 'relative';
+      multiplayerBtn.style.zIndex = '9999';
+      
+      console.log('🔧 Estilos inline aplicados para debug');
     } else {
       console.error('❌ Botão multiplayer NÃO encontrado no header!');
       console.log('🔍 HTML completo do header:', container.innerHTML);
+      
+      // Verificar se há algum problema na estrutura
+      const navItems = container.querySelectorAll('.nav-item');
+      console.log('🔍 Nav items encontrados:', navItems.length);
+      navItems.forEach((item, index) => {
+        console.log(`🔍 Nav item ${index}:`, item.innerHTML);
+      });
     }
 
     return container;

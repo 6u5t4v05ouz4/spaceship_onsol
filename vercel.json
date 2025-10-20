@@ -5,7 +5,7 @@
       "destination": "/game.html"
     },
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/((?!api|health|metrics).*)",
       "destination": "/index.html"
     }
   ]

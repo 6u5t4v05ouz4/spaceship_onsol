@@ -274,6 +274,23 @@ app.use('/assets', express.static(path.join(rootDir, 'dist/assets')));
 app.use('/static', express.static(path.join(rootDir, 'dist/static')));
 app.use('/game.html', express.static(path.join(rootDir, 'game.html')));
 
+// Servir index.html para rotas específicas do frontend
+app.get('/', (req, res) => {
+  res.sendFile(path.join(rootDir, 'dist', 'index.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(rootDir, 'dist', 'index.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(rootDir, 'dist', 'index.html'));
+});
+
+app.get('/profile', (req, res) => {
+  res.sendFile(path.join(rootDir, 'dist', 'index.html'));
+});
+
 // Fallback para SPA - todas as rotas não encontradas servem index.html
 app.get('*', (req, res) => {
   // Não servir index.html para arquivos estáticos

@@ -59,7 +59,10 @@ export default class MultiplayerManager {
     // Setup event listeners
     this.setupEventListeners();
 
-    // Entrar no chunk inicial
+    // Iniciar gameplay explicitamente (após autenticar)
+    socketService.playStart();
+
+    // Entrar no chunk inicial somente após playStart
     this.enterChunk(0, 0);
 
     console.log('✅ Multiplayer Manager inicializado');
@@ -239,15 +242,15 @@ export default class MultiplayerManager {
    * Handle player left
    */
   handlePlayerLeft(data) {
-    console.log('👋 Player saiu:', data.playerId);
-    this.removeOtherPlayer(data.playerId);
+    console.log('👋 Player saiu:', data.id);
+    this.removeOtherPlayer(data.id);
   }
 
   /**
    * Handle player moved
    */
   handlePlayerMoved(data) {
-    const player = this.otherPlayers.get(data.playerId);
+    const player = this.otherPlayers.get(data.id);
     if (player && player.sprite) {
       // Animar movimento suave
       this.scene.tweens.add({

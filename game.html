@@ -75,21 +75,21 @@
             
             // Configuração do jogo completa
             const config = {
-                type: Phaser.AUTO,
-                width: window.innerWidth,
-                height: window.innerHeight,
-                backgroundColor: '#000000',
-                physics: {
-                    default: 'arcade',
-                    arcade: {
-                        gravity: { x: 0, y: 0 },
-                        debug: false
-                    }
-                },
+            type: Phaser.AUTO,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            backgroundColor: '#000000',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { x: 0, y: 0 },
+                    debug: false
+                }
+            },
                 scene: [GameSceneModular],
-                scale: {
-                    mode: Phaser.Scale.RESIZE,
-                    autoCenter: Phaser.Scale.CENTER_BOTH
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                autoCenter: Phaser.Scale.CENTER_BOTH
                 }
             };
             

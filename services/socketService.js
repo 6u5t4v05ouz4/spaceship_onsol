@@ -174,7 +174,7 @@ class SocketService {
     });
 
     this.socket.on('player:left', (data) => {
-      console.log('👋 Player saiu:', data.playerId);
+      console.log('👋 Player saiu:', data.id);
 
       window.dispatchEvent(new CustomEvent('socket:player:left', {
         detail: data
@@ -320,6 +320,32 @@ class SocketService {
 
     console.log(`📍 Entrando no chunk (${chunkX}, ${chunkY})`);
     this.socket.emit('chunk:enter', { chunkX, chunkY });
+    return true;
+  }
+
+  /**
+   * Inicia o gameplay (após apertar Play na UI)
+   */
+  playStart() {
+    if (!this.authenticated) {
+      console.error('❌ Não autenticado');
+      return false;
+    }
+    console.log('▶️ Iniciando gameplay (play:start)');
+    this.socket.emit('play:start', {});
+    return true;
+  }
+
+  /**
+   * Para o gameplay (saindo para dashboard, por exemplo)
+   */
+  playStop() {
+    if (!this.authenticated) {
+      console.error('❌ Não autenticado');
+      return false;
+    }
+    console.log('⏹️ Encerrando gameplay (play:stop)');
+    this.socket.emit('play:stop', {});
     return true;
   }
 

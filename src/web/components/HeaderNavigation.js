@@ -220,29 +220,14 @@ export default class HeaderNavigation {
         return;
       }
 
-      // Handle Multiplayer button - open multiplayer.html in new window
+      // Handle Multiplayer button - open multiplayer.html in new tab
       if (link.classList.contains('nav-link-multiplayer')) {
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          console.log('🌐 Abrindo jogo multiplayer em nova janela...');
+          console.log('🌐 Abrindo jogo multiplayer em nova aba...');
 
-          // Abrir multiplayer.html em nova janela com configurações otimizadas
-          const multiplayerWindow = window.open(
-            '/multiplayer.html',
-            'space_crypto_multiplayer',
-            'width=1200,height=800,scrollbars=no,resizable=yes,location=no,menubar=no,status=no,toolbar=no'
-          );
-
-          // Verificar se a janela foi aberta corretamente
-          if (!multiplayerWindow || multiplayerWindow.closed || typeof multiplayerWindow.closed === 'undefined') {
-            // Fallback para mesma aba se popup for bloqueado
-            console.warn('⚠️ Popup bloqueado, abrindo na mesma aba...');
-            window.location.href = '/multiplayer.html';
-          } else {
-            console.log('✅ Janela multiplayer aberta com sucesso');
-            // Focar na nova janela
-            multiplayerWindow.focus();
-          }
+          // Abrir multiplayer.html em nova aba
+          window.open('/multiplayer.html', '_blank');
         });
         return;
       }

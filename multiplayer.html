@@ -130,33 +130,118 @@
         // Verificar autenticação antes de carregar o jogo
         async function checkAuthentication() {
             try {
+                console.log('🔐 Verificando autenticação...');
+
+                // Tentar pegar sessão atual
                 const { data: { session }, error } = await supabase.auth.getSession();
 
-                if (error || !session) {
-                    console.error('❌ Usuário não autenticado:', error);
-                    document.getElementById('loading').innerHTML = `
-                        <div style="text-align: center;">
-                            <h2>❌ Acesso Negado</h2>
-                            <p>Você precisa estar autenticado para jogar multiplayer.</p>
-                            <button onclick="window.open('/login', '_self')" style="
-                                background: #00ff00;
-                                border: none;
-                                padding: 10px 20px;
-                                border-radius: 5px;
-                                cursor: pointer;
-                                font-family: 'Courier New', monospace;
-                                margin-top: 20px;
-                            ">Ir para Login</button>
-                        </div>
-                    `;
-                    return false;
+                console.log('📋 Sessão encontrada:', session);
+                console.log('❗ Erro na sessão:', error);
+
+                if (error) {
+                    console.error('❌ Erro ao verificar sessão:', error);
                 }
 
+                if (!session) {
+                    console.warn('⚠️ Nenhuma sessão ativa encontrada');
+
+                    // Tentar refresh da sessão usando refresh token do localStorage
+                    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+
+                    console.log('🔄 Refresh session result:', refreshData);
+                    console.log('❌ Refresh session error:', refreshError);
+
+                    if (refreshError || !refreshData.session) {
+                        console.error('❌ Falha ao refresh sessão, tentando pegar dados do localStorage...');
+
+                        // Tentar recuperar dados diretamente do localStorage como fallback
+                        try {
+                            const storedSession = localStorage.getItem('supabase.auth.token');
+                            if (storedSession) {
+                                const sessionData = JSON.parse(storedSession);
+                                console.log('💾 Sessão recuperada do localStorage:', sessionData);
+
+                                if (sessionData.access_token) {
+                                    console.log('✅ Token encontrado, tentando validar...');
+
+                                    // Validar o token pegando o usuário
+                                    const { data: userData, error: userError } = await supabase.auth.getUser(sessionData.access_token);
+
+                                    if (!userError && userData.user) {
+                                        console.log('✅ Usuário validado com sucesso:', userData.user.email);
+                                        window.userSession = {
+                                            user: userData.user,
+                                            access_token: sessionData.access_token,
+                                            refresh_token: sessionData.refresh_token
+                                        };
+                                        return true;
+                                    }
+                                }
+                            }
+                        } catch (storageError) {
+                            console.error('❌ Erro ao acessar localStorage:', storageError);
+                        }
+
+                        // Se chegou aqui, não há autenticação válida
+                        document.getElementById('loading').innerHTML = `
+                            <div style="text-align: center; color: white;">
+                                <h2>❌ Acesso Negado</h2>
+                                <p>Você precisa estar autenticado para jogar multiplayer.</p>
+                                <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">Dica: Faça login primeiro e depois clique no botão multiplayer novamente.</p>
+                                <div style="margin-top: 20px;">
+                                    <button onclick="window.opener ? window.close() : window.location.href='/login'" style="
+                                        background: #00ff00;
+                                        border: none;
+                                        padding: 10px 20px;
+                                        border-radius: 5px;
+                                        cursor: pointer;
+                                        font-family: 'Courier New', monospace;
+                                        margin-right: 10px;
+                                        color: black;
+                                    ">Fechar esta aba</button>
+                                    <button onclick="window.location.href='/login'" style="
+                                        background: #ff6b35;
+                                        border: none;
+                                        padding: 10px 20px;
+                                        border-radius: 5px;
+                                        cursor: pointer;
+                                        font-family: 'Courier New', monospace;
+                                        color: white;
+                                    ">Ir para Login</button>
+                                </div>
+                            </div>
+                        `;
+                        return false;
+                    }
+                }
+
+                // Se temos sessão válida
                 console.log('✅ Usuário autenticado:', session.user.email);
                 window.userSession = session;
+
+                // Atualizar informações do jogador na UI
+                document.getElementById('playerName').textContent = session.user.email.split('@')[0];
+
                 return true;
             } catch (error) {
-                console.error('❌ Erro ao verificar autenticação:', error);
+                console.error('❌ Erro crítico ao verificar autenticação:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="text-align: center; color: #ff6b35;">
+                        <h2>❌ Erro de Autenticação</h2>
+                        <p>Ocorreu um erro ao verificar sua autenticação.</p>
+                        <p style="font-size: 12px; opacity: 0.7;">${error.message}</p>
+                        <button onclick="window.location.reload()" style="
+                            background: #ff6b35;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-family: 'Courier New', monospace;
+                            margin-top: 20px;
+                            color: white;
+                        ">Tentar Novamente</button>
+                    </div>
+                `;
                 return false;
             }
         }

@@ -14,27 +14,41 @@ console.log('  - SUPABASE_URL:', supabaseUrl ? '✅ Definido' : '❌ NÃO DEFINI
 console.log('  - SERVICE_ROLE_KEY:', serviceRoleKey ? `✅ Definido (${serviceRoleKey.substring(0, 20)}...)` : '❌ NÃO DEFINIDO');
 console.log('  - ANON_KEY:', anonKey ? `✅ Definido (${anonKey.substring(0, 20)}...)` : '❌ NÃO DEFINIDO');
 
-// Admin client (bypass RLS, usado para operações do servidor)
-export const supabaseAdmin = createClient(
-  supabaseUrl,
-  serviceRoleKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
+// Tornar inicialização resiliente: não falhar se variáveis estiverem ausentes
+let supabaseAdmin = null;
+let supabaseAnonClient = null;
 
-// Anon client (respeita RLS, usado para operações de usuários)
-export const supabaseAnonClient = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+try {
+  if (supabaseUrl && serviceRoleKey) {
+    supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+  } else {
+    console.warn('⚠️  Supabase admin client não inicializado: variáveis ausentes');
+  }
+} catch (err) {
+  console.warn('⚠️  Falha ao inicializar supabaseAdmin:', err?.message || err);
+  supabaseAdmin = null;
+}
+
+try {
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    supabaseAnonClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  } else {
+    console.warn('⚠️  Supabase anon client não inicializado: variáveis ausentes');
+  }
+} catch (err) {
+  console.warn('⚠️  Falha ao inicializar supabaseAnonClient:', err?.message || err);
+  supabaseAnonClient = null;
+}
 
 // Validar conexão ao iniciar
 export async function validateSupabaseConnection() {
   try {
+    if (!supabaseAdmin) {
+      console.warn('⚠️  Supabase admin client indisponível; pulando validação');
+      return false;
+    }
     const { data, error } = await supabaseAdmin
       .from('player_state')
       .select('count')
@@ -51,4 +65,6 @@ export async function validateSupabaseConnection() {
     return false;
   }
 }
+
+export { supabaseAdmin, supabaseAnonClient };
 

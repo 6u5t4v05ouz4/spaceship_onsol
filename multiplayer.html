@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Crypto Miner - Multiplayer</title>
+    <title>🔥 SPACE CRYPTO MINER - MULTIPLAYER V12345 🔥</title>
     <link rel="icon" href="/assets/icones/icone.png" />
 
-    <!-- Forçar no cache para desenvolvimento -->
+    <!-- FORÇAR CACHE BUSTING AGRESSIVO -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta name="turbolinks-cache-control" content="no-cache">
 
-    <!-- CSS simples -->
-    <link rel="stylesheet" href="/main.css" id="main-css">
+    <!-- CSS com timestamp -->
+    <link rel="stylesheet" href="/main.css?v=<?php echo date('YmdHis'); ?>" id="main-css">
 
     <!-- Phaser.js -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
@@ -194,18 +195,30 @@
     </style>
 </head>
 <body>
-    <!-- Script para forçar no cache em desenvolvimento -->
+    <!-- SCRIPT FORÇADO DE LIMPEZA DE CACHE -->
     <script>
-        // Adicionar timestamp ao CSS para evitar cache
+        console.clear(); // Limpar console antigo
+        console.log('🔥 LIMPANDO CACHE COMPLETO V12345 🔥');
+
+        // Forçar limpeza de localStorage/sessionStorage relacionados ao cache
+        try {
+            localStorage.removeItem('spaceCryptoMiner_cache');
+            sessionStorage.clear();
+        } catch(e) {}
+
+        // Forçar timestamp no CSS
         const cssLink = document.getElementById('main-css');
         if (cssLink) {
             cssLink.href = '/main.css?v=' + Date.now();
         }
 
-        // Forçar reload se detectar cache antigo
-        if (performance.navigation.type === 1) {
-            console.log('Página recarregada, limpando cache...');
-        }
+        // Adicionar meta tag dinâmica para evitar cache
+        const meta = document.createElement('meta');
+        meta.httpEquiv = 'Cache-Control';
+        meta.content = 'no-cache, no-store, must-revalidate, max-age=0';
+        document.head.appendChild(meta);
+
+        console.log('🔥 CACHE LIMPO V12345 - INICIANDO JOGO 🔥');
     </script>
 
     <div id="loading">🚀 Carregando multiplayer...</div>
@@ -893,8 +906,18 @@
         }
 
     
-        // Inicializar quando a página carregar
+        // FORÇAR VERIFICAÇÃO DE VERSÃO ANTES DE INICIALIZAR
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔥 VERIFICANDO VERSÃO V12345 🔥');
+
+            // Verificar se página carregou com versão correta
+            if (!document.title.includes('V12345')) {
+                console.error('❌ VERSÃO ANTIGA DETECTADA - FORÇANDO RELOAD');
+                window.location.href = window.location.pathname + '?v=' + Date.now();
+                return;
+            }
+
+            console.log('✅ VERSÃO CORRETA V12345 - INICIANDO JOGO');
             initializeGame();
         });
     </script>

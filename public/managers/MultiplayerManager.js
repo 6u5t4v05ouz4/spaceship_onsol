@@ -28,15 +28,25 @@ export default class MultiplayerManager {
     // Conectar ao servidor se não estiver conectado
     if (!socketService.isConnected()) {
       console.log('🔌 Tentando conectar ao servidor...');
+      console.log('🔍 SocketService estado antes da conexão:', {
+        connected: socketService.isConnected(),
+        socket: socketService.socket,
+        serverUrl: window.VITE_SERVER_URL
+      });
+      
       socketService.connect();
       
       // Aguardar conexão
       await new Promise((resolve) => {
         if (socketService.isConnected()) {
+          console.log('✅ Já conectado');
           resolve();
         } else {
+          console.log('⏳ Aguardando conexão...');
           const checkConnection = () => {
+            console.log('🔍 Evento socket:connected recebido!');
             if (socketService.isConnected()) {
+              console.log('✅ Conexão confirmada!');
               window.removeEventListener('socket:connected', checkConnection);
               resolve();
             }
@@ -45,10 +55,17 @@ export default class MultiplayerManager {
           
           // Timeout de 5 segundos
           setTimeout(() => {
+            console.error('❌ Timeout na conexão após 5 segundos');
+            console.log('🔍 Estado do socket:', socketService.socket);
             window.removeEventListener('socket:connected', checkConnection);
             resolve();
           }, 5000);
         }
+      });
+      
+      console.log('🔍 Estado após tentativa de conexão:', {
+        connected: socketService.isConnected(),
+        socketId: socketService.getSocketId()
       });
     }
 
@@ -56,10 +73,11 @@ export default class MultiplayerManager {
     console.log('🔐 Tentando autenticar...');
     console.log('🔍 Supabase disponível:', typeof window.supabaseClient !== 'undefined');
     console.log('🔍 window.userSession:', window.userSession);
+    console.log('🔍 Socket conectado antes da auth:', socketService.isConnected());
     
     try {
-      await socketService.authenticate();
-      console.log('✅ Autenticação enviada com sucesso');
+      const authResult = await socketService.authenticate();
+      console.log('✅ Autenticação enviada com sucesso:', authResult);
     } catch (error) {
       console.error('❌ Erro na autenticação:', error);
     }
@@ -84,6 +102,9 @@ export default class MultiplayerManager {
    */
   async waitForAuthentication() {
     console.log('⏳ Aguardando autenticação...');
+    console.log('🔍 Socket conectado:', socketService.isConnected());
+    console.log('🔍 Socket autenticado:', socketService.isAuthenticated());
+    
     return new Promise((resolve) => {
       if (socketService.isAuthenticated()) {
         this.isAuthenticated = true;
@@ -96,10 +117,11 @@ export default class MultiplayerManager {
       console.log('🔍 Aguardando evento socket:authenticated...');
 
       const checkAuth = () => {
+        console.log('🔍 Evento socket:authenticated recebido!');
         if (socketService.isAuthenticated()) {
           this.isAuthenticated = true;
           this.playerId = socketService.getPlayerId();
-          console.log('✅ Autenticado:', this.playerId);
+          console.log('✅ Autenticação confirmada! Player ID:', this.playerId);
           window.removeEventListener('socket:authenticated', checkAuth);
           resolve();
         }
@@ -109,6 +131,12 @@ export default class MultiplayerManager {
 
       // Timeout de 10 segundos
       setTimeout(() => {
+        console.error('❌ Timeout na autenticação após 10 segundos');
+        console.log('🔍 Estado final:', {
+          connected: socketService.isConnected(),
+          authenticated: socketService.isAuthenticated(),
+          playerId: socketService.getPlayerId()
+        });
         if (!this.isAuthenticated) {
           console.warn('⚠️ Timeout de autenticação, continuando sem multiplayer');
           window.removeEventListener('socket:authenticated', checkAuth);

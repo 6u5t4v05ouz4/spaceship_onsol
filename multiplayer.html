@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Crypto Miner - Multiplayer</title>
+    <link rel="icon" href="/assets/icones/icone.png" />
+
+    <!-- CSS simples -->
+    <link rel="stylesheet" href="/main.css">
+
+    <!-- Phaser.js -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Socket.io CDN -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff00;
+            font-size: 24px;
+            z-index: 1000;
+        }
+
+        #playerInfo {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #00ff00;
+            font-size: 14px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00ff00;
+        }
+
+        #gameControls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">🚀 Carregando multiplayer...</div>
+    <div id="gameCanvas"></div>
+
+    <!-- Interface do jogador -->
+    <div id="playerInfo" style="display: none;">
+        <div>👤 <span id="playerName">Jogador</span></div>
+        <div>📍 Chunk: <span id="playerChunk">0, 0</span></div>
+        <div>⚡ Energia: <span id="playerEnergy">100</span>%</div>
+        <div>🪨 Recursos: <span id="playerResources">0</span></div>
+    </div>
+
+    <!-- Controles do jogo -->
+    <div id="gameControls" style="display: none;">
+        <button class="control-btn" id="chatBtn">💬 Chat</button>
+        <button class="control-btn" id="mapBtn">🗺️ Mapa</button>
+        <button class="control-btn" id="settingsBtn">⚙️ Config</button>
+        <button class="control-btn" id="exitBtn">🚪 Sair</button>
+    </div>
+
+    <script type="module">
+        // Usar Supabase via CDN
+        const { createClient } = window.supabase;
+
+        // Criar cliente Supabase e disponibilizar globalmente
+        const supabase = createClient(
+            'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4'
+        );
+
+        if (typeof window !== 'undefined') {
+            window.supabaseClient = supabase;
+            console.log('✅ Supabase client inicializado globalmente');
+
+            // ✅ Definir URL do servidor Railway globalmente
+            window.VITE_SERVER_URL = 'https://spaceshiponsol-production-5493.up.railway.app';
+            console.log('✅ URL do servidor definida:', window.VITE_SERVER_URL);
+        }
+
+        // Verificar autenticação antes de carregar o jogo
+        async function checkAuthentication() {
+            try {
+                console.log('🔐 Verificando autenticação...');
+                console.log('🌐 URL atual:', window.location.href);
+                console.log('📱 User agent:', navigator.userAgent);
+
+                // Primeiro, verificar se conseguimos acessar a janela pai (opener)
+                if (window.opener && !window.opener.closed) {
+                    console.log('🔗 Janela pai detectada, tentando comunicação...');
+                    try {
+                        // Tentar pegar a sessão da janela pai via localStorage compartilhado
+                        const openerData = localStorage.getItem('supabase.auth.token');
+                        if (openerData) {
+                            console.log('💾 Dados da janela pai encontrados:', openerData);
+                        }
+                    } catch (err) {
+                        console.warn('⚠️ Não foi possível acessar dados da janela pai:', err);
+                    }
+                }
+
+                // Mostrar todos os itens do localStorage para debugging
+                console.log('📦 Itens no localStorage:');
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    console.log(`  - ${key}: ${value ? 'presente' : 'vazio'}`);
+                }
+
+                // Tentar pegar sessão atual
+                console.log('🔍 Tentando getSession...');
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                console.log('📋 Sessão encontrada:', session);
+                console.log('❗ Erro na sessão:', error);
+
+                if (error) {
+                    console.error('❌ Erro ao verificar sessão:', error);
+                }
+
+                if (!session) {
+                    console.warn('⚠️ Nenhuma sessão ativa encontrada, tentando refresh...');
+
+                    // Tentar refresh da sessão
+                    console.log('🔄 Tentando refreshSession...');
+                    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+
+                    console.log('🔄 Refresh session result:', refreshData);
+                    console.log('❌ Refresh session error:', refreshError);
+
+                    if (refreshError || !refreshData.session) {
+                        console.error('❌ Falha ao refresh, tentando método alternativo...');
+
+                        // Método alternativo: tentar recuperar dados de múltiplas fontes
+                        let sessionData = null;
+
+                        // Tentar diferentes chaves do localStorage
+                        const possibleKeys = [
+                            'supabase.auth.token',
+                            'supabase.auth.expires_at',
+                            'sb-cjrbhqlwfjebnjoyfjnc-auth-token'
+                        ];
+
+                        for (const key of possibleKeys) {
+                            const data = localStorage.getItem(key);
+                            if (data) {
+                                console.log(`💾 Encontrado dado em ${key}:`, data);
+                                try {
+                                    sessionData = JSON.parse(data);
+                                    if (sessionData.access_token) {
+                                        console.log('✅ Token encontrado em:', key);
+                                        break;
+                                    }
+                                } catch (e) {
+                                    console.warn(`⚠️ Erro ao parsear ${key}:`, e);
+                                }
+                            }
+                        }
+
+                        if (sessionData && sessionData.access_token) {
+                            console.log('✅ Dados de sessão encontrados, validando token...');
+
+                            // Criar nova instância do cliente com o token encontrado
+                            const tempSupabase = createClient(
+                                'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+                                sessionData.access_token,
+                                {
+                                    auth: {
+                                        persistSession: false,
+                                        autoRefreshToken: false
+                                    }
+                                }
+                            );
+
+                            // Validar o token
+                            const { data: userData, error: userError } = await tempSupabase.auth.getUser(sessionData.access_token);
+
+                            if (!userError && userData.user) {
+                                console.log('✅ Token validado com sucesso:', userData.user.email);
+
+                                // Restaurar sessão no cliente principal
+                                await supabase.auth.setSession({
+                                    access_token: sessionData.access_token,
+                                    refresh_token: sessionData.refresh_token || sessionData.access_token
+                                });
+
+                                // Tentar pegar a sessão novamente
+                                const { data: { session: restoredSession } } = await supabase.auth.getSession();
+                                if (restoredSession) {
+                                    console.log('✅ Sessão restaurada com sucesso!');
+                                    window.userSession = restoredSession;
+                                    document.getElementById('playerName').textContent = restoredSession.user.email.split('@')[0];
+                                    return true;
+                                }
+                            } else {
+                                console.error('❌ Token inválido:', userError);
+                            }
+                        }
+
+                        // Se chegou aqui, não há autenticação válida
+                        console.error('❌ Nenhuma autenticação válida encontrada');
+
+                        // Mostrar mensagem de erro mais detalhada
+                        document.getElementById('loading').innerHTML = `
+                            <div style="text-align: center; color: white; max-width: 500px; margin: 0 auto;">
+                                <h2>❌ Acesso Negado</h2>
+                                <p>Você precisa estar autenticado para jogar multiplayer.</p>
+                                <div style="background: rgba(255,0,0,0.1); border: 1px solid #ff6b35; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                                    <p style="font-size: 12px; margin: 0;"><strong>Dica:</strong> Faça login na aba principal e depois clique no botão multiplayer novamente.</p>
+                                    <p style="font-size: 10px; opacity: 0.7; margin: 10px 0 0 0;">Se o problema persistir, tente abrir o multiplayer na mesma aba onde você fez login.</p>
+                                </div>
+                                <div style="margin-top: 20px;">
+                                    <button onclick="window.opener ? window.close() : window.location.href='/'" style="
+                                        background: #00ff00;
+                                        border: none;
+                                        padding: 10px 20px;
+                                        border-radius: 5px;
+                                        cursor: pointer;
+                                        font-family: 'Courier New', monospace;
+                                        margin-right: 10px;
+                                        color: black;
+                                    ">Fechar esta aba</button>
+                                    <button onclick="window.location.href='/'" style="
+                                        background: #ff6b35;
+                                        border: none;
+                                        padding: 10px 20px;
+                                        border-radius: 5px;
+                                        cursor: pointer;
+                                        font-family: 'Courier New', monospace;
+                                        color: white;
+                                    ">Ir para Home</button>
+                                </div>
+                            </div>
+                        `;
+                        return false;
+                    } else {
+                        console.log('✅ Refresh session funcionou!');
+                        session = refreshData.session;
+                    }
+                }
+
+                // Se temos sessão válida
+                console.log('✅ Usuário autenticado:', session.user.email);
+                window.userSession = session;
+
+                // Atualizar informações do jogador na UI
+                document.getElementById('playerName').textContent = session.user.email.split('@')[0];
+
+                return true;
+            } catch (error) {
+                console.error('❌ Erro crítico ao verificar autenticação:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="text-align: center; color: #ff6b35;">
+                        <h2>❌ Erro de Autenticação</h2>
+                        <p>Ocorreu um erro ao verificar sua autenticação.</p>
+                        <p style="font-size: 12px; opacity: 0.7;">${error.message}</p>
+                        <button onclick="window.location.reload()" style="
+                            background: #ff6b35;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-family: 'Courier New', monospace;
+                            margin-top: 20px;
+                            color: white;
+                        ">Tentar Novamente</button>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        // Carregar o sistema multiplayer do jogo
+        async function loadMultiplayerGame() {
+            const isAuthenticated = await checkAuthentication();
+            if (!isAuthenticated) return;
+
+            try {
+                // Carregar MultiplayerGameScene
+                const module = await import('/scenes/MultiplayerGameScene.js');
+                console.log('✅ MultiplayerGameScene carregado com sucesso');
+
+                // Obter a classe MultiplayerGameScene do módulo
+                const MultiplayerGameScene = module.default;
+
+                // Configuração do jogo multiplayer
+                const config = {
+                    type: Phaser.AUTO,
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    backgroundColor: '#000000',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { x: 0, y: 0 },
+                            debug: false
+                        }
+                    },
+                    scene: [MultiplayerGameScene],
+                    scale: {
+                        mode: Phaser.Scale.RESIZE,
+                        autoCenter: Phaser.Scale.CENTER_BOTH
+                    }
+                };
+
+                // Inicializar o jogo multiplayer
+                const game = new Phaser.Game(config);
+                console.log('✅ Jogo multiplayer inicializado:', game);
+
+                // Ocultar loading e mostrar interface
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('playerInfo').style.display = 'block';
+                document.getElementById('gameControls').style.display = 'flex';
+
+                // Configurar eventos dos controles
+                setupGameControls();
+
+                // Configurar redimensionamento da janela
+                window.addEventListener('resize', () => {
+                    if (game && game.scale) {
+                        game.scale.resize(window.innerWidth, window.innerHeight);
+                    }
+                });
+
+            } catch (error) {
+                console.error('❌ Erro ao carregar MultiplayerGameScene:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="text-align: center;">
+                        <h2>❌ Erro ao Carregar</h2>
+                        <p>Não foi possível carregar o jogo multiplayer.</p>
+                        <p style="font-size: 12px; opacity: 0.7;">${error.message}</p>
+                        <button onclick="window.location.reload()" style="
+                            background: #ff0000;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-family: 'Courier New', monospace;
+                            margin-top: 20px;
+                            color: white;
+                        ">Tentar Novamente</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Configurar controles do jogo
+        function setupGameControls() {
+            // Chat button
+            document.getElementById('chatBtn').addEventListener('click', () => {
+                console.log('💬 Chat clicado');
+                // TODO: Implementar interface de chat
+            });
+
+            // Map button
+            document.getElementById('mapBtn').addEventListener('click', () => {
+                console.log('🗺️ Mapa clicado');
+                // TODO: Implementar interface de mapa
+            });
+
+            // Settings button
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                console.log('⚙️ Config clicado');
+                // TODO: Implementar interface de configurações
+            });
+
+            // Exit button
+            document.getElementById('exitBtn').addEventListener('click', () => {
+                if (confirm('Tem certeza que deseja sair do jogo multiplayer?')) {
+                    window.close();
+                    // Fallback se não puder fechar a janela
+                    window.location.href = '/dashboard';
+                }
+            });
+        }
+
+        // Iniciar carregamento
+        loadMultiplayerGame();
+    </script>
+</body>
+</html>

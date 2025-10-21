@@ -316,7 +316,11 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
         // Nave do jogador (mantida)
         console.log('🔍 Criando nave do jogador...');
+        console.log('🔍 ShipManager disponível:', !!this.shipManager);
+        console.log('🔍 ShipManager.create disponível:', typeof this.shipManager.create);
+        
         await this.shipManager.create();
+        console.log('🔍 Após create() - ship:', this.shipManager.ship);
 
         // Atualizar nome do jogador com username do multiplayer
         if (this.multiplayerManager && this.multiplayerManager.playerId) {
@@ -326,6 +330,7 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         }
 
         console.log('✅ Nave criada:', this.shipManager.ship);
+        console.log('🔍 Nave posição:', this.shipManager.ship ? {x: this.shipManager.ship.x, y: this.shipManager.ship.y} : 'não criada');
 
         // Configura câmera para seguir a nave (mantido)
         if (this.shipManager.ship) {
@@ -429,6 +434,8 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
     setupInput() {
         console.log('🎮 Configurando controles de input...');
+        console.log('🔍 Input disponível:', !!this.input);
+        console.log('🔍 Keyboard disponível:', !!this.input?.keyboard);
 
         // Desativa menu de contexto do botão direito
         this.input.on('pointerdown', (pointer) => {
@@ -445,6 +452,14 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         this.sKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.testExplosionKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+        
+        console.log('✅ Teclas configuradas:', {
+            spaceKey: !!this.spaceKey,
+            wKey: !!this.wKey,
+            aKey: !!this.aKey,
+            sKey: !!this.sKey,
+            dKey: !!this.dKey
+        });
 
         // Controles de teste para raridades (mesmos do original)
         this.input.keyboard.on('keydown-ONE', () => {
@@ -626,9 +641,16 @@ export default class MultiplayerGameScene extends Phaser.Scene {
     // Métodos de gameplay (adaptados para multiplayer)
 
     fireProjectile() {
+        console.log('🔫 Tentando disparar projétil...');
+        console.log('🔍 ProjectileManager disponível:', !!this.projectileManager);
+        console.log('🔍 ShipManager.ship disponível:', !!this.shipManager?.ship);
+        
         // Usa o ProjectileManager para manter consistência com o original
         if (this.projectileManager) {
             this.projectileManager.fireProjectile();
+            console.log('✅ Projétil disparado via ProjectileManager');
+        } else {
+            console.error('❌ ProjectileManager não disponível');
         }
     }
 
@@ -650,12 +672,21 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
             // Controle de movimento (apenas propulsão com espaço/W - como no original)
             const inputState = {
-                thrust: this.spaceKey ? this.spaceKey.isDown : false || this.wKey ? this.wKey.isDown : false
+                thrust: (this.spaceKey && this.spaceKey.isDown) || (this.wKey && this.wKey.isDown),
+                left: this.aKey && this.aKey.isDown,
+                right: this.dKey && this.dKey.isDown,
+                up: this.wKey && this.wKey.isDown,
+                down: this.sKey && this.sKey.isDown
             };
 
             // Debug da propulsão
             if (inputState.thrust) {
                 console.log('🎮 Multiplayer: Propulsão detectada:', inputState);
+            }
+            
+            // Debug geral dos controles
+            if (inputState.thrust || inputState.left || inputState.right || inputState.up || inputState.down) {
+                console.log('🎮 Controles ativos:', inputState);
             }
 
             this.shipManager.updateMovement(inputState, delta);

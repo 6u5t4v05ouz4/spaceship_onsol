@@ -282,8 +282,14 @@
         console.log = function(...args) {
             originalConsoleLog.apply(console, args);
             const message = args.join(' ');
-            if (message.includes('🔍') || message.includes('✅') || message.includes('❌') || 
-                message.includes('🔌') || message.includes('🔐') || message.includes('📡')) {
+            // Filtrar apenas logs do servidor - conexão, autenticação, multiplayer
+            if (message.includes('🔌') || message.includes('🔐') || message.includes('📡') ||
+                message.includes('SocketService') || message.includes('MultiplayerManager') ||
+                message.includes('socket:connected') || message.includes('socket:authenticated') ||
+                message.includes('auth:success') || message.includes('auth:error') ||
+                message.includes('Conectado ao servidor') || message.includes('Autenticado:') ||
+                message.includes('isConnected') || message.includes('isAuthenticated') ||
+                message.includes('Stats Multiplayer') || message.includes('Network Stats')) {
                 window.uiLogger.addLog(message, 'info');
             }
         };
@@ -291,13 +297,22 @@
         console.warn = function(...args) {
             originalConsoleWarn.apply(console, args);
             const message = args.join(' ');
-            window.uiLogger.addLog(message, 'warning');
+            // Filtrar apenas warnings relacionados ao servidor
+            if (message.includes('SocketService') || message.includes('MultiplayerManager') ||
+                message.includes('socket') || message.includes('auth') || message.includes('conexão')) {
+                window.uiLogger.addLog(message, 'warning');
+            }
         };
 
         console.error = function(...args) {
             originalConsoleError.apply(console, args);
             const message = args.join(' ');
-            window.uiLogger.addLog(message, 'error');
+            // Filtrar apenas erros relacionados ao servidor
+            if (message.includes('SocketService') || message.includes('MultiplayerManager') ||
+                message.includes('socket') || message.includes('auth') || message.includes('conexão') ||
+                message.includes('servidor') || message.includes('autenticação')) {
+                window.uiLogger.addLog(message, 'error');
+            }
         };
 
         // Função para inicializar o jogo de forma segura

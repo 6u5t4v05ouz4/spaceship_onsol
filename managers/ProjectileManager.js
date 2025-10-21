@@ -129,7 +129,16 @@ export default class ProjectileManager {
                 projectile._trailId = trailId; // Armazena para limpar depois
             }
             
-            // Som do disparo com variação de pitch - EXATO do GameScene antigo
+            // Efeito visual de disparo (muzzle flash) - EXATO do GameScene antigo
+            if (this.particleEffects) {
+                this.particleEffects.createMuzzleFlash(
+                    this.playerShip.x + offsetX,
+                    this.playerShip.y + offsetY,
+                    angle
+                );
+            }
+
+        // Som do disparo com variação de pitch - EXATO do GameScene antigo
             if (this.audioManager) {
                 this.audioManager.playShoot();
             }

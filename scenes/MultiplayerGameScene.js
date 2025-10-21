@@ -24,6 +24,11 @@ import CollisionManager from '../managers/CollisionManager.js';
 import UIManager from '../managers/UIManager.js';
 import BackgroundManager from '../managers/BackgroundManager.js';
 import GameOverManager from '../managers/GameOverManager.js';
+import EnemyManager from '../managers/EnemyManager.js';
+import MeteorManager from '../managers/MeteorManager.js';
+import ProjectileManager from '../managers/ProjectileManager.js';
+import MiningManager from '../managers/MiningManager.js';
+import RocketManager from '../managers/RocketManager.js';
 
 // Managers multiplayer (novos/sobrepostos)
 import MultiplayerManager from '../managers/MultiplayerManager.js';
@@ -48,6 +53,11 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         this.uiManager = null;
         this.backgroundManager = null;
         this.gameOverManager = null;
+        this.enemyManager = null;
+        this.meteorManager = null;
+        this.projectileManager = null;
+        this.miningManager = null;
+        this.rocketManager = null;
 
         // Managers multiplayer (novos)
         this.multiplayerManager = null;
@@ -60,8 +70,8 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         this.spaceKey = null;
         this.testExplosionKey = null;
 
-        // Grupos de física (adaptados para multiplayer)
-        this.projectiles = null;
+        // Grupos de física (agora gerenciados pelos managers)
+        // Os grupos são criados pelos managers específicos
 
         // Performance (mantido)
         this.lastCleanup = 0;
@@ -215,6 +225,22 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         this.uiManager = new UIManager(this, this.gameState);
         console.log('✅ UIManager inicializado');
 
+        // EnemyManager (mantido do original)
+        this.enemyManager = new EnemyManager(this, this.collisionManager);
+        console.log('✅ EnemyManager inicializado');
+
+        // MeteorManager (mantido do original)
+        this.meteorManager = new MeteorManager(this, this.collisionManager);
+        console.log('✅ MeteorManager inicializado');
+
+        // ProjectileManager (mantido do original)
+        this.projectileManager = new ProjectileManager(this, this.collisionManager);
+        console.log('✅ ProjectileManager inicializado');
+
+        // MiningManager (mantido do original)
+        this.miningManager = new MiningManager(this, this.collisionManager);
+        console.log('✅ MiningManager inicializado');
+
         // BackgroundManager (mantido)
         this.backgroundManager = new BackgroundManager(this);
         console.log('✅ BackgroundManager inicializado');
@@ -222,6 +248,10 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         // GameOverManager (adaptado para contexto multiplayer)
         this.gameOverManager = new GameOverManager(this);
         console.log('✅ GameOverManager inicializado');
+
+        // RocketManager (mantido do original)
+        this.rocketManager = new RocketManager(this, this.collisionManager);
+        console.log('✅ RocketManager inicializado');
     }
 
     async initializeMultiplayerManagers() {
@@ -277,12 +307,7 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         // Cria a mira do mouse (mantida)
         this.createCrosshair();
 
-        // Configura grupos de física (adaptados)
-        this.projectiles = this.physics.add.group({
-            defaultKey: 'minibullet',
-            maxSize: 50
-        });
-
+        // Grupos de física são criados pelos managers específicos
         console.log('✅ Cena multiplayer configurada');
     }
 
@@ -309,6 +334,60 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         console.log('🔍 Configurando colisões multiplayer...');
         this.collisionManager.setupAllCollisions(this.shipManager.ship);
         console.log('✅ Colisões configuradas');
+
+        // Inicializa sistema de inimigos
+        console.log('🔍 Inicializando sistema de inimigos...');
+        this.enemyManager.initialize(this.shipManager.ship);
+        console.log('✅ Sistema de inimigos inicializado');
+
+        // Inicializa sistema de meteoros
+        console.log('🔍 Inicializando sistema de meteoros...');
+        this.meteorManager.initialize(this.shipManager.ship, this.trailEffects);
+        console.log('✅ Sistema de meteoros inicializado');
+
+        // Inicializa sistema de projéteis
+        console.log('🔍 Inicializando sistema de projéteis...');
+        this.projectileManager.initialize(
+            this.shipManager.ship,
+            this.particleEffects,
+            this.audioManager,
+            this.juiceManager
+        );
+        console.log('✅ Sistema de projéteis inicializado');
+
+        // Inicializa sistema de mineração
+        console.log('🔍 Inicializando sistema de mineração...');
+        this.miningManager.initialize(
+            this.shipManager,
+            this.gameState,
+            this.uiManager,
+            this.particleEffects,
+            this.uiAnimations
+        );
+        console.log('✅ Sistema de mineração inicializado');
+
+        // Inicializa sistema de foguetes
+        console.log('🔍 Inicializando sistema de foguetes...');
+        this.rocketManager.initialize(
+            this.shipManager,
+            this.enemyManager,
+            this.particleEffects,
+            this.audioManager,
+            this.juiceManager
+        );
+        console.log('✅ Sistema de foguetes inicializado');
+
+        // Inicializa sistema de game over
+        console.log('🔍 Inicializando sistema de game over...');
+        this.gameOverManager.initialize(
+            this.gameState,
+            this.shipManager,
+            this.juiceManager,
+            this.particleEffects,
+            this.audioManager,
+            this.uiAnimations
+        );
+        console.log('✅ Sistema de game over inicializado');
 
         // UI (adaptada para informações multiplayer)
         console.log('🔍 Inicializando interface multiplayer...');
@@ -341,19 +420,56 @@ export default class MultiplayerGameScene extends Phaser.Scene {
     }
 
     setupInput() {
-        // Input configuration exatamente como no original
+        console.log('🎮 Configurando controles de input...');
+
+        // Desativa menu de contexto do botão direito
         this.input.on('pointerdown', (pointer) => {
             if (pointer.rightButtonDown()) {
                 return;
             }
         });
 
-        // Captura entrada do teclado (mantido)
+        // Captura entrada do teclado (mesmos do GameSceneModular)
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.wKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+        this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.sKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+        this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.testExplosionKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
-        // Configura clique do mouse para disparar (mantido)
+        // Controles de teste para raridades (mesmos do original)
+        this.input.keyboard.on('keydown-ONE', () => {
+            if (this.shipManager) {
+                this.shipManager.setRarityForTesting('Comum');
+            }
+        });
+
+        this.input.keyboard.on('keydown-TWO', () => {
+            if (this.shipManager) {
+                this.shipManager.setRarityForTesting('Incomum');
+            }
+        });
+
+        this.input.keyboard.on('keydown-THREE', () => {
+            if (this.shipManager) {
+                this.shipManager.setRarityForTesting('Raro');
+            }
+        });
+
+        this.input.keyboard.on('keydown-FOUR', () => {
+            if (this.shipManager) {
+                this.shipManager.setRarityForTesting('Épico');
+            }
+        });
+
+        this.input.keyboard.on('keydown-FIVE', () => {
+            if (this.shipManager) {
+                this.shipManager.setRarityForTesting('Lendário');
+            }
+        });
+
+        // Configura clique do mouse para disparar
         this.input.on('pointerdown', (pointer) => {
             if (pointer.leftButtonDown()) {
                 this.fireProjectile();
@@ -416,76 +532,24 @@ export default class MultiplayerGameScene extends Phaser.Scene {
     }
 
     createCrosshair() {
-        // Mira personalizada mantida do original
-        this.crosshair = this.add.image(0, 0, 'crosshair')
-            .setOrigin(0.5)
-            .setScrollFactor(0)
-            .setDepth(1000);
+        // Cria a mira personalizada usando aim1.png (mesmo do original)
+        this.crosshair = this.add.image(0, 0, 'crosshair');
+        this.crosshair.setScale(0.15); // Reduzido em 70% (era 0.5, agora 0.15)
+        this.crosshair.setDepth(10);
+        this.crosshair.setOrigin(0.5, 0.5); // Centraliza a mira no ponto vermelho
 
-        // Animação de pulso da mira (mantida)
-        this.crosshairPulseTween = this.tweens.add({
-            targets: this.crosshair,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 500,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
-        });
+        // Esconde o cursor padrão do navegador
+        this.input.setDefaultCursor('none');
 
-        console.log('✅ Mira criada');
+        console.log('🎯 Mira personalizada criada com aim1.png (escala reduzida em 70%)');
     }
 
     // Métodos de gameplay (adaptados para multiplayer)
 
     fireProjectile() {
-        if (!this.shipManager || !this.shipManager.ship) return;
-
-        // Lógica de disparo adaptada para multiplayer
-        const ship = this.shipManager.ship;
-        const pointer = this.input.activePointer;
-
-        // Calcula ângulo do disparo
-        const angle = Phaser.Math.Angle.Between(
-            ship.x, ship.y,
-            pointer.worldX, pointer.worldY
-        );
-
-        // Cria projétil com efeitos visuais do original
-        const projectile = this.projectiles.get(ship.x, ship.y);
-
-        if (projectile) {
-            projectile.setActive(true);
-            projectile.setVisible(true);
-
-            // Configura velocidade
-            const speed = 800;
-            projectile.setVelocity(
-                Math.cos(angle) * speed,
-                Math.sin(angle) * speed
-            );
-
-            // Rotação do projétil
-            projectile.rotation = angle;
-
-            // Aplica efeitos visuais do original
-            if (this.particleEffects) {
-                this.particleEffects.createMuzzleFlash(ship.x, ship.y, angle);
-            }
-
-            if (this.audioManager) {
-                this.audioManager.playSound('laser');
-            }
-
-            if (this.juiceManager) {
-                this.juiceManager.screenShake(50, 2);
-            }
-
-            // Cleanup automático
-            this.time.delayedCall(2000, () => {
-                projectile.setActive(false);
-                projectile.setVisible(false);
-            });
+        // Usa o ProjectileManager para manter consistência com o original
+        if (this.projectileManager) {
+            this.projectileManager.fireProjectile();
         }
     }
 
@@ -501,9 +565,29 @@ export default class MultiplayerGameScene extends Phaser.Scene {
             this.trailEffects.update(time, delta);
         }
 
-        // Atualiza nave do jogador (mantido)
-        if (this.shipManager) {
+        // Atualiza nave do jogador com controles (NOVO)
+        if (this.shipManager && this.shipManager.ship) {
             this.shipManager.update(time, delta);
+
+            // Controle de movimento (apenas propulsão com espaço/W - como no original)
+            const inputState = {
+                thrust: this.spaceKey ? this.spaceKey.isDown : false || this.wKey ? this.wKey.isDown : false
+            };
+
+            // Debug da propulsão
+            if (inputState.thrust) {
+                console.log('🎮 Multiplayer: Propulsão detectada:', inputState);
+            }
+
+            this.shipManager.updateMovement(inputState, delta);
+
+            // Atualiza posição no multiplayer
+            if (this.multiplayerManager && this.shipManager.ship) {
+                this.multiplayerManager.updatePosition(
+                    this.shipManager.ship.x,
+                    this.shipManager.ship.y
+                );
+            }
         }
 
         // Atualiza sistema multiplayer (novo)
@@ -516,6 +600,32 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
         // Atualiza lock-on (adaptado para NPCs/players)
         this.updateLockOn();
+
+        // Atualiza sistemas de jogo (mantidos do original)
+        if (this.enemyManager) {
+            this.enemyManager.update();
+        }
+
+        if (this.meteorManager) {
+            this.meteorManager.update();
+        }
+
+        if (this.projectileManager) {
+            this.projectileManager.update();
+        }
+
+        if (this.miningManager) {
+            this.miningManager.update();
+        }
+
+        if (this.rocketManager) {
+            this.rocketManager.update();
+        }
+
+        // Atualiza UI
+        if (this.uiManager) {
+            this.uiManager.update();
+        }
 
         // Performance cleanup (mantido)
         if (time - this.lastCleanup > this.cleanupInterval) {
@@ -531,30 +641,211 @@ export default class MultiplayerGameScene extends Phaser.Scene {
     }
 
     updateCrosshair() {
-        // Atualização da mira mantida do original
-        if (this.crosshair && this.input.activePointer) {
-            this.crosshair.x = this.input.activePointer.x;
-            this.crosshair.y = this.input.activePointer.y;
+        if (!this.crosshair || !this.shipManager.ship) return;
+
+        const worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
+        this.crosshair.x = worldPoint.x;
+        this.crosshair.y = worldPoint.y;
+
+        // Efeito visual: pulsação sutil da mira (proporcional ao novo tamanho)
+        if (!this.crosshairPulseTween) {
+            this.crosshairPulseTween = this.tweens.add({
+                targets: this.crosshair,
+                scaleX: 0.18, // Proporcional ao novo tamanho (0.15 * 1.2)
+                scaleY: 0.18,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
         }
     }
 
     updateLockOn() {
-        // Sistema de lock-on adaptado para NPCs/players multiplayer
-        // Lógica similar ao original, mas para elementos do mundo multiplayer
+        if (!this.crosshair || !this.shipManager.ship) return;
+
+        const crosshairX = this.crosshair.x;
+        const crosshairY = this.crosshair.y;
+        const lockRadius = 50; // Raio de detecção da mira
+
+        // Busca por alvos no mundo multiplayer (outros players, NPCs, inimigos)
+        let targets = [];
+
+        // Adiciona outros players como alvos potenciais
+        if (this.multiplayerManager && this.multiplayerManager.otherPlayers) {
+            this.multiplayerManager.otherPlayers.forEach((playerData, playerId) => {
+                if (playerData.ship && playerData.ship.active) {
+                    targets.push({
+                        sprite: playerData.ship,
+                        type: 'player',
+                        id: playerId
+                    });
+                }
+            });
+        }
+
+        // Busca alvo mais próximo da mira
+        let closestTarget = null;
+        let closestDistance = Infinity;
+
+        targets.forEach(target => {
+            if (target.sprite && target.sprite.active) {
+                const distance = Phaser.Math.Distance.Between(
+                    crosshairX, crosshairY,
+                    target.sprite.x, target.sprite.y
+                );
+
+                if (distance < lockRadius && distance < closestDistance) {
+                    closestDistance = distance;
+                    closestTarget = target;
+                }
+            }
+        });
+
+        // Se encontrou um alvo próximo
+        if (closestTarget) {
+            // Se é o mesmo alvo que estava sendo travado
+            if (this.lockedTarget && this.lockedTarget.sprite === closestTarget.sprite) {
+                // Continua travando
+                const currentTime = Date.now();
+                const lockTime = currentTime - this.lockOnStartTime;
+
+                // Se passou do tempo necessário, confirma o lock
+                if (lockTime >= this.lockOnDuration) {
+                    this.confirmLockOn(closestTarget);
+                }
+            } else {
+                // Novo alvo, reinicia o processo
+                this.lockedTarget = closestTarget;
+                this.lockOnStartTime = Date.now();
+                this.createLockOnIndicator(closestTarget.sprite);
+            }
+        } else {
+            // Nenhum alvo próximo, cancela lock
+            this.cancelLockOn();
+        }
+    }
+
+    /**
+     * Confirma o lock-on no alvo
+     */
+    confirmLockOn(target) {
+        if (!this.lockOnIndicator) return;
+
+        // Destrói o indicador vermelho e cria um verde
+        this.lockOnIndicator.destroy();
+
+        // Cria novo indicador verde para confirmar lock
+        this.lockOnIndicator = this.add.circle(target.sprite.x, target.sprite.y, 40, 0x00ff00, 0.5);
+        this.lockOnIndicator.setDepth(target.sprite.depth + 1);
+        this.lockOnIndicator.setStrokeStyle(4, 0x00ff00, 1.0);
+        this.lockOnIndicator.setScale(1.2);
+
+        // Animação pulsante mais intensa
+        this.tweens.add({
+            targets: this.lockOnIndicator,
+            scaleX: 1.3,
+            scaleY: 1.3,
+            duration: 300,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        console.log(`🎯 Lock-on confirmado no ${target.type}!`);
+    }
+
+    /**
+     * Cancela o lock-on atual
+     */
+    cancelLockOn() {
+        if (this.lockedTarget) {
+            this.lockedTarget = null;
+            this.lockOnStartTime = 0;
+
+            if (this.lockOnIndicator) {
+                this.lockOnIndicator.destroy();
+                this.lockOnIndicator = null;
+            }
+        }
+    }
+
+    /**
+     * Cria indicador visual de lock-on
+     */
+    createLockOnIndicator(targetSprite) {
+        // Remove indicador anterior se existir
+        if (this.lockOnIndicator) {
+            this.lockOnIndicator.destroy();
+        }
+
+        // Cria círculo vermelho ao redor do alvo
+        this.lockOnIndicator = this.add.circle(targetSprite.x, targetSprite.y, 40, 0xff0000, 0.3);
+        this.lockOnIndicator.setDepth(targetSprite.depth + 1);
+        this.lockOnIndicator.setStrokeStyle(3, 0xff0000, 0.8);
+
+        // Animação pulsante
+        this.tweens.add({
+            targets: this.lockOnIndicator,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    /**
+     * Obtém o alvo travado pelo sistema de lock-on
+     */
+    getLockedTarget() {
+        // Verifica se o alvo travado ainda está ativo
+        if (this.lockedTarget && this.lockedTarget.sprite && this.lockedTarget.sprite.active) {
+            const currentTime = Date.now();
+            const lockTime = currentTime - this.lockOnStartTime;
+
+            // Só retorna o alvo se o lock foi confirmado (3+ segundos)
+            if (lockTime >= this.lockOnDuration) {
+                return this.lockedTarget;
+            }
+        }
+
+        return null;
     }
 
     performCleanup() {
         // Sistema de cleanup mantido do original
         console.log('🧹 Realizando cleanup de performance...');
 
-        // Cleanup de projéteis inativos
-        this.projectiles.children.entries.forEach(projectile => {
-            if (!projectile.active) {
-                this.projectiles.remove(projectile, true, true);
-            }
-        });
+        // Cleanup de projéteis inativos (gerenciado pelo ProjectileManager)
+        if (this.projectileManager) {
+            this.projectileManager.cleanupDistantProjectiles();
+        }
 
-        // Outros sistemas de cleanup...
+        // Cleanup dos sistemas managers
+        if (this.meteorManager) {
+            this.meteorManager.cleanupDistantMeteors();
+        }
+
+        if (this.projectileManager) {
+            this.projectileManager.cleanupDistantProjectiles();
+        }
+
+        if (this.rocketManager) {
+            this.rocketManager.cleanupDistantRockets();
+        }
+
+        if (this.miningManager) {
+            this.miningManager.cullMiningPlanets();
+        }
+
+        // Força garbage collection se disponível
+        if (window.gc) {
+            window.gc();
+        }
+
+        console.log('✅ Cleanup realizado');
     }
 
     debugInfo() {

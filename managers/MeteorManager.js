@@ -150,48 +150,31 @@ export default class MeteorManager {
                     break;
             }
         } else {
-            // Fallback: usar posições fixas baseadas no chunk atual para consistência
-            const multiplayerManager = this.scene.multiplayerManager;
-            if (multiplayerManager && multiplayerManager.currentChunk) {
-                const chunkX = multiplayerManager.currentChunk.x;
-                const chunkY = multiplayerManager.currentChunk.y;
-                
-                // Spawn dentro do chunk atual (1000x1000 unidades)
-                const chunkStartX = chunkX * 1000;
-                const chunkStartY = chunkY * 1000;
-                
-                // Posições fixas baseadas em seed para consistência
-                const seed = `${chunkX},${chunkY}`;
-                const randomX = this.seededRandom(seed, this.meteorCount * 2);
-                const randomY = this.seededRandom(seed, this.meteorCount * 2 + 1);
-                
-                x = chunkStartX + Math.floor(randomX * 1000);
-                y = chunkStartY + Math.floor(randomY * 1000);
-            } else {
-                // Fallback para spawn aleatório no chunk (0,0)
-                x = Phaser.Math.Between(-500, 500);
-                y = Phaser.Math.Between(-500, 500);
+            // Fallback para spawn aleatório
+            const minX = -2000, maxX = 2000, minY = -2000, maxY = 2000;
+            const side = Phaser.Math.Between(0, 3);
+            
+            switch (side) {
+                case 0: // Esquerda
+                    x = minX - 100;
+                    y = Phaser.Math.Between(minY, maxY);
+                    break;
+                case 1: // Direita
+                    x = maxX + 100;
+                    y = Phaser.Math.Between(minY, maxY);
+                    break;
+                case 2: // Cima
+                    x = Phaser.Math.Between(minX, maxX);
+                    y = minY - 100;
+                    break;
+                case 3: // Baixo
+                    x = Phaser.Math.Between(minX, maxX);
+                    y = maxY + 100;
+                    break;
             }
         }
         
         return { x, y };
-    }
-    
-    /**
-     * Gera número pseudo-aleatório baseado em seed (mesmo do servidor)
-     */
-    seededRandom(seed, index) {
-        const str = `${seed}-${index}`;
-        let hash = 0;
-        
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = (hash << 5) - hash + char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        
-        // Normalizar para 0-1
-        return Math.abs(Math.sin(hash)) % 1;
     }
     
     /**

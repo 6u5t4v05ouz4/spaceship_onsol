@@ -87,25 +87,36 @@ class SocketService {
         playerId: this.playerId
       });
       
-      this.connected = true;
-      this.reconnectAttempts = 0;
-      
-      console.log('🔍 Estado após atualização:', {
-        connected: this.connected,
-        authenticated: this.authenticated,
-        playerId: this.playerId
-      });
+      // Verificar se o socket está realmente conectado
+      if (this.socket.connected && this.socket.id) {
+        console.log('✅ Socket realmente conectado, atualizando estado');
+        this.connected = true;
+        this.reconnectAttempts = 0;
+        
+        console.log('🔍 Estado após atualização:', {
+          connected: this.connected,
+          authenticated: this.authenticated,
+          playerId: this.playerId
+        });
 
-      // Disparar evento customizado
-      window.dispatchEvent(new CustomEvent('socket:connected', {
-        detail: { socketId: this.socket.id }
-      }));
+        // Disparar evento customizado
+        window.dispatchEvent(new CustomEvent('socket:connected', {
+          detail: { socketId: this.socket.id }
+        }));
 
-      // Auto-autenticar após conectar
-      setTimeout(() => {
-        console.log('🔐 Auto-autenticando após conexão...');
-        this.authenticateIfNeeded();
-      }, 500);
+        // Auto-autenticar após conectar
+        setTimeout(() => {
+          console.log('🔐 Auto-autenticando após conexão...');
+          this.authenticateIfNeeded();
+        }, 500);
+      } else {
+        console.warn('⚠️ Evento connect disparado mas socket não está realmente conectado');
+        console.log('🔍 Socket state:', {
+          connected: this.socket.connected,
+          id: this.socket.id,
+          readyState: this.socket.readyState
+        });
+      }
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -119,19 +130,22 @@ class SocketService {
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('❌ Erro de conexão:', error.message);
-      console.error('🔍 Detalhes do erro:', {
-        type: error.type,
+      console.error('❌ Erro de conexão:', error);
+      console.log('🔍 Detalhes do erro:', {
+        message: error.message,
         description: error.description,
         context: error.context,
-        transport: error.transport
+        type: error.type
       });
+      
+      this.connected = false;
       this.reconnectAttempts++;
 
       window.dispatchEvent(new CustomEvent('socket:connect_error', {
         detail: { error: error.message, attempts: this.reconnectAttempts }
       }));
     });
+
 
     // ===== Autenticação =====
     this.socket.on('auth:success', (data) => {

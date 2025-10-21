@@ -11,6 +11,7 @@ import {
   getPlayersInChunk,
   removePlayerOnline
 } from './database.js';
+import { supabaseAdmin, supabaseAnonClient } from './config/supabase.js';
 
 // Map de players conectados por socket
 const connectedPlayers = new Map();
@@ -33,48 +34,109 @@ export async function initMultiplayer() {
  */
 export async function handleAuth(socket, data, io) {
   try {
-    console.log('🔐 Auth request:', data.userId ? data.userId.substring(0, 8) : 'unknown');
+    console.log('🔐 Auth request:', data);
+    const { token } = data;
 
-    // Aceitar os dados enviados pelo cliente
-    const userId = data.userId || `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const username = data.username || `Player_${userId.substring(0, 8)}`;
-    const email = data.email || 'demo@example.com';
+    if (!token) {
+      console.error('❌ Token não fornecido');
+      socket.emit('auth:error', { message: 'Token não fornecido' });
+      return;
+    }
 
-    // Salvar informações do socket
-    socket.userId = userId;
-    socket.username = username;
-    socket.email = email;
+    // 1. Validar JWT com Supabase
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAnonClient.auth.getUser(token);
 
-    // Atualizar estado do jogador no banco
-    const playerState = await updatePlayerState(userId, {
-      username,
-      email,
-      socketId: socket.id,
-      x: 400, // Posição inicial
-      y: 300,
-      chunkX: 0,
-      chunkY: 0,
-      health: 100,
-      is_in_game: false // Por padrão, não está no multiplayer
-    });
+    if (authError || !user) {
+      console.error('❌ Auth falhou:', authError?.message);
+      socket.emit('auth:error', { message: 'Token inválido ou expirado' });
+      return;
+    }
 
-    // Adicionar aos players conectados
+    console.log('✅ Usuário autenticado:', user.email);
+
+    // 2. Buscar ou criar player_state
+    let { data: playerState, error: fetchError } = await supabaseAdmin
+      .from('player_state')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    // Se não existe, criar
+    if (fetchError && fetchError.code === 'PGRST116') {
+      console.log(`🆕 Criando novo player_state para ${user.email}`);
+
+      const { data: newPlayer, error: createError } = await supabaseAdmin
+        .from('player_state')
+        .insert({
+          user_id: user.id,
+          username: user.email?.split('@')[0] || 'Player',
+          x: 400,
+          y: 300,
+          current_chunk: '0,0',
+          health: 100,
+          max_health: 100,
+          energy: 100,
+          max_energy: 100,
+          resources: 0,
+          experience: 0,
+          level: 1,
+          armor: 0,
+          weapon_damage: 10,
+          is_online: true,
+          is_in_game: false,
+          last_login: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Erro ao criar player_state:', createError);
+        socket.emit('auth:error', { message: 'Erro ao criar estado do jogador' });
+        return;
+      }
+
+      playerState = newPlayer;
+    } else if (fetchError) {
+      console.error('❌ Erro ao buscar player_state:', fetchError);
+      socket.emit('auth:error', { message: 'Erro ao buscar estado do jogador' });
+      return;
+    }
+
+    // 3. Atualizar is_online e last_login
+    await supabaseAdmin
+      .from('player_state')
+      .update({
+        is_online: true,
+        last_login: new Date().toISOString(),
+      })
+      .eq('id', playerState.id);
+
+    // 4. Salvar informações do socket
+    socket.userId = user.id;
+    socket.playerId = playerState.id;
+    socket.username = playerState.username;
+
+    // 5. Adicionar aos players conectados
     connectedPlayers.set(socket.id, {
-      userId,
-      username,
+      userId: user.id,
+      playerId: playerState.id,
+      username: playerState.username,
       socketId: socket.id,
-      chunkX: 0,
-      chunkY: 0,
+      chunkX: Math.floor(playerState.x / 1000),
+      chunkY: Math.floor(playerState.y / 1000),
       is_in_game: false // Por padrão, não está no multiplayer
     });
 
-    console.log('✅ Player autenticado:', username, `(Socket: ${socket.id})`);
+    console.log('✅ Player autenticado:', playerState.username, `(Socket: ${socket.id})`);
 
     // Responder ao cliente
     socket.emit('auth:success', {
-      playerId: userId,
-      username,
-      playerState
+      playerId: playerState.id,
+      username: playerState.username,
+      playerState: playerState
     });
 
   } catch (error) {
@@ -97,7 +159,7 @@ export async function handleChunkEnter(socket, data, io) {
     console.log(`📍 Player ${socket.username} entrando no chunk (${chunkX}, ${chunkY})`);
 
     // Atualizar posição do jogador
-    const playerState = await updatePlayerState(socket.userId, {
+    const playerState = await updatePlayerState(socket.playerId, {
       socketId: socket.id,
       x: chunkX * 1000 + 400, // Centro do chunk
       y: chunkY * 1000 + 300,
@@ -207,7 +269,7 @@ export async function handleChunkEnter(socket, data, io) {
 
     // Preparar dados dos players (excluindo o próprio jogador)
     const otherPlayers = playersInChunk
-      .filter(p => p.user_id !== socket.userId)
+      .filter(p => p.user_id !== socket.playerId)
       .map(p => ({
         id: p.user_id,
         username: p.username,
@@ -241,7 +303,7 @@ export async function handleChunkEnter(socket, data, io) {
       // Se não está no multiplayer, define como ativo automaticamente
       if (!playerData.is_in_game) {
         playerData.is_in_game = true;
-        await updatePlayerState(socket.userId, { is_in_game: true });
+        await updatePlayerState(socket.playerId, { is_in_game: true });
         console.log(`🎮 ${socket.username} ativou multiplayer automaticamente`);
       }
 
@@ -249,7 +311,7 @@ export async function handleChunkEnter(socket, data, io) {
       console.log(`📡 Emitindo player:joined para ${io.sockets.adapter.rooms.get(`chunk:${chunkX}:${chunkY}`)?.size || 0} sockets`);
 
       socket.to(`chunk:${chunkX}:${chunkY}`).emit('player:joined', {
-        id: socket.userId,
+        id: socket.playerId,
         username: socket.username,
         x: playerState.x,
         y: playerState.y,
@@ -283,7 +345,7 @@ export async function handlePlayerMove(socket, data, io) {
     if (!socket.userId) return;
 
     // Atualizar estado no banco
-    await updatePlayerState(socket.userId, {
+    await updatePlayerState(socket.playerId, {
       socketId: socket.id,
       x,
       y,
@@ -315,7 +377,7 @@ export async function handlePlayerMove(socket, data, io) {
 
     // Broadcast do movimento para players no mesmo chunk
     socket.to(`chunk:${chunkX}:${chunkY}`).emit('player:moved', {
-      playerId: socket.userId,
+      playerId: socket.playerId,
       username: socket.username,
       x,
       y,
@@ -328,7 +390,7 @@ export async function handlePlayerMove(socket, data, io) {
     if (changedChunk) {
       // Notificar chunk antigo que o player saiu
       io.to(`chunk:${connectedPlayer.chunkX}:${connectedPlayer.chunkY}`).emit('player:left', {
-        playerId: socket.userId,
+        playerId: socket.playerId,
         username: socket.username
       });
 
@@ -372,7 +434,7 @@ export async function handleAttack(socket, data, io) {
 
     // Notificar chunk sobre o ataque
     io.to(`chunk:${attacker.chunkX}:${attacker.chunkY}`).emit('battle:attack', {
-      attackerId: socket.userId,
+      attackerId: socket.playerId,
       attackerName: socket.username,
       defenderId: targetId,
       defenderName: targetSocket.username,
@@ -405,7 +467,7 @@ export async function handleRespawn(socket, data, io) {
     if (!socket.userId) return;
 
     // Resetar posição e vida
-    const playerState = await updatePlayerState(socket.userId, {
+    const playerState = await updatePlayerState(socket.playerId, {
       socketId: socket.id,
       x: 400,
       y: 300,
@@ -448,7 +510,7 @@ export async function handleDisconnect(socket, reason, io) {
     if (connectedPlayer) {
       // Notificar chunk que o player saiu
       io.to(`chunk:${connectedPlayer.chunkX}:${connectedPlayer.chunkY}`).emit('player:left', {
-        playerId: socket.userId,
+        playerId: socket.playerId,
         username: socket.username
       });
 
@@ -481,7 +543,7 @@ export async function handlePlayStart(socket, data, io) {
     }
 
     // Atualizar no banco também
-    await updatePlayerState(socket.userId, {
+    await updatePlayerState(socket.playerId, {
       is_in_game: true
     });
 
@@ -489,7 +551,7 @@ export async function handlePlayStart(socket, data, io) {
     if (playerData) {
       console.log(`🚀 ${socket.username} está no multiplayer - emitindo player:joined para chunk (${playerData.chunkX}, ${playerData.chunkY})`);
       socket.to(`chunk:${playerData.chunkX}:${playerData.chunkY}`).emit('player:joined', {
-        id: socket.userId,
+        id: socket.playerId,
         username: socket.username,
         x: 400, // Posição padrão
         y: 300,
@@ -524,14 +586,14 @@ export async function handlePlayStop(socket, data, io) {
     }
 
     // Atualizar no banco também
-    await updatePlayerState(socket.userId, {
+    await updatePlayerState(socket.playerId, {
       is_in_game: false
     });
 
     // Notificar outros players que saiu
     if (playerData) {
       socket.to(`chunk:${playerData.chunkX}:${playerData.chunkY}`).emit('player:left', {
-        playerId: socket.userId,
+        playerId: socket.playerId,
         username: socket.username
       });
     }

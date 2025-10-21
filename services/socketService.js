@@ -51,6 +51,9 @@ class SocketService {
   }
 
   createSocketConnection(serverUrl) {
+    console.log('🔌 Criando conexão Socket.io com:', serverUrl);
+    console.log('🔍 io disponível:', typeof io !== 'undefined');
+    
     this.socket = io(serverUrl, {
       transports: ['polling', 'websocket'], // ✅ Polling primeiro, websocket como fallback
       reconnection: true,
@@ -62,6 +65,7 @@ class SocketService {
       upgrade: true, // ✅ Permite upgrade para websocket
     });
 
+    console.log('✅ Socket criado:', this.socket);
     this.setupListeners();
   }
 
@@ -72,6 +76,7 @@ class SocketService {
     // ===== Conexão =====
     this.socket.on('connect', () => {
       console.log('✅ Conectado ao servidor:', this.socket.id);
+      console.log('🔍 Socket conectado:', this.socket.connected);
       this.connected = true;
       this.reconnectAttempts = 0;
 
@@ -82,6 +87,7 @@ class SocketService {
 
       // Auto-autenticar após conectar
       setTimeout(() => {
+        console.log('🔐 Auto-autenticando após conexão...');
         this.authenticateIfNeeded();
       }, 500);
     });
@@ -114,6 +120,7 @@ class SocketService {
     // ===== Autenticação =====
     this.socket.on('auth:success', (data) => {
       console.log('✅ Autenticado:', data.playerId);
+      console.log('🔍 Dados completos:', data);
       this.authenticated = true;
       this.playerId = data.playerId;
       this.playerState = data.playerState;
@@ -274,18 +281,26 @@ class SocketService {
    * Autentica com o servidor
    */
   async authenticate() {
+    console.log('🔐 Iniciando processo de autenticação...');
+    console.log('🔍 Conectado:', this.connected);
+    console.log('🔍 Socket:', this.socket);
+    
     if (!this.connected) {
       console.error('❌ Não conectado ao servidor');
       return false;
     }
 
     const supabase = getSupabase();
+    console.log('🔍 Supabase client:', supabase);
     if (!supabase) {
       console.error('❌ Supabase client não disponível');
       return false;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    console.log('🔍 Obtendo sessão do Supabase...');
+    const { data: { session }, error } = await supabase.auth.getSession();
+    console.log('🔍 Sessão:', session);
+    console.log('🔍 Erro:', error);
 
     if (!session) {
       console.error('❌ Sem sessão ativa no Supabase');
@@ -293,6 +308,7 @@ class SocketService {
     }
 
     console.log('🔐 Autenticando com servidor...');
+    console.log('🔍 Token:', session.access_token ? 'presente' : 'ausente');
     this.socket.emit('auth', {
       token: session.access_token,
     });

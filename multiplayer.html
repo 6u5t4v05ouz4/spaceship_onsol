@@ -86,6 +86,101 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* Estilos do Painel de Logs */
+        #serverLogs {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            max-height: 500px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 255, 0, 0.1);
+            border-bottom: 1px solid #00ff00;
+        }
+
+        .logs-header h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .logs-toggle, .logs-clear {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logs-toggle:hover, .logs-clear:hover {
+            background: rgba(0, 255, 0, 0.3);
+        }
+
+        .logs-content {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            word-wrap: break-word;
+        }
+
+        .log-entry.info {
+            color: #00ff00;
+        }
+
+        .log-entry.warning {
+            color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        .log-entry.error {
+            color: #ff0000;
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        .log-entry.success {
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .log-entry.debug {
+            color: #ff00ff;
+            background: rgba(255, 0, 255, 0.1);
+        }
+
+        .logs-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .logs-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .logs-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 0, 0.5);
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -101,11 +196,24 @@
         <div>🪨 Recursos: <span id="playerResources">0</span></div>
     </div>
 
+    <!-- Painel de Logs do Servidor -->
+    <div id="serverLogs" style="display: none;">
+        <div class="logs-header">
+            <h3>🔍 Server Logs</h3>
+            <button id="toggleLogs" class="logs-toggle">📋</button>
+            <button id="clearLogs" class="logs-clear">🗑️</button>
+        </div>
+        <div id="logsContent" class="logs-content">
+            <div class="log-entry">Sistema inicializado...</div>
+        </div>
+    </div>
+
     <!-- Controles do jogo -->
     <div id="gameControls" style="display: none;">
         <button class="control-btn" id="chatBtn">💬 Chat</button>
         <button class="control-btn" id="mapBtn">🗺️ Mapa</button>
         <button class="control-btn" id="settingsBtn">⚙️ Config</button>
+        <button class="control-btn" id="logsBtn">📋 Logs</button>
         <button class="control-btn" id="exitBtn">🚪 Sair</button>
     </div>
 
@@ -116,6 +224,81 @@
         
         // Usar Supabase via CDN
         const { createClient } = window.supabase;
+
+        // Sistema de Logs na UI
+        class UILogger {
+            constructor() {
+                this.logsContainer = document.getElementById('logsContent');
+                this.maxLogs = 100;
+                this.logs = [];
+            }
+
+            addLog(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = {
+                    message: `[${timestamp}] ${message}`,
+                    type: type
+                };
+                
+                this.logs.push(logEntry);
+                
+                // Manter apenas os últimos logs
+                if (this.logs.length > this.maxLogs) {
+                    this.logs.shift();
+                }
+                
+                this.updateUI();
+            }
+
+            updateUI() {
+                if (!this.logsContainer) return;
+                
+                this.logsContainer.innerHTML = '';
+                this.logs.forEach(log => {
+                    const div = document.createElement('div');
+                    div.className = `log-entry ${log.type}`;
+                    div.textContent = log.message;
+                    this.logsContainer.appendChild(div);
+                });
+                
+                // Scroll para o final
+                this.logsContainer.scrollTop = this.logsContainer.scrollHeight;
+            }
+
+            clear() {
+                this.logs = [];
+                this.updateUI();
+            }
+        }
+
+        // Instância global do logger
+        window.uiLogger = new UILogger();
+
+        // Interceptar console.log para mostrar na UI
+        const originalConsoleLog = console.log;
+        const originalConsoleWarn = console.warn;
+        const originalConsoleError = console.error;
+
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            const message = args.join(' ');
+            if (message.includes('🔍') || message.includes('✅') || message.includes('❌') || 
+                message.includes('🔌') || message.includes('🔐') || message.includes('📡')) {
+                window.uiLogger.addLog(message, 'info');
+            }
+        };
+
+        console.warn = function(...args) {
+            originalConsoleWarn.apply(console, args);
+            const message = args.join(' ');
+            window.uiLogger.addLog(message, 'warning');
+        };
+
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            const message = args.join(' ');
+            window.uiLogger.addLog(message, 'error');
+        };
 
         // Função para inicializar o jogo de forma segura
         async function initializeGame() {
@@ -476,6 +659,21 @@
                     // Fallback se não puder fechar a janela
                     window.location.href = '/dashboard';
                 }
+            });
+
+            // Event listeners para o painel de logs
+            document.getElementById('logsBtn').addEventListener('click', () => {
+                const logsPanel = document.getElementById('serverLogs');
+                logsPanel.style.display = logsPanel.style.display === 'none' ? 'block' : 'none';
+            });
+
+            document.getElementById('toggleLogs').addEventListener('click', () => {
+                const logsContent = document.getElementById('logsContent');
+                logsContent.style.display = logsContent.style.display === 'none' ? 'block' : 'none';
+            });
+
+            document.getElementById('clearLogs').addEventListener('click', () => {
+                window.uiLogger.clear();
             });
         }
 

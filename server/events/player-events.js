@@ -145,8 +145,8 @@ export async function handlePlayStart(socket, data, io) {
       socket.join(`chunk:${player.current_chunk}`);
     }
 
-    // Opcional: marcar flag em cache
-    player.is_in_game = true;
+    // Marcar flag em cache usando método dedicado
+    cacheManager.setPlayerGameStatus(player.id, true);
 
     // Notificar outros players do chunk
     socket.to(`chunk:${player.current_chunk}`).emit('player:joined', {
@@ -183,7 +183,8 @@ export async function handlePlayStop(socket, data, io) {
       });
     }
 
-    player.is_in_game = false;
+    // Marcar flag em cache usando método dedicado
+    cacheManager.setPlayerGameStatus(player.id, false);
   } catch (error) {
     logger.error('❌ Erro no handlePlayStop:', error);
   }
@@ -331,15 +332,21 @@ export async function handleChunkEnter(socket, data, io) {
     });
 
     // 8. Notificar outros players
-    socket.to(`chunk:${chunkId}`).emit('player:joined', {
-      id: player.id, // IMPORTANTE: usar 'id' não 'playerId'
-      username: player.username,
-      x: player.x,
-      y: player.y,
-      health: player.health,
-      max_health: player.max_health,
-      current_chunk: chunkId,
-    });
+    // Notificar outros players APENAS se o jogador estiver ativo no multiplayer (is_in_game)
+    if (player.is_in_game) {
+      socket.to(`chunk:${chunkId}`).emit('player:joined', {
+        id: player.id, // IMPORTANTE: usar 'id' não 'playerId'
+        username: player.username,
+        x: player.x,
+        y: player.y,
+        health: player.health,
+        max_health: player.max_health,
+        current_chunk: chunkId,
+      });
+      logger.debug(`📢 ${player.username} entrou no multiplayer no chunk ${chunkId}`);
+    } else {
+      console.log(`🔍 Player ${player.username} entrou no chunk ${chunkId} mas não está no multiplayer (is_in_game: false)`);
+    }
 
     logger.debug(`✅ ${player.username} entrou no chunk ${chunkId} (${playersInChunk.length} players)`);
   } catch (error) {

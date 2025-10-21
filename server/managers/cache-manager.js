@@ -66,12 +66,13 @@ class CacheManager {
   addPlayer(playerId, data) {
     this.playersOnline.set(playerId, {
       ...data,
+      is_in_game: false, // Por padrão, jogadores não estão no multiplayer
       lastUpdate: Date.now(),
     });
 
     this.stats.totalPlayers = this.playersOnline.size;
 
-    logger.debug(`➕ Player adicionado ao cache: ${data.username} (${playerId})`);
+    logger.debug(`➕ Player adicionado ao cache: ${data.username} (${playerId}) - is_in_game: false`);
   }
 
   /**
@@ -203,7 +204,7 @@ class CacheManager {
   }
 
   /**
-   * Obtém todos os jogadores em um chunk
+   * Obtém todos os jogadores em um chunk (apenas jogadores ativos no multiplayer)
    * @param {string} chunkId - ID do chunk (formato: "x,y")
    * @returns {Array<Object>}
    */
@@ -211,7 +212,8 @@ class CacheManager {
     const players = [];
 
     for (const [playerId, player] of this.playersOnline.entries()) {
-      if (player.current_chunk === chunkId) {
+      // Apenas incluir jogadores que estão no multiplayer (is_in_game = true)
+      if (player.current_chunk === chunkId && player.is_in_game) {
         players.push({ ...player, id: playerId });
       }
     }
@@ -231,6 +233,22 @@ class CacheManager {
     }
 
     return players;
+  }
+
+  /**
+   * Atualiza status do jogador no multiplayer
+   * @param {string} playerId - UUID do player
+   * @param {boolean} isInGame - Se está no multiplayer
+   */
+  setPlayerGameStatus(playerId, isInGame) {
+    const player = this.playersOnline.get(playerId);
+
+    if (player) {
+      player.is_in_game = isInGame;
+      player.lastUpdate = Date.now();
+
+      logger.debug(`🎮 Status do jogo atualizado: ${player.username} is_in_game=${isInGame}`);
+    }
   }
 
   /**

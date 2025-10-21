@@ -453,12 +453,16 @@ class SocketService {
    */
   isConnected() {
     const result = this.connected && this.socket?.connected;
-    console.log('🔍 isConnected() chamado:', {
-      thisConnected: this.connected,
-      socketConnected: this.socket?.connected,
-      result: result,
-      socketId: this.socket?.id
-    });
+    // Reduzir logs verbosos - só logar mudanças de estado
+    if (this.lastConnectedState !== result) {
+      console.log('🔍 isConnected() mudou:', {
+        thisConnected: this.connected,
+        socketConnected: this.socket?.connected,
+        result: result,
+        socketId: this.socket?.id
+      });
+      this.lastConnectedState = result;
+    }
     return result;
   }
 
@@ -467,11 +471,15 @@ class SocketService {
    */
   isAuthenticated() {
     const result = this.authenticated && !!this.playerId;
-    console.log('🔍 isAuthenticated() chamado:', {
-      thisAuthenticated: this.authenticated,
-      playerId: this.playerId,
-      result: result
-    });
+    // Reduzir logs verbosos - só logar mudanças de estado
+    if (this.lastAuthenticatedState !== result) {
+      console.log('🔍 isAuthenticated() mudou:', {
+        thisAuthenticated: this.authenticated,
+        playerId: this.playerId,
+        result: result
+      });
+      this.lastAuthenticatedState = result;
+    }
     return result;
   }
 

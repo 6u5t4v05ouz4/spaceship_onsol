@@ -281,7 +281,13 @@
 
         console.log = function(...args) {
             originalConsoleLog.apply(console, args);
-            const message = args.join(' ');
+            const message = args.map(arg => {
+                if (typeof arg === 'object' && arg !== null) {
+                    return JSON.stringify(arg, null, 2);
+                }
+                return String(arg);
+            }).join(' ');
+            
             // Filtrar apenas logs do servidor - conexão, autenticação, multiplayer
             if (message.includes('🔌') || message.includes('🔐') || message.includes('📡') ||
                 message.includes('SocketService') || message.includes('MultiplayerManager') ||

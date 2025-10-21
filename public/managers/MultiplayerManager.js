@@ -45,10 +45,14 @@ export default class MultiplayerManager {
           console.log('⏳ Aguardando conexão...');
           const checkConnection = () => {
             console.log('🔍 Evento socket:connected recebido!');
+            console.log('🔍 SocketService.isConnected():', socketService.isConnected());
             if (socketService.isConnected()) {
               console.log('✅ Conexão confirmada!');
+              this.isConnected = true;
               window.removeEventListener('socket:connected', checkConnection);
               resolve();
+            } else {
+              console.warn('⚠️ Evento recebido mas socket não está conectado');
             }
           };
           window.addEventListener('socket:connected', checkConnection);
@@ -67,6 +71,10 @@ export default class MultiplayerManager {
         connected: socketService.isConnected(),
         socketId: socketService.getSocketId()
       });
+      
+      // Atualizar estado interno
+      this.isConnected = socketService.isConnected();
+      console.log('🔍 MultiplayerManager.isConnected atualizado para:', this.isConnected);
     }
 
     // Autenticar explicitamente (Supabase já está disponível aqui)
@@ -95,6 +103,17 @@ export default class MultiplayerManager {
         playerId: this.playerId
       });
     }
+    
+    // Sincronizar estado final
+    this.isConnected = socketService.isConnected();
+    this.isAuthenticated = socketService.isAuthenticated();
+    this.playerId = socketService.getPlayerId();
+    
+    console.log('🔍 Estado final sincronizado:', {
+      isConnected: this.isConnected,
+      isAuthenticated: this.isAuthenticated,
+      playerId: this.playerId
+    });
 
     // Setup event listeners
     this.setupEventListeners();

@@ -40,6 +40,69 @@ const copyScenesPlugin = {
   }
 };
 
+// Plugin para copiar arquivos de managers
+const copyManagersPlugin = {
+  name: 'copy-managers-files',
+  writeBundle() {
+    // Garantir que o diretório dist/managers exista
+    if (!existsSync('dist/managers')) {
+      mkdirSync('dist/managers', { recursive: true });
+      console.log('📁 Diretório dist/managers criado');
+    }
+
+    // Copiar arquivos de managers necessários para multiplayer
+    const managerFiles = [
+      'JuiceManager.js',
+      'AudioManager.js',
+      'GameStateManager.js',
+      'ShipManager.js',
+      'CollisionManager.js',
+      'UIManager.js',
+      'BackgroundManager.js',
+      'GameOverManager.js',
+      'MultiplayerManager.js',
+      'AssetManager.js',
+      'SpriteSheetManager.js'
+    ];
+
+    managerFiles.forEach(file => {
+      const srcPath = join('src/managers', file);
+      const destPath = join('dist/managers', file);
+      if (existsSync(srcPath)) {
+        copyFileSync(srcPath, destPath);
+        console.log(`✅ ${file} copiado para dist/managers/`);
+      }
+    });
+  }
+};
+
+// Plugin para copiar arquivos de effects
+const copyEffectsPlugin = {
+  name: 'copy-effects-files',
+  writeBundle() {
+    // Garantir que o diretório dist/effects exista
+    if (!existsSync('dist/effects')) {
+      mkdirSync('dist/effects', { recursive: true });
+      console.log('📁 Diretório dist/effects criado');
+    }
+
+    // Copiar arquivos de effects necessários para multiplayer
+    const effectFiles = [
+      'ParticleEffects.js',
+      'UIAnimations.js'
+    ];
+
+    effectFiles.forEach(file => {
+      const srcPath = join('src/effects', file);
+      const destPath = join('dist/effects', file);
+      if (existsSync(srcPath)) {
+        copyFileSync(srcPath, destPath);
+        console.log(`✅ ${file} copiado para dist/effects/`);
+      }
+    });
+  }
+};
+
 // Plugin SPA Fallback
 const spaFallbackPlugin = {
   name: 'spa-fallback',
@@ -86,7 +149,7 @@ export default defineConfig({
 		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
 	},
   publicDir: 'public',
-  plugins: [spaFallbackPlugin, copyHtmlPlugin, copyScenesPlugin],
+  plugins: [spaFallbackPlugin, copyHtmlPlugin, copyScenesPlugin, copyManagersPlugin, copyEffectsPlugin],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

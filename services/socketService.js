@@ -6,6 +6,24 @@
 // Socket.io será carregado via script tag no HTML
 const io = window.io;
 
+// Função segura para evitar erros de circular structure nos logs
+const safeLog = (message, data = null) => {
+  try {
+    if (data && typeof data === 'object') {
+      console.log(message + ': ' + JSON.stringify({
+        type: data.constructor?.name || 'Object',
+        id: data.id || 'N/A'
+      }));
+    } else if (data !== null && data !== undefined) {
+      console.log(message + ': ' + String(data));
+    } else {
+      console.log(message);
+    }
+  } catch (e) {
+    console.log(message + ': [Object]');
+  }
+};
+
 // Supabase é global, carregado via script tag no HTML
 const getSupabase = () => {
   if (typeof window !== 'undefined' && window.supabaseClient) {
@@ -72,7 +90,7 @@ class SocketService {
       upgrade: true, // ✅ Permite upgrade para websocket
     });
 
-    console.log('✅ Socket criado:', this.socket);
+    console.log('✅ Socket criado: Socket{id: ' + (this.socket?.id || 'unknown') + '}');
     this.setupListeners();
   }
 
@@ -81,18 +99,14 @@ class SocketService {
    */
   setupListeners() {
     console.log('🔧 Configurando listeners do socket...');
-    console.log('🔍 Socket atual:', this.socket);
+    console.log('🔍 Socket atual:', this.socket ? 'Socket{id: ' + (this.socket.id || 'unknown') + '}' : 'null');
     
     // ===== Conexão =====
     this.socket.on('connect', () => {
       console.log('✅ Evento connect disparado!');
       console.log('✅ Conectado ao servidor:', this.socket.id);
       console.log('🔍 Socket conectado:', this.socket.connected);
-      console.log('🔍 Estado antes da atualização:', {
-        connected: this.connected,
-        authenticated: this.authenticated,
-        playerId: this.playerId
-      });
+      console.log('🔍 Estado antes da atualização: connected=' + this.connected + ', authenticated=' + this.authenticated + ', playerId=' + this.playerId);
 
       // Verificar se o socket está realmente conectado
       if (this.socket.connected && this.socket.id) {
@@ -100,11 +114,7 @@ class SocketService {
         this.connected = true;
         this.reconnectAttempts = 0;
 
-        console.log('🔍 Estado após atualização:', {
-          connected: this.connected,
-          authenticated: this.authenticated,
-          playerId: this.playerId
-        });
+        console.log('🔍 Estado após atualização: connected=' + this.connected + ', authenticated=' + this.authenticated + ', playerId=' + this.playerId);
 
         // Disparar evento customizado
         window.dispatchEvent(new CustomEvent('socket:connected', {
@@ -118,11 +128,7 @@ class SocketService {
         }, 500);
       } else {
         console.warn('⚠️ Evento connect disparado mas socket não está realmente conectado');
-        console.log('🔍 Socket state:', {
-          connected: this.socket.connected,
-          id: this.socket.id,
-          readyState: this.socket.readyState
-        });
+        console.log('🔍 Socket state: connected=' + this.socket.connected + ', id=' + this.socket.id + ', readyState=' + this.socket.readyState);
       }
     });
 
@@ -140,12 +146,7 @@ class SocketService {
 
     this.socket.on('connect_error', (error) => {
       console.error('❌ Erro de conexão:', error);
-      console.log('🔍 Detalhes do erro:', {
-        message: error.message,
-        description: error.description,
-        context: error.context,
-        type: error.type
-      });
+      console.log('🔍 Detalhes do erro: message=' + error.message + ', type=' + error.type);
       
       this.connected = false;
       this.reconnectAttempts++;
@@ -242,12 +243,7 @@ class SocketService {
 
     // ===== Combate =====
     this.socket.on('battle:hit', (data) => {
-      console.log('💥 Você foi atingido!', {
-        attacker: data.attackerName,
-        damage: data.damage,
-        critical: data.isCritical,
-        health: `${data.health}/${data.maxHealth}`,
-      });
+      safeLog('💥 Você foi atingido! attacker=' + data.attackerName + ', damage=' + data.damage + ', critical=' + data.isCritical + ', health=' + data.health + '/' + data.maxHealth);
 
       window.dispatchEvent(new CustomEvent('socket:battle:hit', {
         detail: data
@@ -287,10 +283,7 @@ class SocketService {
     });
 
     this.socket.on('player:death', (data) => {
-      console.log('💀 Você morreu!', {
-        killer: data.killerName,
-        respawnIn: `${data.respawnDelay / 1000}s`,
-      });
+      safeLog('💀 Você morreu! killer=' + data.killerName + ', respawnIn=' + (data.respawnDelay / 1000) + 's');
 
       window.dispatchEvent(new CustomEvent('socket:player:death', {
         detail: data
@@ -329,7 +322,7 @@ class SocketService {
   async authenticate() {
     console.log('🔐 Iniciando processo de autenticação...');
     console.log('🔍 Conectado:', this.connected);
-    console.log('🔍 Socket:', this.socket);
+    console.log('🔍 Socket:', this.socket ? 'Socket{id: ' + (this.socket.id || 'unknown') + ', connected: ' + this.socket.connected + '}' : 'null');
     
     if (!this.connected) {
       console.error('❌ Não conectado ao servidor');

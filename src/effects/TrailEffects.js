@@ -13,6 +13,33 @@ export default class TrailEffects {
         this.graphics = this.scene.add.graphics();
         this.graphics.setDepth(5);
     }
+
+    /**
+     * Atualiza todos os trails (chamado no update do jogo)
+     */
+    update(time, delta) {
+        // Limpa e redesenha todos os trails
+        this.graphics.clear();
+
+        // Renderiza todos os trails de linha
+        this.trails.forEach((trail, id) => {
+            if (trail.type === 'line' && trail.points.length > 1) {
+                this.graphics.lineStyle(trail.width, trail.color, trail.alpha);
+                this.graphics.beginPath();
+
+                for (let i = 0; i < trail.points.length; i++) {
+                    const point = trail.points[i];
+                    if (i === 0) {
+                        this.graphics.moveTo(point.x, point.y);
+                    } else {
+                        this.graphics.lineTo(point.x, point.y);
+                    }
+                }
+
+                this.graphics.strokePath();
+            }
+        });
+    }
     
     /**
      * Cria um trail de linha atrás de um objeto

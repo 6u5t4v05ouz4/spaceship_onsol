@@ -103,14 +103,14 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         this.load.atlas('planets', '/assets/background/planets.png', '/assets/background/planets.json');
         this.load.image('stars', '/assets/background/stars.jpeg');
 
-        // Carrega assets de áudio do original
-        this.load.audio('laser', '/assets/sounds/laser.mp3');
-        this.load.audio('explosion', '/assets/sounds/explosion.mp3');
-        this.load.audio('engine', '/assets/sounds/engine.mp3');
-        this.load.audio('pickup', '/assets/sounds/pickup.mp3');
-        this.load.audio('rocket', '/assets/sounds/rocket.mp3');
-        this.load.audio('damage', '/assets/sounds/damage.mp3');
-        this.load.audio('powerup', '/assets/sounds/powerup.mp3');
+        // Carrega assets de áudio do original (caminhos corrigidos)
+        this.load.audio('laser', '/assets/sounds_effects/bullet.mp3');
+        this.load.audio('explosion', '/assets/sounds_effects/explosion.mp3');
+        this.load.audio('engine', '/assets/sounds_effects/rocket.mp3');
+        this.load.audio('pickup', '/assets/sounds_effects/bullet.mp3'); // reaproveita
+        this.load.audio('rocket', '/assets/sounds_effects/rocket-launch.mp3');
+        this.load.audio('damage', '/assets/sounds_effects/explosion.mp3'); // reaproveita
+        this.load.audio('powerup', '/assets/sounds_effects/rocket.mp3'); // reaproveita
 
         // Loading com progresso
         this.load.on('progress', (progress) => {

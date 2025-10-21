@@ -335,10 +335,15 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         this.collisionManager.setupAllCollisions(this.shipManager.ship);
         console.log('✅ Colisões configuradas');
 
-        // Inicializa sistema de inimigos
-        console.log('🔍 Inicializando sistema de inimigos...');
+        // Inicializa sistema de NPCs (apenas para NPCs multiplayer, não spawn automático)
+        console.log('🔍 Inicializando sistema de NPCs...');
         this.enemyManager.initialize(this.shipManager.ship);
-        console.log('✅ Sistema de inimigos inicializado');
+        // Desativa spawn automático para multiplayer - NPCs serão spawnados pelo MultiplayerManager
+        if (this.enemyManager.spawnTimer) {
+            this.enemyManager.spawnTimer.remove(false);
+            this.enemyManager.spawnTimer = null;
+        }
+        console.log('✅ Sistema de NPCs inicializado (spawn automático desativado)');
 
         // Inicializa sistema de meteoros
         console.log('🔍 Inicializando sistema de meteoros...');
@@ -366,16 +371,16 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         );
         console.log('✅ Sistema de mineração inicializado');
 
-        // Inicializa sistema de foguetes
+        // Inicializa sistema de foguetes (sem inimigos por padrão no multiplayer)
         console.log('🔍 Inicializando sistema de foguetes...');
         this.rocketManager.initialize(
             this.shipManager,
-            this.enemyManager,
+            null, // Sem EnemyManager por padrão - NPCs serão gerenciados pelo MultiplayerManager
             this.particleEffects,
             this.audioManager,
             this.juiceManager
         );
-        console.log('✅ Sistema de foguetes inicializado');
+        console.log('✅ Sistema de foguetes inicializado (sem inimigos automáticos)');
 
         // Inicializa sistema de game over
         console.log('🔍 Inicializando sistema de game over...');
@@ -509,6 +514,17 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
         // Animação de explosão (baseado no GameSceneModular)
         this.createExplosionAnimation();
+
+        // Cria animação do meteoro (baseado no GameSceneModular)
+        this.anims.create({
+            key: 'meteoro_anim',
+            frames: [
+                { key: 'meteoro', frame: 'meteoro 0.aseprite' },
+                { key: 'meteoro', frame: 'meteoro 1.aseprite' }
+            ],
+            frameRate: 8,
+            repeat: -1
+        });
 
         console.log('✅ Animações criadas');
     }

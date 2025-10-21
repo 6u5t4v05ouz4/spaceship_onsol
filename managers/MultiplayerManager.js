@@ -4,6 +4,8 @@
  */
 
 import socketService from '../services/socketService.js';
+import AssetManager from './AssetManager.js';
+import SpriteSheetManager from './SpriteSheetManager.js';
 
 export default class MultiplayerManager {
   constructor(scene) {
@@ -15,6 +17,11 @@ export default class MultiplayerManager {
     this.playerId = null;
     this.isConnected = false;
     this.isAuthenticated = false;
+
+    // Asset managers
+    this.assetManager = new AssetManager(scene);
+    this.spriteSheetManager = new SpriteSheetManager(scene);
+    this.chunkElements = new Map(); // Map<chunkKey, elementSprites>
   }
 
   /**
@@ -23,10 +30,14 @@ export default class MultiplayerManager {
   async init() {
     console.log('🌐 Inicializando Multiplayer Manager...');
 
+    // Inicializar asset managers primeiro
+    await this.spriteSheetManager.init();
+    await this.assetManager.init();
+
     // Conectar ao servidor se não estiver conectado
     if (!socketService.isConnected()) {
       socketService.connect();
-      
+
       // Aguardar conexão
       await new Promise((resolve) => {
         if (socketService.isConnected()) {
@@ -39,7 +50,7 @@ export default class MultiplayerManager {
             }
           };
           window.addEventListener('socket:connected', checkConnection);
-          
+
           // Timeout de 5 segundos
           setTimeout(() => {
             window.removeEventListener('socket:connected', checkConnection);
@@ -59,10 +70,7 @@ export default class MultiplayerManager {
     // Setup event listeners
     this.setupEventListeners();
 
-    // Iniciar gameplay explicitamente (após autenticar)
-    socketService.playStart();
-
-    // Entrar no chunk inicial somente após playStart
+    // Entrar no chunk inicial
     this.enterChunk(0, 0);
 
     console.log('✅ Multiplayer Manager inicializado');
@@ -193,19 +201,69 @@ export default class MultiplayerManager {
   handleChunkData(data) {
     console.log('📦 Chunk data recebido:', data);
     console.log('📊 Players no chunk:', data.players?.length || 0);
+    console.log('📊 Asteroides no chunk:', data.asteroids?.length || 0);
+    console.log('📊 Cristais no chunk:', data.crystals?.length || 0);
+    console.log('📊 Recursos no chunk:', data.resources?.length || 0);
+    console.log('📊 Planetas no chunk:', data.planets?.length || 0);
+    console.log('📊 NPCs no chunk:', data.npcs?.length || 0);
+    console.log('📊 Estações no chunk:', data.stations?.length || 0);
     console.log('🆔 Meu player ID:', this.playerId);
 
     // Limpar players antigos
     this.clearOtherPlayers();
+
+    // Limpar elementos antigos do chunk
+    this.clearChunkElements(data.chunk.chunkX, data.chunk.chunkY);
+
+    // Preparar assets para o chunk
+    this.assetManager.preloadChunkAssets(data.chunk.chunkX, data.chunk.chunkY);
+
+    // Processar asteroides
+    if (data.asteroids && data.asteroids.length > 0) {
+      console.log('🌑 Processando asteroides do chunk...');
+      this.spawnChunkElements(data.asteroids, data.chunk.chunkX, data.chunk.chunkY, 'asteroid');
+    }
+
+    // Processar cristais
+    if (data.crystals && data.crystals.length > 0) {
+      console.log('💎 Processando cristais do chunk...');
+      this.spawnChunkElements(data.crystals, data.chunk.chunkX, data.chunk.chunkY, 'crystal');
+    }
+
+    // Processar recursos minerais
+    if (data.resources && data.resources.length > 0) {
+      console.log('⛏️ Processando recursos minerais do chunk...');
+      this.spawnChunkElements(data.resources, data.chunk.chunkX, data.chunk.chunkY, 'resource');
+    }
+
+    // Processar planetas
+    if (data.planets && data.planets.length > 0) {
+      console.log('🪐 Processando planetas do chunk...');
+      this.spawnChunkElements(data.planets, data.chunk.chunkX, data.chunk.chunkY, 'planet');
+    }
+
+    // Processar NPCs
+    if (data.npcs && data.npcs.length > 0) {
+      console.log('🚀 Processando NPCs do chunk...');
+      data.npcs.forEach(npc => {
+        this.spawnNPC(npc, data.chunk.chunkX, data.chunk.chunkY);
+      });
+    }
+
+    // Processar estações espaciais
+    if (data.stations && data.stations.length > 0) {
+      console.log('🏭 Processando estações espaciais do chunk...');
+      data.stations.forEach(station => {
+        this.spawnSpaceStation(station, data.chunk.chunkX, data.chunk.chunkY);
+      });
+    }
 
     // Adicionar players do chunk
     if (data.players && data.players.length > 0) {
       console.log('👥 Processando players do chunk...');
       data.players.forEach(player => {
         console.log(`  - Player: ${player.username} (ID: ${player.id})`);
-        console.log(`    📍 Posição: (${player.x}, ${player.y})`);
-        console.log(`    🗺️ Chunk: ${player.current_chunk}`);
-        
+
         // Não adicionar o próprio player
         if (player.id !== this.playerId) {
           console.log(`    ✅ Adicionando player ${player.username}`);
@@ -219,11 +277,7 @@ export default class MultiplayerManager {
     }
 
     console.log('📊 Total de outros players após processamento:', this.otherPlayers.size);
-
-    // TODO: Adicionar asteroides do chunk
-    // if (data.asteroids && data.asteroids.length > 0) {
-    //   this.scene.spawnAsteroids(data.asteroids);
-    // }
+    console.log('📊 Total de elementos visíveis:', this.chunkElements.size);
   }
 
   /**
@@ -242,15 +296,15 @@ export default class MultiplayerManager {
    * Handle player left
    */
   handlePlayerLeft(data) {
-    console.log('👋 Player saiu:', data.id);
-    this.removeOtherPlayer(data.id);
+    console.log('👋 Player saiu:', data.playerId);
+    this.removeOtherPlayer(data.playerId);
   }
 
   /**
    * Handle player moved
    */
   handlePlayerMoved(data) {
-    const player = this.otherPlayers.get(data.id);
+    const player = this.otherPlayers.get(data.playerId);
     if (player && player.sprite) {
       // Animar movimento suave
       this.scene.tweens.add({
@@ -259,6 +313,148 @@ export default class MultiplayerManager {
         y: data.y,
         duration: this.positionUpdateInterval,
         ease: 'Linear'
+      });
+    }
+  }
+
+  /**
+   * Spawn de elementos do chunk
+   */
+  spawnChunkElements(elements, chunkX, chunkY, elementType) {
+    const chunkKey = `${chunkX},${chunkY}`;
+
+    if (!this.chunkElements.has(chunkKey)) {
+      this.chunkElements.set(chunkKey, []);
+    }
+
+    const chunkElementList = this.chunkElements.get(chunkKey);
+
+    elements.forEach(elementData => {
+      try {
+        // Criar sprite do elemento usando AssetManager
+        const sprite = this.assetManager.createElement({
+          ...elementData,
+          element_type: elementType,
+          chunk_x: chunkX,
+          chunk_y: chunkY
+        }, chunkX, chunkY);
+
+        // Adicionar à lista de elementos do chunk
+        chunkElementList.push({
+          id: elementData.id,
+          sprite,
+          type: elementType,
+          chunkX,
+          chunkY
+        });
+
+        console.log(`✅ Elemento spawnado: ${elementType} (${elementData.x}, ${elementData.y})`);
+
+      } catch (error) {
+        console.error(`❌ Erro ao spawnar elemento ${elementType}:`, error);
+      }
+    });
+  }
+
+  /**
+   * Limpa elementos de um chunk específico
+   */
+  clearChunkElements(chunkX, chunkY) {
+    const chunkKey = `${chunkX},${chunkY}`;
+    const elements = this.chunkElements.get(chunkKey);
+
+    if (elements) {
+      elements.forEach(element => {
+        if (element.sprite) {
+          element.sprite.destroy();
+        }
+        // Limpar textos de NPCs
+        if (element.text) {
+          element.text.destroy();
+        }
+        // Limpar textos de estações
+        if (element.texts) {
+          element.texts.forEach(text => text.destroy());
+        }
+      });
+      this.chunkElements.delete(chunkKey);
+      console.log(`🧹 Limpos elementos do chunk (${chunkX}, ${chunkY})`);
+    }
+  }
+
+  /**
+   * Remove um elemento específico
+   */
+  removeElement(elementId, chunkX, chunkY) {
+    const chunkKey = `${chunkX},${chunkY}`;
+    const elements = this.chunkElements.get(chunkKey);
+
+    if (elements) {
+      const index = elements.findIndex(el => el.id === elementId);
+      if (index !== -1) {
+        const element = elements[index];
+        const x = element.sprite?.x || 0;
+        const y = element.sprite?.y || 0;
+
+        if (element.sprite) {
+          element.sprite.destroy();
+        }
+        // Limpar textos de NPCs
+        if (element.text) {
+          element.text.destroy();
+        }
+        // Limpar textos de estações
+        if (element.texts) {
+          element.texts.forEach(text => text.destroy());
+        }
+        elements.splice(index, 1);
+
+        // Criar efeito de destruição
+        this.createElementDestroyEffect(x, y, element.type);
+
+        console.log(`💥 Elemento removido: ${element.type} (${elementId})`);
+      }
+    }
+  }
+
+  /**
+   * Cria efeito de destruição de elemento
+   */
+  createElementDestroyEffect(x, y, elementType) {
+    // Usar sprite sheet de explosões se disponível
+    if (this.scene.textures.exists('effects_explosions')) {
+      const explosion = this.scene.add.sprite(x, y, 'effects_explosions', 'explosion_small_1');
+      explosion.setScale(0.5);
+      explosion.setDepth(20);
+
+      // Animar explosão
+      this.scene.tweens.add({
+        targets: explosion,
+        scaleX: 1.2,
+        scaleY: 1.2,
+        alpha: 0,
+        duration: 300,
+        ease: 'Power2',
+        onComplete: () => {
+          explosion.destroy();
+        }
+      });
+    } else {
+      // Fallback: círculo de explosão simples
+      const explosion = this.scene.add.graphics();
+      explosion.fillStyle(0xFF8800, 0.8);
+      explosion.fillCircle(x, y, 20);
+
+      this.scene.tweens.add({
+        targets: explosion,
+        scaleX: 2,
+        scaleY: 2,
+        alpha: 0,
+        duration: 400,
+        ease: 'Power2',
+        onComplete: () => {
+          explosion.destroy();
+        }
       });
     }
   }
@@ -290,16 +486,23 @@ export default class MultiplayerManager {
     // Criar sprite do player (usar 'nave' como fallback)
     const spriteKey = this.scene.textures.exists('enemy') ? 'enemy' : 'nave';
     console.log('🎨 Usando sprite:', spriteKey);
-    console.log('📍 Posição do sprite:', data.x, data.y);
     
     const sprite = this.scene.physics.add.sprite(data.x, data.y, spriteKey);
     sprite.setScale(0.6);
     
-    // Debug: verificar se o sprite foi criado corretamente
+    // Tentar tocar animação se existir
+    try {
+      if (this.scene.anims.exists('enemy_thrust')) {
+        sprite.play('enemy_thrust');
+      } else if (this.scene.anims.exists('nave_thrust')) {
+        sprite.play('nave_thrust');
+      }
+    } catch (e) {
+      console.warn('⚠️ Animação não disponível:', e.message);
+    }
+    
+    sprite.setDepth(10);
     console.log('✅ Sprite criado:', sprite);
-    console.log('📍 Sprite posição final:', sprite.x, sprite.y);
-    console.log('👁️ Sprite visível:', sprite.visible);
-    console.log('🎯 Sprite ativo:', sprite.active);
 
     // Criar texto do nome
     const nameText = this.scene.add.text(data.x, data.y - 40, data.username, {
@@ -511,6 +714,108 @@ export default class MultiplayerManager {
   }
 
   /**
+   * Spawn de NPC
+   */
+  spawnNPC(npcData, chunkX, chunkY) {
+    const chunkKey = `${chunkX},${chunkY}`;
+
+    if (!this.chunkElements.has(chunkKey)) {
+      this.chunkElements.set(chunkKey, []);
+    }
+
+    const chunkElementList = this.chunkElements.get(chunkKey);
+
+    try {
+      // Criar sprite do NPC usando AssetManager
+      const sprite = this.assetManager.createElement({
+        ...npcData,
+        element_type: npcData.ship_type ? `npc_${npcData.ship_type}` : 'npc_trader',
+        chunk_x: chunkX,
+        chunk_y: chunkY
+      }, chunkX, chunkY);
+
+      // Adicionar informações flutuantes do NPC
+      const npcText = this.scene.add.text(sprite.x, sprite.y - 30, npcData.behavior || 'neutral', {
+        fontSize: '12px',
+        fill: npcData.behavior === 'hostile' ? '#ff0000' :
+               npcData.behavior === 'friendly' ? '#00ff00' : '#ffff00',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        padding: { x: 4, y: 2 }
+      }).setOrigin(0.5).setDepth(1000);
+
+      // Adicionar à lista de elementos do chunk
+      chunkElementList.push({
+        id: npcData.id,
+        sprite,
+        text: npcText,
+        type: 'npc',
+        chunkX,
+        chunkY
+      });
+
+      console.log(`✅ NPC spawnado: ${npcData.ship_type} (${npcData.x}, ${npcData.y})`);
+
+    } catch (error) {
+      console.error(`❌ Erro ao spawnar NPC:`, error);
+    }
+  }
+
+  /**
+   * Spawn de estação espacial
+   */
+  spawnSpaceStation(stationData, chunkX, chunkY) {
+    const chunkKey = `${chunkX},${chunkY}`;
+
+    if (!this.chunkElements.has(chunkKey)) {
+      this.chunkElements.set(chunkKey, []);
+    }
+
+    const chunkElementList = this.chunkElements.get(chunkKey);
+
+    try {
+      // Criar sprite da estação usando AssetManager
+      const sprite = this.assetManager.createElement({
+        ...stationData,
+        element_type: stationData.station_type ? `station_${stationData.station_type}` : 'station_trading_post',
+        chunk_x: chunkX,
+        chunk_y: chunkY
+      }, chunkX, chunkY);
+
+      // Adicionar informações flutuantes da estação
+      const stationText = this.scene.add.text(sprite.x, sprite.y - 50, stationData.station_type?.replace('_', ' ') || 'trading post', {
+        fontSize: '14px',
+        fill: '#00ffff',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        padding: { x: 6, y: 3 }
+      }).setOrigin(0.5).setDepth(1000);
+
+      // Adicionar ícones de serviços
+      const servicesText = this.scene.add.text(sprite.x, sprite.y - 35,
+        (stationData.services || []).slice(0, 3).join(' • '), {
+        fontSize: '10px',
+        fill: '#ffffff',
+        backgroundColor: 'rgba(0,0,100,0.6)',
+        padding: { x: 4, y: 2 }
+      }).setOrigin(0.5).setDepth(1000);
+
+      // Adicionar à lista de elementos do chunk
+      chunkElementList.push({
+        id: stationData.id,
+        sprite,
+        texts: [stationText, servicesText],
+        type: 'station',
+        chunkX,
+        chunkY
+      });
+
+      console.log(`✅ Estação spawnada: ${stationData.station_type} (${stationData.x}, ${stationData.y})`);
+
+    } catch (error) {
+      console.error(`❌ Erro ao spawnar estação:`, error);
+    }
+  }
+
+  /**
    * Update (chamado a cada frame)
    */
   update() {
@@ -526,6 +831,18 @@ export default class MultiplayerManager {
         player.healthBar.setPosition(player.sprite.x, player.sprite.y - 50);
       }
     });
+
+    // Atualizar textos de NPCs e estações
+    this.chunkElements.forEach((elements) => {
+      elements.forEach(element => {
+        if (element.type === 'npc' && element.text && element.sprite) {
+          element.text.setPosition(element.sprite.x, element.sprite.y - 30);
+        } else if (element.type === 'station' && element.texts && element.sprite) {
+          element.texts[0].setPosition(element.sprite.x, element.sprite.y - 50);
+          element.texts[1].setPosition(element.sprite.x, element.sprite.y - 35);
+        }
+      });
+    });
   }
 
   /**
@@ -533,12 +850,37 @@ export default class MultiplayerManager {
    */
   destroy() {
     console.log('🧹 Limpando Multiplayer Manager...');
-    
+
     // Limpar todos os players
     this.clearOtherPlayers();
 
-    // Remover event listeners
-    // (não é possível remover listeners anônimos, então deixamos para o garbage collector)
+    // Limpar todos os elementos dos chunks
+    this.chunkElements.forEach((elements, chunkKey) => {
+      elements.forEach(element => {
+        if (element.sprite) {
+          element.sprite.destroy();
+        }
+        // Limpar textos de NPCs
+        if (element.text) {
+          element.text.destroy();
+        }
+        // Limpar textos de estações
+        if (element.texts) {
+          element.texts.forEach(text => text.destroy());
+        }
+      });
+    });
+    this.chunkElements.clear();
+
+    // Limpar asset managers
+    if (this.assetManager) {
+      this.assetManager.cleanup();
+    }
+    if (this.spriteSheetManager) {
+      this.spriteSheetManager.cleanup();
+    }
+
+    console.log('✅ Multiplayer Manager limpo');
   }
 }
 

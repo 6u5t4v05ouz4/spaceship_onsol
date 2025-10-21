@@ -7,8 +7,6 @@
  * - Animações de UI
  * - Responsividade e layout
  */
-import socketService from '../services/socketService.js';
-
 export default class UIManager {
     constructor(scene, gameState) {
         this.scene = scene;
@@ -45,7 +43,6 @@ export default class UIManager {
         this.createSpeedDisplay();
         this.createRarityDisplay();
         this.createCoordinatesDisplay();
-        this.createConnectionDisplay();
     }
 
     createUIPanel() {
@@ -335,7 +332,6 @@ export default class UIManager {
         this.updateSpeedDisplay();
         this.updateRarityDisplay();
         this.updateCoordinatesDisplay();
-        this.updateConnectionDisplay();
     }
 
     updateHealthBar() {
@@ -580,103 +576,6 @@ export default class UIManager {
             'Lendário': '#FFD700'
         };
         return colors[rarity] || '#FFFFFF';
-    }
-
-    createConnectionDisplay() {
-        // Painel de conexão no canto esquerdo inferior
-        const screenHeight = this.scene.game.config.height;
-        const panelWidth = 280;
-        const panelHeight = 100;
-        const startX = 16;
-        const startY = screenHeight - panelHeight - 16;
-        
-        // Painel de fundo
-        this.uiElements.set('connectionPanel', this.scene.add.rectangle(
-            startX, startY, panelWidth, panelHeight, 0x0a0a0f, 0.85
-        ).setOrigin(0, 0).setScrollFactor(0).setDepth(18));
-        
-        // Borda do painel
-        this.uiElements.set('connectionPanelBorder', this.scene.add.rectangle(
-            startX, startY, panelWidth, panelHeight, 0x00d4ff, 0
-        ).setOrigin(0, 0).setScrollFactor(0).setDepth(18)
-        .setStrokeStyle(2, 0x00d4ff, 0.8));
-        
-        const contentX = startX + 18;
-        let currentY = startY + 18;
-        
-        // Título
-        this.scene.add.text(contentX, currentY, '🌐 CONEXÃO', {
-            fontSize: '13px',
-            fill: '#00d4ff',
-            fontFamily: 'Arial, sans-serif',
-            fontStyle: 'bold'
-        }).setScrollFactor(0).setDepth(20);
-        currentY += 25;
-        
-        // Status da conexão
-        this.uiElements.set('connectionStatus', this.scene.add.text(contentX, currentY, 'Desconectado', {
-            fontSize: '14px',
-            fill: '#ff4444',
-            fontFamily: 'Arial, sans-serif',
-            fontStyle: 'bold'
-        }).setScrollFactor(0).setDepth(20));
-        currentY += 25;
-        
-        // Ping
-        this.uiElements.set('pingText', this.scene.add.text(contentX, currentY, 'Ping: -- ms', {
-            fontSize: '12px',
-            fill: '#ffaa00',
-            fontFamily: 'Arial, sans-serif',
-            fontStyle: 'bold'
-        }).setScrollFactor(0).setDepth(20));
-    }
-
-    updateConnectionDisplay() {
-        const connectionStatus = this.uiElements.get('connectionStatus');
-        const pingText = this.uiElements.get('pingText');
-        
-        if (!connectionStatus || !pingText) return;
-        
-        // Debug: verificar estado do socketService
-        console.log('🔍 UIManager - Estado do socketService:', {
-            exists: !!socketService,
-            connected: socketService?.isConnected(),
-            authenticated: socketService?.isAuthenticated(),
-            socket: !!socketService?.socket,
-            socketConnected: socketService?.socket?.connected
-        });
-        
-        // Usar socketService importado diretamente
-        if (!socketService) {
-            connectionStatus.setText('Serviço não disponível');
-            connectionStatus.setColor('#ff4444');
-            pingText.setText('Ping: -- ms');
-            return;
-        }
-        
-        // Atualizar status da conexão
-        if (socketService.isConnected()) {
-            connectionStatus.setText('Conectado');
-            connectionStatus.setColor('#00ff88');
-        } else {
-            connectionStatus.setText('Desconectado');
-            connectionStatus.setColor('#ff4444');
-        }
-        
-        // Atualizar ping (simulado por enquanto)
-        const ping = socketService.getPing ? socketService.getPing() : '--';
-        pingText.setText(`Ping: ${ping} ms`);
-        
-        // Cor do ping baseada na latência
-        if (ping === '--') {
-            pingText.setColor('#ffaa00');
-        } else if (ping < 50) {
-            pingText.setColor('#00ff88'); // Verde para ping baixo
-        } else if (ping < 100) {
-            pingText.setColor('#ffaa00'); // Laranja para ping médio
-        } else {
-            pingText.setColor('#ff4444'); // Vermelho para ping alto
-        }
     }
 
     // === CLEANUP ===

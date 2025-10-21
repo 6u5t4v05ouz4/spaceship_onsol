@@ -263,6 +263,9 @@ export default class MultiplayerManager {
       console.log('👥 Processando players do chunk...');
       data.players.forEach(player => {
         console.log(`  - Player: ${player.username} (ID: ${player.id}) - Meu ID: ${this.playerId}`);
+        console.log(`  - Tipo do player.id: ${typeof player.id}, Tipo do this.playerId: ${typeof this.playerId}`);
+        console.log(`  - Comparação ===: ${player.id === this.playerId}`);
+        console.log(`  - Comparação ==: ${player.id == this.playerId}`);
 
         // NÃO adicionar o próprio player de forma alguma
         if (player.id === this.playerId) {

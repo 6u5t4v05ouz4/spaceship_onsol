@@ -517,15 +517,30 @@ export default class UIManager {
         const multiplayerManager = this.scene.multiplayerManager;
         let playersInChunk = 1; // Você mesmo
         
+        console.log('🔍 UIManager: Contando players...');
+        console.log('🔍 UIManager: multiplayerManager:', !!multiplayerManager);
+        console.log('🔍 UIManager: otherPlayers:', multiplayerManager?.otherPlayers);
+        console.log('🔍 UIManager: otherPlayers.size:', multiplayerManager?.otherPlayers?.size);
+        
         if (multiplayerManager && multiplayerManager.otherPlayers) {
             const currentChunk = `${chunkX},${chunkY}`;
-            multiplayerManager.otherPlayers.forEach((player) => {
+            console.log('🔍 UIManager: currentChunk:', currentChunk);
+            
+            multiplayerManager.otherPlayers.forEach((player, playerId) => {
+                console.log(`🔍 UIManager: Player ${playerId}:`, player);
+                console.log(`🔍 UIManager: player.data:`, player.data);
+                console.log(`🔍 UIManager: player.data?.current_chunk:`, player.data?.current_chunk);
+                
                 if (player.data && player.data.current_chunk === currentChunk) {
+                    console.log(`🔍 UIManager: ✅ Player ${playerId} está no chunk atual`);
                     playersInChunk++;
+                } else {
+                    console.log(`🔍 UIManager: ❌ Player ${playerId} NÃO está no chunk atual`);
                 }
             });
         }
         
+        console.log('🔍 UIManager: Total playersInChunk:', playersInChunk);
         playersText.setText(`Players: ${playersInChunk}`);
         
         // Mudar cor baseado na quantidade de players

@@ -220,17 +220,17 @@ export default class HeaderNavigation {
         return;
       }
 
-      // Handle Multiplayer button - open multiplayer.html in new tab
-      if (link.classList.contains('nav-link-multiplayer')) {
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          console.log('🌐 Abrindo jogo multiplayer em nova aba...');
-
-          // Abrir multiplayer.html em nova aba
-          window.open('/multiplayer.html', '_blank');
-        });
-        return;
-      }
+       // Handle Multiplayer button - open multiplayer page
+       if (link.classList.contains('nav-link-multiplayer')) {
+         link.addEventListener('click', (e) => {
+           e.preventDefault();
+           console.log('🌐 Navegando para página multiplayer...');
+           
+           // Usar o router para navegar para /multiplayer
+           navigateTo('/multiplayer');
+         });
+         return;
+       }
 
       link.addEventListener('click', (e) => {
         e.preventDefault();

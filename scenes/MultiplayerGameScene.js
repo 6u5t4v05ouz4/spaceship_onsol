@@ -507,20 +507,43 @@ export default class MultiplayerGameScene extends Phaser.Scene {
             repeat: 0
         });
 
-        // Animação de explosão (mantida)
-        this.anims.create({
-            key: 'explosion',
-            frames: this.anims.generateFrameNames('explosion', {
-                prefix: 'explo',
-                start: 0,
-                end: 7,
-                suffix: '.aseprite'
-            }),
-            frameRate: 20,
-            repeat: 0
-        });
+        // Animação de explosão (baseado no GameSceneModular)
+        this.createExplosionAnimation();
 
         console.log('✅ Animações criadas');
+    }
+
+    /**
+     * Cria animação de explosão (baseado no GameSceneModular)
+     */
+    createExplosionAnimation() {
+        let explosionFrameNames = this.textures.exists('explosion') ?
+            this.textures.get('explosion').getFrameNames().filter(n => n !== '__BASE') : [];
+
+        explosionFrameNames = explosionFrameNames.sort((a, b) => {
+            const ra = a.match(/(\d+)/g);
+            const rb = b.match(/(\d+)/g);
+            const na = ra ? parseInt(ra[ra.length-1], 10) : 0;
+            const nb = rb ? parseInt(rb[rb.length-1], 10) : 0;
+            return na - nb;
+        });
+
+        this.explosionFrameNames = explosionFrameNames;
+
+        if (explosionFrameNames.length > 0) {
+            const explosionFrames = explosionFrameNames.map(fn => ({ key: 'explosion', frame: fn }));
+
+            if (this.anims.exists('explosion_anim')) {
+                this.anims.remove('explosion_anim');
+            }
+
+            this.anims.create({
+                key: 'explosion_anim',
+                frames: explosionFrames,
+                frameRate: 15,
+                repeat: 0
+            });
+        }
     }
 
     setupCamera() {
@@ -631,6 +654,11 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         if (time - this.lastCleanup > this.cleanupInterval) {
             this.performCleanup();
             this.lastCleanup = time;
+        }
+
+        // Debug explosion (tecla E)
+        if (this.testExplosionKey && Phaser.Input.Keyboard.JustDown(this.testExplosionKey)) {
+            this.createTestExplosion();
         }
 
         // Debug (mantido)
@@ -812,6 +840,32 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         }
 
         return null;
+    }
+
+    /**
+     * Cria explosão de teste (baseado no GameSceneModular)
+     */
+    createTestExplosion() {
+        const cam = this.cameras.main;
+        const cx = cam.scrollX + cam.width / 2;
+        const cy = cam.scrollY + cam.height / 2;
+
+        console.log('DEBUG: test explosion spawn at', cx, cy);
+
+        // Cria sprite de explosão
+        const explosion = this.add.sprite(cx, cy, 'explosion');
+        explosion.setDepth(1000);
+        explosion.setOrigin(0.5, 0.5);
+
+        if (this.anims.exists('explosion_anim')) {
+            explosion.once('animationcomplete', () => {
+                explosion.destroy();
+            });
+            explosion.play('explosion_anim');
+        } else {
+            console.warn('Animação de explosão não existe!');
+            explosion.destroy();
+        }
     }
 
     performCleanup() {

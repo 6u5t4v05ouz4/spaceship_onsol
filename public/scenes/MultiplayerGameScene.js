@@ -990,15 +990,20 @@ export default class MultiplayerGameScene extends Phaser.Scene {
     }
 
     debugInfo() {
-        // Informações de debug adaptadas para multiplayer
+        // Informações de debug adaptadas para multiplayer - reduzir frequência
         if (this.multiplayerManager) {
-            console.log('📊 Stats Multiplayer:', {
-                connected: this.multiplayerManager.isConnected,
-                authenticated: this.multiplayerManager.isAuthenticated,
-                playerId: this.multiplayerManager.playerId,
-                otherPlayers: this.multiplayerManager.otherPlayers.size,
-                currentChunk: this.multiplayerManager.currentChunk
-            });
+            const now = Date.now();
+            // Só logar stats a cada 5 segundos
+            if (!this.lastStatsLog || now - this.lastStatsLog > 5000) {
+                console.log('📊 Stats Multiplayer:', {
+                    connected: this.multiplayerManager.isConnected,
+                    authenticated: this.multiplayerManager.isAuthenticated,
+                    playerId: this.multiplayerManager.playerId,
+                    otherPlayers: this.multiplayerManager.otherPlayers.size,
+                    currentChunk: this.multiplayerManager.currentChunk
+                });
+                this.lastStatsLog = now;
+            }
         }
     }
 

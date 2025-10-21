@@ -91,6 +91,17 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// Endpoint para configurações do cliente (sem credenciais sensíveis)
+app.get('/api/config', (req, res) => {
+  res.json({
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    SERVER_URL: process.env.RAILWAY_PUBLIC_DOMAIN || 'https://spaceshiponsol-production-5493.up.railway.app',
+    GAME_VERSION: '1.0.0',
+    DEBUG_MODE: process.env.NODE_ENV !== 'production'
+  });
+});
+
 // Endpoint de informações do servidor
 app.get('/api/info', (req, res) => {
   res.json({

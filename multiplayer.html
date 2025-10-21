@@ -110,40 +110,56 @@
     </div>
 
     <script type="module">
-        // Importar SocketService (singleton)
+        // Importar dependências
         import socketService from '/services/socketService.js';
+        import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
         
         // Usar Supabase via CDN
         const { createClient } = window.supabase;
 
-        // Criar cliente Supabase e disponibilizar globalmente
-        const supabase = createClient(
-            'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4'
-        );
-
-        if (typeof window !== 'undefined') {
-            // Configurar Supabase
-            console.log('🔍 Configurando Supabase...');
-            
-            // Definir variáveis do Supabase globalmente
-            window.SUPABASE_URL = 'https://cjrbhqlwfjebnjoyfjnc.supabase.co';
-            window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4';
-            
-            console.log('🔍 SUPABASE_URL:', window.SUPABASE_URL);
-            console.log('🔍 SUPABASE_ANON_KEY:', window.SUPABASE_ANON_KEY ? 'presente' : 'ausente');
-            
-            window.supabaseClient = supabase;
-            console.log('✅ Supabase client configurado:', window.supabaseClient);
-
-            // ✅ Definir URL do servidor Railway globalmente
-            window.VITE_SERVER_URL = 'https://spaceshiponsol-production-5493.up.railway.app';
-            console.log('✅ URL do servidor definida:', window.VITE_SERVER_URL);
-            
-            // Inicializar SocketService globalmente
-            console.log('🔍 Inicializando SocketService...');
-            window.socketService = socketService;
-            console.log('✅ SocketService inicializado globalmente:', window.socketService);
+        // Função para inicializar o jogo de forma segura
+        async function initializeGame() {
+            try {
+                console.log('🔍 Inicializando jogo...');
+                
+                // Carregar credenciais de forma segura
+                console.log('🔐 Carregando credenciais...');
+                const credentials = await loadSecureCredentials();
+                
+                // Configurar Supabase
+                console.log('🔍 Configurando Supabase...');
+                const supabase = createClient(
+                    credentials.SUPABASE_URL,
+                    credentials.SUPABASE_ANON_KEY
+                );
+                
+                // Disponibilizar globalmente
+                window.supabaseClient = supabase;
+                window.SUPABASE_URL = credentials.SUPABASE_URL;
+                window.SUPABASE_ANON_KEY = credentials.SUPABASE_ANON_KEY;
+                window.VITE_SERVER_URL = GAME_CONFIG.SERVER_URL;
+                
+                console.log('✅ Supabase client configurado');
+                console.log('✅ URL do servidor definida:', window.VITE_SERVER_URL);
+                
+                // Inicializar SocketService globalmente
+                console.log('🔍 Inicializando SocketService...');
+                window.socketService = socketService;
+                console.log('✅ SocketService inicializado globalmente');
+                
+                // Carregar o jogo
+                await loadMultiplayerGame();
+                
+            } catch (error) {
+                console.error('❌ Erro ao inicializar jogo:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: red; text-align: center;">
+                        <h2>❌ Erro ao carregar o jogo</h2>
+                        <p>${error.message}</p>
+                        <button onclick="location.reload()">🔄 Tentar novamente</button>
+                    </div>
+                `;
+            }
         }
 
         // Verificar autenticação antes de carregar o jogo
@@ -601,16 +617,10 @@
             }
         }
 
-        // Inicializar conexão antes de carregar o jogo
-        initializeSocket();
-
-        // Aguardar autenticação
-        setTimeout(async () => {
-            const isAuthenticated = await authenticateWithSupabase();
-            if (isAuthenticated) {
-                loadMultiplayerGame();
-            }
-        }, 1000);
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeGame();
+        });
 
         // Iniciar carregamento
         // loadMultiplayerGame();

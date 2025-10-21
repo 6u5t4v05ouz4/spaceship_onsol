@@ -245,24 +245,6 @@
         // Importar dependências
         console.log('🔄 Carregando multiplayer.html (v' + Date.now() + ')');
 
-        // Interceptador global para capturar erros de JSON.stringify
-        const originalJSONStringify = JSON.stringify;
-        JSON.stringify = function(...args) {
-            try {
-                return originalJSONStringify.apply(this, args);
-            } catch (e) {
-                console.error('🚨 JSON.stringify Error capturado:', e.message);
-                console.error('🚨 Stack:', e.stack);
-                console.error('🚨 Args:', args.map(a => {
-                    if (typeof a === 'object' && a !== null) {
-                        return `[${a.constructor?.name || 'Object'}]`;
-                    }
-                    return String(a);
-                }));
-                throw e; // Re-throw para ver o erro original
-            }
-        };
-
         // Error handler global para capturar qualquer erro não tratado
         window.addEventListener('error', function(event) {
             console.error('🚨 ERRO GLOBAL CAPTURADO:', {
@@ -361,35 +343,24 @@
         // Instância global do logger
         window.uiLogger = new UILogger();
 
-        // Função segura para serializar objetos (evita circular structure)
-        function safeStringify(obj, depth = 0) {
-            if (depth > 1) return '[Max Depth]';
-
+        // Função ultra segura para converter qualquer argumento para string
+        function safeStringify(obj) {
+            // NUNCA usar JSON.stringify - sempre retornar representação simples
             if (obj === null || obj === undefined) return 'null';
-            if (typeof obj !== 'object') return String(obj);
+            if (typeof obj === 'string') return obj;
+            if (typeof obj === 'number') return obj.toString();
+            if (typeof obj === 'boolean') return obj.toString();
+            if (typeof obj === 'function') return '[Function]';
 
-            // Para tipos de objetos conhecidos, retornar representação simples
-            if (obj.constructor && obj.constructor.name) {
-                switch(obj.constructor.name) {
-                    case 'Socket':
-                        return `Socket{id: ${obj.id || 'unknown'}, connected: ${obj.connected || false}}`;
-                    case 'SocketService':
-                        return `SocketService{connected: ${obj.connected || false}, authenticated: ${obj.authenticated || false}}`;
-                    case 'Window':
-                    case 'Document':
-                        return `[${obj.constructor.name}]`;
-                    default:
-                        return `[${obj.constructor.name}]`;
-                }
+            // Objetos - apenas mostrar tipo, nunca conteúdo
+            if (typeof obj === 'object') {
+                if (obj === window || obj === document) return '[Window/Document]';
+                if (Array.isArray(obj)) return '[Array]';
+                if (obj.constructor && obj.constructor.name) return '[' + obj.constructor.name + ']';
+                return '[Object]';
             }
 
-            // Para arrays, mostrar tamanho e tipo
-            if (Array.isArray(obj)) {
-                return `Array[${obj.length}]`;
-            }
-
-            // Para objetos genéricos
-            return '[Object]';
+            return String(obj);
         }
 
         // Interceptar console.log para mostrar na UI
@@ -399,37 +370,7 @@
 
         // Função ultra segura para converter argumentos
         const safeArgsToString = (args) => {
-            return args.map(arg => {
-                try {
-                    // Valores primitivos
-                    if (arg === null || arg === undefined) {
-                        return 'null';
-                    }
-                    if (typeof arg === 'string' || typeof arg === 'number' || typeof arg === 'boolean') {
-                        return String(arg);
-                    }
-
-                    // Objetos complexos - só mostrar tipo
-                    if (typeof arg === 'object') {
-                        if (arg === window || arg === document) {
-                            return '[Window/Document]';
-                        }
-                        if (arg.constructor && arg.constructor.name) {
-                            return `[${arg.constructor.name}]`;
-                        }
-                        return '[Object]';
-                    }
-
-                    // Funções
-                    if (typeof arg === 'function') {
-                        return '[Function]';
-                    }
-
-                    return String(arg);
-                } catch (e) {
-                    return '[Unknown]';
-                }
-            }).join(' ');
+            return args.map(arg => safeStringify(arg)).join(' ');
         };
 
         console.log = function(...args) {
@@ -1052,18 +993,6 @@
     
         // Inicializar quando a página carregar
         document.addEventListener('DOMContentLoaded', () => {
-            // Forçar reload se tiver parâmetro de versão antiga
-            const urlParams = new URLSearchParams(window.location.search);
-            const version = urlParams.get('v');
-            const currentVersion = Date.now().toString().slice(-6);
-
-            if (!version || version !== currentVersion) {
-                console.log('🔄 Forçando reload com nova versão:', currentVersion);
-                const newUrl = window.location.pathname + '?v=' + currentVersion;
-                window.location.replace(newUrl);
-                return;
-            }
-
             initializeGame();
         });
     </script>

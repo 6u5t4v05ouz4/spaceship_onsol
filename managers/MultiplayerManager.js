@@ -30,9 +30,9 @@ export default class MultiplayerManager {
   async init() {
     console.log('🌐 Inicializando Multiplayer Manager...');
 
-    // Inicializar asset managers primeiro
-    await this.spriteSheetManager.init();
-    await this.assetManager.init();
+    // Inicializar asset managers (spriteSheetManager desativado - usa assets existentes)
+    // await this.spriteSheetManager.init(); // Desativado - usa assets existentes
+    // await this.assetManager.init(); // Desativado para evitar erros
 
     // Conectar ao servidor se não estiver conectado
     if (!socketService.isConnected()) {

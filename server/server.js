@@ -12,7 +12,18 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { initMultiplayer } from './multiplayer-handlers.js';
+import {
+  initMultiplayer,
+  handleAuth,
+  handleChunkEnter,
+  handlePlayerMove,
+  handleAttack,
+  handleRespawn,
+  handlePlayStart,
+  handlePlayStop,
+  handleDisconnect,
+  getServerStats
+} from './multiplayer-handlers.js';
 
 // =====================================================
 // PATH SETUP

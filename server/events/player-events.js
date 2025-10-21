@@ -149,6 +149,7 @@ export async function handlePlayStart(socket, data, io) {
     cacheManager.setPlayerGameStatus(player.id, true);
 
     // Notificar outros players do chunk
+    logger.info(`🚀 ${player.username} está entrando no multiplayer - emitindo player:joined para chunk ${player.current_chunk}`);
     socket.to(`chunk:${player.current_chunk}`).emit('player:joined', {
       id: player.id,
       username: player.username,
@@ -158,6 +159,7 @@ export async function handlePlayStart(socket, data, io) {
       max_health: player.max_health,
       current_chunk: player.current_chunk,
     });
+    logger.info(`📡 player:joined emitido com sucesso para ${player.username}`);
   } catch (error) {
     logger.error('❌ Erro no handlePlayStart:', error);
     socket.emit('error', { message: 'Erro ao iniciar jogo' });

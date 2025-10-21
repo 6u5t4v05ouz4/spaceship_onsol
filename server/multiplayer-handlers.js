@@ -52,7 +52,8 @@ export async function handleAuth(socket, data, io) {
       y: 300,
       chunkX: 0,
       chunkY: 0,
-      health: 100
+      health: 100,
+      is_in_game: false // Por padrão, não está no multiplayer
     });
 
     // Adicionar aos players conectados
@@ -61,7 +62,8 @@ export async function handleAuth(socket, data, io) {
       username,
       socketId: socket.id,
       chunkX: 0,
-      chunkY: 0
+      chunkY: 0,
+      is_in_game: false // Por padrão, não está no multiplayer
     });
 
     console.log('✅ Player autenticado:', username, `(Socket: ${socket.id})`);
@@ -231,16 +233,22 @@ export async function handleChunkEnter(socket, data, io) {
       timestamp: Date.now()
     });
 
-    // Notificar outros players no chunk sobre a chegada
-    socket.to(`chunk:${chunkX}:${chunkY}`).emit('player:joined', {
-      id: socket.userId,
-      username: socket.username,
-      x: playerState.x,
-      y: playerState.y,
-      health: playerState.health,
-      maxHealth: playerState.max_health,
-      currentChunk: `(${chunkX}, ${chunkY})`
-    });
+    // Notificar outros players no chunk sobre a chegada APENAS se estiver no multiplayer
+    const playerData = connectedPlayers.get(socket.id);
+    if (playerData && playerData.is_in_game) {
+      console.log(`🚀 ${socket.username} está no multiplayer - emitindo player:joined para chunk (${chunkX}, ${chunkY})`);
+      socket.to(`chunk:${chunkX}:${chunkY}`).emit('player:joined', {
+        id: socket.userId,
+        username: socket.username,
+        x: playerState.x,
+        y: playerState.y,
+        health: playerState.health,
+        maxHealth: playerState.max_health,
+        currentChunk: `(${chunkX}, ${chunkY})`
+      });
+    } else {
+      console.log(`🔍 ${socket.username} entrou no chunk (${chunkX}, ${chunkY}) mas não está no multiplayer (is_in_game: ${playerData?.is_in_game})`);
+    }
 
     // Juntar o socket à sala do chunk
     socket.join(`chunk:${chunkX}:${chunkY}`);
@@ -438,6 +446,88 @@ export async function handleDisconnect(socket, reason, io) {
 
   } catch (error) {
     console.error('❌ Erro na desconexão:', error);
+  }
+}
+
+/**
+ * Handler para entrar no jogo (play:start)
+ */
+export async function handlePlayStart(socket, data, io) {
+  try {
+    if (!socket.userId) {
+      socket.emit('error', { message: 'Não autenticado' });
+      return;
+    }
+
+    console.log(`🎮 ${socket.username} está entrando no multiplayer`);
+
+    // Marcar jogador como ativo no multiplayer
+    const playerData = connectedPlayers.get(socket.id);
+    if (playerData) {
+      playerData.is_in_game = true;
+    }
+
+    // Atualizar no banco também
+    await updatePlayerState(socket.userId, {
+      is_in_game: true
+    });
+
+    // Notificar outros players do chunk atual
+    if (playerData) {
+      console.log(`🚀 ${socket.username} está no multiplayer - emitindo player:joined para chunk (${playerData.chunkX}, ${playerData.chunkY})`);
+      socket.to(`chunk:${playerData.chunkX}:${playerData.chunkY}`).emit('player:joined', {
+        id: socket.userId,
+        username: socket.username,
+        x: 400, // Posição padrão
+        y: 300,
+        health: 100,
+        maxHealth: 100,
+        currentChunk: `(${playerData.chunkX}, ${playerData.chunkY})`
+      });
+    }
+
+    socket.emit('play:started', { success: true });
+    console.log(`✅ ${socket.username} entrou no multiplayer`);
+
+  } catch (error) {
+    console.error('❌ Erro no handlePlayStart:', error);
+    socket.emit('error', { message: 'Erro ao entrar no jogo' });
+  }
+}
+
+/**
+ * Handler para sair do jogo (play:stop)
+ */
+export async function handlePlayStop(socket, data, io) {
+  try {
+    if (!socket.userId) return;
+
+    console.log(`🚪 ${socket.username} está saindo do multiplayer`);
+
+    // Marcar jogador como inativo no multiplayer
+    const playerData = connectedPlayers.get(socket.id);
+    if (playerData) {
+      playerData.is_in_game = false;
+    }
+
+    // Atualizar no banco também
+    await updatePlayerState(socket.userId, {
+      is_in_game: false
+    });
+
+    // Notificar outros players que saiu
+    if (playerData) {
+      socket.to(`chunk:${playerData.chunkX}:${playerData.chunkY}`).emit('player:left', {
+        playerId: socket.userId,
+        username: socket.username
+      });
+    }
+
+    socket.emit('play:stopped', { success: true });
+    console.log(`✅ ${socket.username} saiu do multiplayer`);
+
+  } catch (error) {
+    console.error('❌ Erro no handlePlayStop:', error);
   }
 }
 

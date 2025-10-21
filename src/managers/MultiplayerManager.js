@@ -22,6 +22,25 @@ export default class MultiplayerManager {
     this.assetManager = new AssetManager(scene);
     this.spriteSheetManager = new SpriteSheetManager(scene);
     this.chunkElements = new Map(); // Map<chunkKey, elementSprites>
+
+    // Sistemas de rede (novos)
+    this.networkStats = {
+      predictions: 0,
+      corrections: 0,
+      latency: 0,
+      lastUpdate: 0
+    };
+    this.lastNetworkUpdate = 0;
+    this.networkUpdateInterval = 1000; // Update stats a cada segundo
+
+    // Controle de movimento local
+    this.localPlayerData = {
+      x: 0,
+      y: 0,
+      chunkX: 0,
+      chunkY: 0,
+      lastMoveTime: 0
+    };
   }
 
   /**
@@ -94,6 +113,10 @@ export default class MultiplayerManager {
           this.isAuthenticated = true;
           this.playerId = socketService.getPlayerId();
           console.log('✅ Autenticado:', this.playerId);
+
+          // Inicializar sistemas de rede com estado do jogador
+          this.initializeNetworkSystems();
+
           window.removeEventListener('socket:authenticated', checkAuth);
           resolve();
         }
@@ -110,6 +133,107 @@ export default class MultiplayerManager {
         }
       }, 10000);
     });
+  }
+
+  /**
+   * Inicializa os sistemas de rede com estado inicial do jogador
+   */
+  initializeNetworkSystems() {
+    console.log('🌐 Inicializando sistemas de rede avançados...');
+
+    const playerState = socketService.getPlayerState();
+    if (playerState) {
+      const initialState = {
+        x: playerState.x || 0,
+        y: playerState.y || 0,
+        chunkX: Math.floor((playerState.x || 0) / 1000),
+        chunkY: Math.floor((playerState.y || 0) / 1000)
+      };
+
+      // Inicializar prediction manager
+      socketService.initializeNetworkSystems(initialState);
+
+      // Atualizar dados locais
+      this.localPlayerData = {
+        ...this.localPlayerData,
+        ...initialState
+      };
+
+      console.log('✅ Sistemas de rede inicializados com estado:', initialState);
+    }
+
+    // Configurar eventos de rede avançados
+    this.setupNetworkEvents();
+  }
+
+  /**
+   * Configura eventos específicos dos novos sistemas de rede
+   */
+  setupNetworkEvents() {
+    console.log('📡 Configurando eventos de rede avançados...');
+
+    // Evento de confirmação de movimento (predição)
+    window.addEventListener('socket:move:confirmed', (e) => {
+      const { x, y, sequence } = e.detail;
+      this.networkStats.predictions++;
+      console.debug(`📡 Movimento confirmado: seq=${sequence}, pos=(${x}, ${y})`);
+    });
+
+    // Evento de correção de posição do servidor
+    window.addEventListener('socket:position:corrected', (e) => {
+      const { x, y, reason } = e.detail;
+      this.networkStats.corrections++;
+      console.warn(`⚠️ Posição corrigida pelo servidor: ${reason} -> (${x}, ${y})`);
+
+      // Forçar teleport da nave local para posição corrigida
+      if (this.scene.shipManager?.ship) {
+        this.scene.shipManager.ship.setPosition(x, y);
+      }
+
+      // Atualizar dados locais
+      this.localPlayerData.x = x;
+      this.localPlayerData.y = y;
+      this.localPlayerData.chunkX = Math.floor(x / 1000);
+      this.localPlayerData.chunkY = Math.floor(y / 1000);
+    });
+
+    // Evento de erro de rate limit
+    window.addEventListener('socket:error', (e) => {
+      const { code, message } = e.detail;
+      if (code === 'RATE_LIMIT_EXCEEDED' || code === 'CHUNK_RATE_LIMIT_EXCEEDED') {
+        console.warn(`⚠️ Rate limit atingido: ${message}`);
+        // Mostrar feedback visual para o jogador
+        this.showNetworkWarning(message);
+      }
+    });
+
+    console.log('✅ Eventos de rede avançados configurados');
+  }
+
+  /**
+   * Mostra aviso de rede para o jogador
+   */
+  showNetworkWarning(message) {
+    // Criar aviso visual temporário
+    if (this.scene && this.scene.add) {
+      const warningText = this.scene.add.text(
+        this.scene.cameras.main.width / 2,
+        100,
+        `⚠️ ${message}`,
+        {
+          fontSize: '16px',
+          fontFamily: 'Arial',
+          fill: '#ffaa00',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          padding: { x: 10, y: 5 }
+        }
+      ).setOrigin(0.5).setDepth(1000);
+
+      // Remover após 3 segundos
+      this.scene.time.delayedCall(3000, () => {
+        if (warningText) warningText.destroy();
+      });
+    }
   }
 
   /**
@@ -170,7 +294,7 @@ export default class MultiplayerManager {
   }
 
   /**
-   * Atualiza posição do player local
+   * Atualiza posição do player local com predição client-side
    */
   updatePosition(x, y) {
     if (!this.isAuthenticated) return;
@@ -186,13 +310,43 @@ export default class MultiplayerManager {
     const chunkX = Math.floor(x / 1000);
     const chunkY = Math.floor(y / 1000);
 
+    // Atualizar dados locais
+    this.localPlayerData.x = x;
+    this.localPlayerData.y = y;
+    this.localPlayerData.chunkX = chunkX;
+    this.localPlayerData.chunkY = chunkY;
+    this.localPlayerData.lastMoveTime = now;
+
     // Verificar mudança de chunk
     if (chunkX !== this.currentChunk.x || chunkY !== this.currentChunk.y) {
       this.enterChunk(chunkX, chunkY);
     }
 
-    // Enviar posição
+    // Enviar posição com predição client-side
     socketService.updatePosition(Math.floor(x), Math.floor(y), chunkX, chunkY);
+  }
+
+  /**
+   * Obtém posição atual do jogador (com predição)
+   */
+  getPlayerPosition() {
+    if (!this.isAuthenticated) {
+      return this.localPlayerData;
+    }
+
+    // Usar posição predita do socket service
+    const predictedPos = socketService.getPredictedPosition();
+    if (predictedPos) {
+      return {
+        x: predictedPos.x,
+        y: predictedPos.y,
+        chunkX: predictedPos.chunkX || Math.floor(predictedPos.x / 1000),
+        chunkY: predictedPos.chunkY || Math.floor(predictedPos.y / 1000),
+        lastMoveTime: this.localPlayerData.lastMoveTime
+      };
+    }
+
+    return this.localPlayerData;
   }
 
   /**
@@ -294,6 +448,12 @@ export default class MultiplayerManager {
     if (data.id === this.playerId) return;
 
     this.addOtherPlayer(data);
+
+    // Adicionar ao interpolation manager para movimento suave
+    socketService.updateEntityPosition(data.id, {
+      x: data.x,
+      y: data.y
+    }, null, data.health);
   }
 
   /**
@@ -302,22 +462,26 @@ export default class MultiplayerManager {
   handlePlayerLeft(data) {
     console.log('👋 Player saiu:', data.playerId);
     this.removeOtherPlayer(data.playerId);
+
+    // Remover do interpolation manager
+    socketService.removeEntity(data.playerId);
   }
 
   /**
-   * Handle player moved
+   * Handle player moved (com interpolação suave)
    */
   handlePlayerMoved(data) {
+    // Atualizar posição no interpolation manager
+    socketService.updateEntityPosition(data.playerId, {
+      x: data.x,
+      y: data.y
+    }, null, data.health);
+
+    // Manter lógica existente como fallback
     const player = this.otherPlayers.get(data.playerId);
     if (player && player.sprite) {
-      // Animar movimento suave
-      this.scene.tweens.add({
-        targets: [player.sprite, player.nameText],
-        x: data.x,
-        y: data.y,
-        duration: this.positionUpdateInterval,
-        ease: 'Linear'
-      });
+      // Não fazer tween aqui - a interpolação será tratada no update()
+      // O sistema de interpolação cuidará do movimento suave
     }
   }
 
@@ -818,6 +982,12 @@ export default class MultiplayerManager {
    * Update (chamado a cada frame)
    */
   update() {
+    // Atualizar sistemas de rede (predição e interpolação)
+    socketService.update();
+
+    // Atualizar posições interpoladas dos outros jogadores
+    this.updateInterpolatedPlayers();
+
     // Atualizar posição dos outros players (healthbar e nameText seguem sprite)
     this.otherPlayers.forEach((player) => {
       if (player.sprite && player.nameText) {
@@ -842,6 +1012,83 @@ export default class MultiplayerManager {
         }
       });
     });
+
+    // Atualizar estatísticas de rede (periodicamente)
+    this.updateNetworkStats();
+  }
+
+  /**
+   * Atualiza posições dos outros jogadores com interpolação suave
+   */
+  updateInterpolatedPlayers() {
+    this.otherPlayers.forEach((playerData, playerId) => {
+      const interpolatedPos = socketService.getInterpolatedPosition(playerId);
+
+      if (interpolatedPos && playerData.sprite) {
+        // Usar interpolação suave para movimento
+        const currentX = playerData.sprite.x;
+        const currentY = playerData.sprite.y;
+
+        const smoothing = 0.2; // Fator de suavização
+        const newX = currentX + (interpolatedPos.x - currentX) * smoothing;
+        const newY = currentY + (interpolatedPos.y - currentY) * smoothing;
+
+        // Atualizar sprite e elementos UI
+        playerData.sprite.x = newX;
+        playerData.sprite.y = newY;
+
+        // Atualizar saúde se disponível na interpolação
+        if (interpolatedPos.health !== undefined && playerData.healthBar) {
+          const healthPercent = interpolatedPos.health / playerData.maxHealth;
+          playerData.healthBar.setScale(Math.max(0, healthPercent), 1);
+
+          // Mudar cor baseado na saúde
+          if (healthPercent > 0.5) {
+            playerData.healthBar.setFillStyle(0x00ff00);
+          } else if (healthPercent > 0.25) {
+            playerData.healthBar.setFillStyle(0xffff00);
+          } else {
+            playerData.healthBar.setFillStyle(0xff0000);
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Atualiza estatísticas de rede para debug
+   */
+  updateNetworkStats() {
+    const now = Date.now();
+    if (now - this.lastNetworkUpdate < this.networkUpdateInterval) {
+      return;
+    }
+
+    this.lastNetworkUpdate = now;
+
+    try {
+      const networkStats = socketService.getNetworkStats();
+
+      this.networkStats = {
+        predictions: networkStats.prediction.predictions,
+        corrections: networkStats.prediction.corrections,
+        latency: networkStats.connection.latency,
+        entities: networkStats.interpolation.entities,
+        lastUpdate: now
+      };
+
+      // Debug info periódico
+      if (now % 5000 < this.networkUpdateInterval) { // A cada ~5 segundos
+        console.log('📊 Network Stats:', {
+          predictions: this.networkStats.predictions,
+          corrections: this.networkStats.corrections,
+          latency: `${this.networkStats.latency}ms`,
+          entities: this.networkStats.entities
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro ao obter estatísticas de rede:', error);
+    }
   }
 
   /**
@@ -856,7 +1103,10 @@ export default class MultiplayerManager {
       otherPlayersCount: this.otherPlayers.size,
       totalChunks: this.chunkElements.size,
       connectionStatus: this.isConnected ? 'Connected' : 'Disconnected',
-      socketServiceStatus: socketService.isConnected() ? 'Connected' : 'Disconnected'
+      socketServiceStatus: socketService.isConnected() ? 'Connected' : 'Disconnected',
+      // Estatísticas avançadas de rede
+      network: this.networkStats,
+      localPlayerPosition: this.getPlayerPosition()
     };
 
     // Adicionar informações dos outros players
@@ -914,6 +1164,13 @@ export default class MultiplayerManager {
     });
     this.chunkElements.clear();
 
+    // Limpar sistemas de rede
+    socketService.resetNetworkSystems();
+
+    // Limpar event listeners de rede
+    window.removeEventListener('socket:move:confirmed', this.handleMoveConfirmed);
+    window.removeEventListener('socket:position:corrected', this.handlePositionCorrected);
+
     // Limpar asset managers
     if (this.assetManager) {
       this.assetManager.cleanup();
@@ -921,6 +1178,14 @@ export default class MultiplayerManager {
     if (this.spriteSheetManager) {
       this.spriteSheetManager.cleanup();
     }
+
+    // Resetar estatísticas
+    this.networkStats = {
+      predictions: 0,
+      corrections: 0,
+      latency: 0,
+      lastUpdate: 0
+    };
 
     console.log('✅ Multiplayer Manager limpo');
   }

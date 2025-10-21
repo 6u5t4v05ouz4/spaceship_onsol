@@ -4,6 +4,8 @@
  */
 
 import { io } from 'socket.io-client';
+import PredictionManager from '../client/prediction-manager.js';
+import InterpolationManager from '../client/interpolation-manager.js';
 
 // Supabase é global, carregado via script tag no HTML
 const getSupabase = () => {
@@ -23,6 +25,65 @@ class SocketService {
     this.playerState = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
+
+    // Sistemas de predição e interpolação
+    this.predictionManager = new PredictionManager();
+    this.interpolationManager = new InterpolationManager();
+
+    // Configuração dos sistemas
+    this.configureNetworkSystems();
+  }
+
+  /**
+   * Configura sistemas de rede baseado na qualidade da conexão
+   */
+  configureNetworkSystems() {
+    // Detectar qualidade da conexão e ajustar parâmetros
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+    if (connection) {
+      const effectiveType = connection.effectiveType;
+
+      switch (effectiveType) {
+        case 'slow-2g':
+        case '2g':
+          // Conexão lenta - mais delay, menos previsão
+          this.predictionManager.configure({
+            interpolationDelay: 200,
+            inputBufferSize: 30
+          });
+          this.interpolationManager.configure({
+            interpolationDelay: 200,
+            maxBufferSize: 20
+          });
+          break;
+
+        case '3g':
+          // Conexão média - configurações balanceadas
+          this.predictionManager.configure({
+            interpolationDelay: 150,
+            inputBufferSize: 45
+          });
+          this.interpolationManager.configure({
+            interpolationDelay: 150,
+            maxBufferSize: 25
+          });
+          break;
+
+        case '4g':
+        default:
+          // Conexão rápida - mínimo delay, máxima precisão
+          this.predictionManager.configure({
+            interpolationDelay: 100,
+            inputBufferSize: 60
+          });
+          this.interpolationManager.configure({
+            interpolationDelay: 100,
+            maxBufferSize: 30
+          });
+          break;
+      }
+    }
   }
 
   /**
@@ -246,6 +307,28 @@ class SocketService {
         detail: data
       }));
     });
+
+    // ===== Validação e Correção =====
+    this.socket.on('position:corrected', (data) => {
+      console.warn('⚠️ Posição corrigida pelo servidor:', data.reason);
+
+      // Aplicar correção no prediction manager
+      this.predictionManager.processPositionCorrection(data);
+
+      window.dispatchEvent(new CustomEvent('socket:position:corrected', {
+        detail: data
+      }));
+    });
+
+    // ===== Confirmação do Servidor (para predição) =====
+    this.socket.on('move:confirmed', (data) => {
+      // Processar confirmação no prediction manager
+      this.predictionManager.processServerConfirmation(data);
+
+      window.dispatchEvent(new CustomEvent('socket:move:confirmed', {
+        detail: data
+      }));
+    });
   }
 
   /**
@@ -308,13 +391,61 @@ class SocketService {
   }
 
   /**
-   * Atualiza posição
+   * Atualiza posição com predição client-side
    */
   updatePosition(x, y, chunkX, chunkY) {
     if (!this.authenticated) return false;
 
-    this.socket.emit('player:move', { x, y, chunkX, chunkY });
+    // Processar input no prediction manager
+    const inputData = {
+      thrust: true, // Detecção simples de movimento
+      targetX: x,
+      targetY: y,
+      chunkX: chunkX || Math.floor(x / 1000),
+      chunkY: chunkY || Math.floor(y / 1000)
+    };
+
+    const predictionData = this.predictionManager.processInput(inputData);
+
+    // Enviar ao servidor com dados de predição
+    this.socket.emit('player:move', {
+      x,
+      y,
+      chunkX: chunkX || Math.floor(x / 1000),
+      chunkY: chunkY || Math.floor(y / 1000),
+      sequence: predictionData.sequence,
+      timestamp: predictionData.timestamp
+    });
+
     return true;
+  }
+
+  /**
+   * Obtém posição atual predita do jogador
+   */
+  getPredictedPosition() {
+    return this.predictionManager.getCurrentState();
+  }
+
+  /**
+   * Obtém posição interpolada de outro jogador
+   */
+  getInterpolatedPosition(playerId) {
+    return this.interpolationManager.getInterpolatedPosition(playerId);
+  }
+
+  /**
+   * Atualiza entidade no interpolation manager
+   */
+  updateEntityPosition(playerId, position, rotation, health) {
+    this.interpolationManager.updateEntity(playerId, position, rotation, health);
+  }
+
+  /**
+   * Remove entidade do interpolation manager
+   */
+  removeEntity(playerId) {
+    this.interpolationManager.removeEntity(playerId);
   }
 
   /**
@@ -393,6 +524,47 @@ class SocketService {
    */
   getSocketId() {
     return this.socket?.id;
+  }
+
+  /**
+   * Update principal (para ser chamado a cada frame)
+   */
+  update() {
+    // Atualizar prediction manager
+    this.predictionManager.update();
+
+    // Atualizar interpolation manager
+    this.interpolationManager.update();
+  }
+
+  /**
+   * Obtém estatísticas dos sistemas de rede
+   */
+  getNetworkStats() {
+    return {
+      prediction: this.predictionManager.getStats(),
+      interpolation: this.interpolationManager.getStats(),
+      connection: {
+        connected: this.connected,
+        authenticated: this.authenticated,
+        latency: this.predictionManager.getEstimatedLatency()
+      }
+    };
+  }
+
+  /**
+   * Reseta os sistemas de predição e interpolação
+   */
+  resetNetworkSystems() {
+    this.predictionManager.reset();
+    this.interpolationManager.clear();
+  }
+
+  /**
+   * Inicializa os sistemas com estado inicial
+   */
+  initializeNetworkSystems(initialState) {
+    this.predictionManager.initialize(initialState);
   }
 }
 

@@ -8,6 +8,8 @@ import cacheManager from '../managers/cache-manager.js';
 import zoneManager from '../managers/zone-manager.js';
 import chunkGenerator from '../engines/chunk-generator.js';
 import logger from '../utils/logger.js';
+import movementValidator from '../validators/movement-validator.js';
+import rateLimiter from '../middleware/rate-limiter.js';
 
 /**
  * Handler: auth
@@ -15,6 +17,17 @@ import logger from '../utils/logger.js';
  */
 export async function handleAuth(socket, data, io) {
   try {
+    // Rate limiting para autenticação
+    const rateLimitCheck = rateLimiter.checkLimit(socket, 'auth');
+    if (!rateLimitCheck.allowed) {
+      logger.warn(`⚠️ Rate limit excedido para auth: ${rateLimitCheck.reason}`);
+      socket.emit('auth:error', {
+        message: 'Muitas tentativas de autenticação. Tente novamente em alguns instantes.',
+        retryAfter: rateLimitCheck.retryAfter
+      });
+      return;
+    }
+
     const { token } = data;
 
     if (!token) {
@@ -189,8 +202,47 @@ export async function handleChunkEnter(socket, data, io) {
       return;
     }
 
+    // Rate limiting para entrada de chunks
+    const rateLimitCheck = rateLimiter.checkLimit(socket, 'chunk:enter', player.id);
+    if (!rateLimitCheck.allowed) {
+      logger.warn(`⚠️ Rate limit excedido para chunk enter: ${rateLimitCheck.reason}`);
+      socket.emit('error', {
+        message: 'Mudando de chunks rápido demais. Espere um momento.',
+        code: 'CHUNK_RATE_LIMIT_EXCEEDED',
+        retryAfter: rateLimitCheck.retryAfter
+      });
+      return;
+    }
+
     const { chunkX, chunkY } = data;
+
+    // Validar coordenadas do chunk
+    if (!Number.isInteger(chunkX) || !Number.isInteger(chunkY) ||
+        Math.abs(chunkX) > 100 || Math.abs(chunkY) > 100) {
+      logger.warn(`⚠️ Coordenadas de chunk inválidas: ${chunkX}, ${chunkY}`);
+      socket.emit('error', { message: 'Coordenadas de chunk inválidas' });
+      return;
+    }
+
     const chunkId = `${chunkX},${chunkY}`;
+
+    // Validar que não está tentando entrar em chunks muito distantes
+    if (player.current_chunk) {
+      const [currentX, currentY] = player.current_chunk.split(',').map(Number);
+      const distance = Math.sqrt(
+        Math.pow(chunkX - currentX, 2) + Math.pow(chunkY - currentY, 2)
+      );
+
+      // Permitir apenas chunks adjacentes ou movimento razoável
+      if (distance > 3) {
+        logger.warn(`⚠️ Tentativa de pulo de chunk muito distante: ${player.current_chunk} -> ${chunkId}`);
+        socket.emit('error', {
+          message: 'Distância de chunk muito grande. Movimento gradual permitido apenas.',
+          code: 'CHUNK_DISTANCE_EXCEEDED'
+        });
+        return;
+      }
+    }
 
     logger.debug(`📍 ${player.username} entrando no chunk ${chunkId}`);
 
@@ -308,21 +360,63 @@ export async function handlePlayerMove(socket, data, io) {
       return;
     }
 
+    // Rate limiting para movimento
+    const rateLimitCheck = rateLimiter.checkLimit(socket, 'player:move', player.id);
+    if (!rateLimitCheck.allowed) {
+      logger.warn(`⚠️ Rate limit excedido para movimento: ${rateLimitCheck.reason}`);
+      socket.emit('error', {
+        message: 'Movimento rápido demais. Reduza a velocidade.',
+        code: 'RATE_LIMIT_EXCEEDED'
+      });
+      return;
+    }
+
     const { x, y, chunkX, chunkY } = data;
+
+    // Validação básica dos dados
+    if (typeof x !== 'number' || typeof y !== 'number' ||
+        !Number.isFinite(x) || !Number.isFinite(y)) {
+      logger.warn(`⚠️ Dados de posição inválidos: ${JSON.stringify(data)}`);
+      return;
+    }
+
+    // Adicionar timestamp aos dados para validação
+    const positionWithTimestamp = {
+      x,
+      y,
+      timestamp: Date.now()
+    };
+
+    // Validar movimento (anti-cheat)
+    const movementValidation = movementValidator.validateMovement(
+      player.id,
+      positionWithTimestamp,
+      player
+    );
+
+    if (!movementValidation.valid) {
+      logger.warn(`⚠️ Movimento inválido detectado para ${player.username}: ${movementValidation.reason}`);
+
+      // Enviar posição corrigida para o cliente
+      socket.emit('position:corrected', {
+        x: player.x,
+        y: player.y,
+        chunkX: Math.floor(player.x / 1000),
+        chunkY: Math.floor(player.y / 1000),
+        reason: movementValidation.reason
+      });
+
+      return;
+    }
 
     // Se chunk não informado, manter chunk atual e apenas broadcast de movimento
     const hasChunk = Number.isInteger(chunkX) && Number.isInteger(chunkY);
     const newChunkId = hasChunk ? `${chunkX},${chunkY}` : player.current_chunk;
 
-    // Validação básica
-    if (typeof x !== 'number' || typeof y !== 'number') {
-      return;
-    }
-
     // Verificar se mudou de chunk
     const changedChunk = hasChunk && player.current_chunk !== newChunkId;
 
-    // Atualizar cache
+    // Atualizar cache com posição validada
     cacheManager.updatePosition(player.id, x, y, newChunkId);
 
     // Se mudou de chunk, processar transição
@@ -407,10 +501,14 @@ export async function handleDisconnect(socket, reason, io) {
       })
       .eq('id', player.id);
 
-    // 3. Remover do cache (marca para sync final)
+    // 3. Limpar dados dos validadores (segurança e performance)
+    movementValidator.clearPlayerHistory(player.id);
+    rateLimiter.clearPlayerData(player.id);
+
+    // 4. Remover do cache (marca para sync final)
     cacheManager.removePlayer(player.id);
 
-    logger.debug(`✅ Player ${player.username} removido do cache`);
+    logger.debug(`✅ Player ${player.username} removido do cache e validadores`);
   } catch (error) {
     logger.error('❌ Erro no handleDisconnect:', error);
   }

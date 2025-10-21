@@ -54,8 +54,17 @@ export default class MultiplayerManager {
     // await this.spriteSheetManager.init(); // Desativado - usa assets existentes
     // await this.assetManager.init(); // Desativado para evitar erros
 
-    // Conectar ao servidor se não estiver conectado
-    if (!socketService.isConnected()) {
+    // Verificar se já existe conexão WebSocket no HTML
+    if (typeof window !== 'undefined' && window.socket && window.socket.connected) {
+      console.log('✅ Usando conexão WebSocket existente do HTML');
+      this.isConnected = true;
+
+      // Configurar referência direta para evitar conflitos
+      socketService.socket = window.socket;
+      socketService.connected = true;
+    } else {
+      // Conectar ao servidor se não estiver conectado
+      console.log('🔌 Nenhuma conexão encontrada, criando nova via socketService...');
       socketService.connect();
 
       // Aguardar conexão
@@ -80,12 +89,27 @@ export default class MultiplayerManager {
       });
     }
 
-    // Autenticar explicitamente (Supabase já está disponível aqui)
-    console.log('🔐 Tentando autenticar...');
-    await socketService.authenticate();
-
-    // Aguardar confirmação de autenticação
-    await this.waitForAuthentication();
+    // Verificar se já está autenticado através da conexão existente
+    if (typeof window !== 'undefined' && window.socket && window.socket.connected) {
+      console.log('🔐 Verificando autenticação existente...');
+      // Se já tem player definido globalmente, estamos autenticados
+      if (typeof window !== 'undefined' && window.playerId) {
+        this.playerId = window.playerId;
+        this.username = window.currentPlayerUsername || 'Player';
+        this.isAuthenticated = true;
+        console.log('✅ Já autenticado:', this.playerId, 'username:', this.username);
+      } else {
+        // Tentar autenticar se necessário
+        console.log('🔐 Tentando autenticar...');
+        await socketService.authenticate();
+        await this.waitForAuthentication();
+      }
+    } else {
+      // Autenticar explicitamente se criou nova conexão
+      console.log('🔐 Tentando autenticar...');
+      await socketService.authenticate();
+      await this.waitForAuthentication();
+    }
 
     // Setup event listeners
     this.setupEventListeners();

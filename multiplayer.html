@@ -429,6 +429,9 @@
         let playerId = null;
         let isConnected = false;
 
+        // Expor socket globalmente para MultiplayerManager
+        window.socket = null;
+
         function initializeSocket() {
             console.log('🔌 Inicializando conexão WebSocket...');
 
@@ -442,6 +445,10 @@
                 reconnectionDelayMax: 5000,
                 reconnectionAttempts: 5
             });
+
+            // Exposer socket globalmente para MultiplayerManager
+            window.socket = socket;
+            console.log('🔌 Socket exposto globalmente');
 
             // Evento de conexão
             socket.on('connect', () => {

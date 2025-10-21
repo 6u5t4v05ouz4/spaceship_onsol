@@ -312,7 +312,7 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
         // UI (adaptada para informações multiplayer)
         console.log('🔍 Inicializando interface multiplayer...');
-        this.uiManager.initialize();
+        this.uiManager.createUI();
         console.log('✅ Interface inicializada');
 
         // Inicializa sistema multiplayer principal

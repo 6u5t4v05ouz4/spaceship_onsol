@@ -151,7 +151,11 @@ export default class MultiplayerManager {
       };
 
       // Inicializar prediction manager
-      socketService.initializeNetworkSystems(initialState);
+      if (socketService.initializeNetworkSystems && typeof socketService.initializeNetworkSystems === 'function') {
+        socketService.initializeNetworkSystems(initialState);
+      } else {
+        console.warn('⚠️ initializeNetworkSystems não disponível - sistemas avançados desativados');
+      }
 
       // Atualizar dados locais
       this.localPlayerData = {
@@ -335,7 +339,10 @@ export default class MultiplayerManager {
     }
 
     // Usar posição predita do socket service
-    const predictedPos = socketService.getPredictedPosition();
+    let predictedPos = null;
+    if (socketService.getPredictedPosition && typeof socketService.getPredictedPosition === 'function') {
+      predictedPos = socketService.getPredictedPosition();
+    }
     if (predictedPos) {
       return {
         x: predictedPos.x,
@@ -450,10 +457,12 @@ export default class MultiplayerManager {
     this.addOtherPlayer(data);
 
     // Adicionar ao interpolation manager para movimento suave
-    socketService.updateEntityPosition(data.id, {
-      x: data.x,
-      y: data.y
-    }, null, data.health);
+    if (socketService.updateEntityPosition && typeof socketService.updateEntityPosition === 'function') {
+      socketService.updateEntityPosition(data.id, {
+        x: data.x,
+        y: data.y
+      }, null, data.health);
+    }
   }
 
   /**
@@ -464,7 +473,9 @@ export default class MultiplayerManager {
     this.removeOtherPlayer(data.playerId);
 
     // Remover do interpolation manager
-    socketService.removeEntity(data.playerId);
+    if (socketService.removeEntity && typeof socketService.removeEntity === 'function') {
+      socketService.removeEntity(data.playerId);
+    }
   }
 
   /**
@@ -472,10 +483,12 @@ export default class MultiplayerManager {
    */
   handlePlayerMoved(data) {
     // Atualizar posição no interpolation manager
-    socketService.updateEntityPosition(data.playerId, {
-      x: data.x,
-      y: data.y
-    }, null, data.health);
+    if (socketService.updateEntityPosition && typeof socketService.updateEntityPosition === 'function') {
+      socketService.updateEntityPosition(data.playerId, {
+        x: data.x,
+        y: data.y
+      }, null, data.health);
+    }
 
     // Manter lógica existente como fallback
     const player = this.otherPlayers.get(data.playerId);
@@ -983,7 +996,9 @@ export default class MultiplayerManager {
    */
   update() {
     // Atualizar sistemas de rede (predição e interpolação)
-    socketService.update();
+    if (socketService.update && typeof socketService.update === 'function') {
+      socketService.update();
+    }
 
     // Atualizar posições interpoladas dos outros jogadores
     this.updateInterpolatedPlayers();
@@ -1022,7 +1037,10 @@ export default class MultiplayerManager {
    */
   updateInterpolatedPlayers() {
     this.otherPlayers.forEach((playerData, playerId) => {
-      const interpolatedPos = socketService.getInterpolatedPosition(playerId);
+      let interpolatedPos = null;
+      if (socketService.getInterpolatedPosition && typeof socketService.getInterpolatedPosition === 'function') {
+        interpolatedPos = socketService.getInterpolatedPosition(playerId);
+      }
 
       if (interpolatedPos && playerData.sprite) {
         // Usar interpolação suave para movimento
@@ -1067,7 +1085,17 @@ export default class MultiplayerManager {
     this.lastNetworkUpdate = now;
 
     try {
-      const networkStats = socketService.getNetworkStats();
+      let networkStats = null;
+      if (socketService.getNetworkStats && typeof socketService.getNetworkStats === 'function') {
+        networkStats = socketService.getNetworkStats();
+      } else {
+        // Fallback para stats básicos
+        networkStats = {
+          prediction: { predictions: 0, corrections: 0 },
+          connection: { latency: 0 },
+          interpolation: { entities: 0 }
+        };
+      }
 
       this.networkStats = {
         predictions: networkStats.prediction.predictions,
@@ -1165,7 +1193,9 @@ export default class MultiplayerManager {
     this.chunkElements.clear();
 
     // Limpar sistemas de rede
-    socketService.resetNetworkSystems();
+    if (socketService.resetNetworkSystems && typeof socketService.resetNetworkSystems === 'function') {
+      socketService.resetNetworkSystems();
+    }
 
     // Limpar event listeners de rede
     window.removeEventListener('socket:move:confirmed', this.handleMoveConfirmed);

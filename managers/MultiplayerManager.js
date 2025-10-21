@@ -846,6 +846,49 @@ export default class MultiplayerManager {
   }
 
   /**
+   * Obtém estatísticas do servidor multiplayer
+   */
+  getServerStats() {
+    const stats = {
+      isConnected: this.isConnected,
+      isAuthenticated: this.isAuthenticated,
+      playerId: this.playerId,
+      currentChunk: this.currentChunk,
+      otherPlayersCount: this.otherPlayers.size,
+      totalChunks: this.chunkElements.size,
+      connectionStatus: this.isConnected ? 'Connected' : 'Disconnected',
+      socketServiceStatus: socketService.isConnected() ? 'Connected' : 'Disconnected'
+    };
+
+    // Adicionar informações dos outros players
+    if (this.otherPlayers.size > 0) {
+      stats.otherPlayers = Array.from(this.otherPlayers.values()).map(player => ({
+        id: player.id,
+        username: player.username,
+        health: player.health,
+        maxHealth: player.maxHealth,
+        position: {
+          x: player.data.x,
+          y: player.data.y
+        }
+      }));
+    }
+
+    // Adicionar informações dos chunks
+    if (this.chunkElements.size > 0) {
+      stats.chunkElements = {};
+      this.chunkElements.forEach((elements, chunkKey) => {
+        stats.chunkElements[chunkKey] = {
+          count: elements.length,
+          types: elements.map(e => e.type)
+        };
+      });
+    }
+
+    return stats;
+  }
+
+  /**
    * Destroy (cleanup)
    */
   destroy() {

@@ -6,8 +6,13 @@
     <title>Space Crypto Miner - Multiplayer</title>
     <link rel="icon" href="/assets/icones/icone.png" />
 
+    <!-- Forçar no cache para desenvolvimento -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <!-- CSS simples -->
-    <link rel="stylesheet" href="/main.css">
+    <link rel="stylesheet" href="/main.css" id="main-css">
 
     <!-- Phaser.js -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
@@ -189,6 +194,20 @@
     </style>
 </head>
 <body>
+    <!-- Script para forçar no cache em desenvolvimento -->
+    <script>
+        // Adicionar timestamp ao CSS para evitar cache
+        const cssLink = document.getElementById('main-css');
+        if (cssLink) {
+            cssLink.href = '/main.css?v=' + Date.now();
+        }
+
+        // Forçar reload se detectar cache antigo
+        if (performance.navigation.type === 1) {
+            console.log('Página recarregada, limpando cache...');
+        }
+    </script>
+
     <div id="loading">🚀 Carregando multiplayer...</div>
     <div id="gameCanvas"></div>
 
@@ -224,6 +243,7 @@
 
     <script type="module">
         // Importar dependências
+        console.log('🔄 Carregando multiplayer.html (v' + Date.now() + ')');
         import socketService from '/services/socketService.js';
         import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
         
@@ -304,56 +324,33 @@
 
         // Função segura para serializar objetos (evita circular structure)
         function safeStringify(obj, depth = 0) {
-            if (depth > 2) return '[Max Depth Reached]';
-            if (obj === null) return 'null';
+            if (depth > 1) return '[Max Depth]';
+
+            if (obj === null || obj === undefined) return 'null';
             if (typeof obj !== 'object') return String(obj);
 
-            try {
-                // Para objetos conhecidos, mostrar apenas propriedades relevantes
-                if (obj.constructor && obj.constructor.name === 'Socket') {
-                    return `Socket{id: ${obj.id}, connected: ${obj.connected}}`;
+            // Para tipos de objetos conhecidos, retornar representação simples
+            if (obj.constructor && obj.constructor.name) {
+                switch(obj.constructor.name) {
+                    case 'Socket':
+                        return `Socket{id: ${obj.id || 'unknown'}, connected: ${obj.connected || false}}`;
+                    case 'SocketService':
+                        return `SocketService{connected: ${obj.connected || false}, authenticated: ${obj.authenticated || false}}`;
+                    case 'Window':
+                    case 'Document':
+                        return `[${obj.constructor.name}]`;
+                    default:
+                        return `[${obj.constructor.name}]`;
                 }
-                if (obj.constructor && obj.constructor.name === 'SocketService') {
-                    return `SocketService{connected: ${obj.connected}, authenticated: ${obj.authenticated}, playerId: ${obj.playerId}}`;
-                }
-
-                // Para outros objetos, tentar JSON.stringify com replacer mais seguro
-                const jsonStr = JSON.stringify(obj, (key, value) => {
-                    if (depth > 1) return '[Max Depth]';
-
-                    // Evitar objetos problemáticos que podem causar referências circulares
-                    if (value === window || value === document || value === globalThis) {
-                        return '[Window/Document]';
-                    }
-
-                    // Verificar se é um objeto HTMLElement
-                    if (value && typeof value === 'object' && value.nodeType === 1) {
-                        return '[HTMLElement]';
-                    }
-
-                    // Verificar se é uma função
-                    if (typeof value === 'function') {
-                        return '[Function]';
-                    }
-
-                    // Para arrays com objetos complexos, limitar profundidade
-                    if (Array.isArray(value) && depth > 0) {
-                        return value.map(item =>
-                            typeof item === 'object' ? '[Object]' : safeStringify(item, depth + 1)
-                        );
-                    }
-
-                    return value;
-                }, 2);
-
-                // Limitar tamanho para evitar logs muito longos
-                if (jsonStr.length > 200) {
-                    return jsonStr.substring(0, 200) + '...';
-                }
-                return jsonStr;
-            } catch (e) {
-                return `[Circular Object: ${obj.constructor?.name || 'Unknown'}]`;
             }
+
+            // Para arrays, mostrar tamanho e tipo
+            if (Array.isArray(obj)) {
+                return `Array[${obj.length}]`;
+            }
+
+            // Para objetos genéricos
+            return '[Object]';
         }
 
         // Interceptar console.log para mostrar na UI

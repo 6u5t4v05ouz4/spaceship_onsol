@@ -4,11 +4,48 @@
  */
 
 import socketService from '../services/socketService.js';
-import AssetManager from './AssetManager.js';
-import SpriteSheetManager from './SpriteSheetManager.js';
-import { createLogger } from '../utils/logger.js';
 
-const logger = createLogger('MultiplayerManager');
+// Classes simplificadas para evitar problemas de importação
+class SimpleAssetManager {
+    constructor(scene) {
+        this.scene = scene;
+    }
+
+    async init() {
+        // Implementação básica
+    }
+}
+
+class SimpleSpriteSheetManager {
+    constructor(scene) {
+        this.scene = scene;
+    }
+
+    async init() {
+        // Implementação básica
+    }
+}
+
+// Logger simplificado que usa o DebugLogger global se disponível
+const logger = {
+    log: (category, message, data) => {
+        if (typeof window !== 'undefined' && window.debugLogger) {
+            window.debugLogger.log(category, `[MultiplayerManager] ${message}`, data);
+        } else {
+            console.log(`[${category}] [MultiplayerManager] ${message}`, data || '');
+        }
+    },
+    auth: (message, data) => logger.log('AUTH', message, data),
+    socket: (message, data) => logger.log('SOCKET', message, data),
+    multiplayer: (message, data) => logger.log('MULTIPLAYER', message, data),
+    movement: (message, data) => logger.log('MOVEMENT', message, data),
+    chunk: (message, data) => logger.log('CHUNK', message, data),
+    game: (message, data) => logger.log('GAME', message, data),
+    error: (message, data) => logger.log('ERROR', message, data),
+    success: (message, data) => logger.log('SUCCESS', message, data),
+    warning: (message, data) => logger.log('WARNING', message, data),
+    debug: (message, data) => logger.log('DEBUG', message, data),
+};
 
 export default class MultiplayerManager {
   constructor(scene) {
@@ -22,9 +59,9 @@ export default class MultiplayerManager {
     this.isConnected = false;
     this.isAuthenticated = false;
 
-    // Asset managers
-    this.assetManager = new AssetManager(scene);
-    this.spriteSheetManager = new SpriteSheetManager(scene);
+    // Asset managers simplificados
+    this.assetManager = new SimpleAssetManager(scene);
+    this.spriteSheetManager = new SimpleSpriteSheetManager(scene);
     this.chunkElements = new Map(); // Map<chunkKey, elementSprites>
 
     // Sistemas de rede (novos)

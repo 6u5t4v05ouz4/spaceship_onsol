@@ -6,6 +6,9 @@
 import socketService from '../services/socketService.js';
 import AssetManager from './AssetManager.js';
 import SpriteSheetManager from './SpriteSheetManager.js';
+import { createLogger } from '../utils/logger.js';
+
+const logger = createLogger('MultiplayerManager');
 
 export default class MultiplayerManager {
   constructor(scene) {
@@ -48,7 +51,7 @@ export default class MultiplayerManager {
    * Inicializa o multiplayer
    */
   async init() {
-    console.log('🌐 Inicializando Multiplayer Manager...');
+    logger.multiplayer('Inicializando Multiplayer Manager...');
 
     // Inicializar asset managers (spriteSheetManager desativado - usa assets existentes)
     // await this.spriteSheetManager.init(); // Desativado - usa assets existentes

@@ -230,8 +230,8 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         // SpriteSheetManager (novo - para elementos do banco)
         console.log('🔍 Inicializando SpriteSheetManager...');
         this.spriteSheetManager = new SpriteSheetManager(this);
-        await this.spriteSheetManager.init();
-        console.log('✅ SpriteSheetManager inicializado');
+        // Desativado init() pois estamos usando assets existentes, não geração procedural
+        console.log('✅ SpriteSheetManager inicializado (sem geração procedural)');
 
         // AssetManager (novo - para gerenciar assets multiplayer)
         console.log('🔍 Inicializando AssetManager...');

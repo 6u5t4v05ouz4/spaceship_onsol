@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { parse } from 'node:url';
-import { copyFileSync, existsSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 
 // Plugin para copiar arquivos HTML
 const copyHtmlPlugin = {
@@ -11,6 +12,29 @@ const copyHtmlPlugin = {
       if (existsSync(file)) {
         copyFileSync(file, `dist/${file}`);
         console.log(`✅ ${file} copiado para dist/`);
+      }
+    });
+  }
+};
+
+// Plugin para copiar arquivos de scenes
+const copyScenesPlugin = {
+  name: 'copy-scenes-files',
+  writeBundle() {
+    // Garantir que o diretório dist/scenes exista
+    if (!existsSync('dist/scenes')) {
+      mkdirSync('dist/scenes', { recursive: true });
+      console.log('📁 Diretório dist/scenes criado');
+    }
+
+    // Copiar arquivos de scenes
+    const sceneFiles = ['MultiplayerGameScene.js'];
+    sceneFiles.forEach(file => {
+      const srcPath = join('src/scenes', file);
+      const destPath = join('dist/scenes', file);
+      if (existsSync(srcPath)) {
+        copyFileSync(srcPath, destPath);
+        console.log(`✅ ${file} copiado para dist/scenes/`);
       }
     });
   }
@@ -62,7 +86,7 @@ export default defineConfig({
 		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
 	},
   publicDir: 'public',
-  plugins: [spaFallbackPlugin, copyHtmlPlugin],
+  plugins: [spaFallbackPlugin, copyHtmlPlugin, copyScenesPlugin],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

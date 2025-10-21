@@ -35,18 +35,20 @@ export async function handleAuth(socket, data, io) {
   try {
     console.log('🔐 Auth request:', data.userId ? data.userId.substring(0, 8) : 'unknown');
 
-    // Em produção, aqui você validaria o token com Supabase
-    // Por enquanto, aceitamos qualquer userId
+    // Aceitar os dados enviados pelo cliente
     const userId = data.userId || `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const username = data.username || `Player_${userId.substring(0, 8)}`;
+    const email = data.email || 'demo@example.com';
 
     // Salvar informações do socket
     socket.userId = userId;
     socket.username = username;
+    socket.email = email;
 
     // Atualizar estado do jogador no banco
     const playerState = await updatePlayerState(userId, {
       username,
+      email,
       socketId: socket.id,
       x: 400, // Posição inicial
       y: 300,

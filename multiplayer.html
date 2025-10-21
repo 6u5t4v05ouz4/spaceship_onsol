@@ -432,7 +432,8 @@
         function initializeSocket() {
             console.log('🔌 Inicializando conexão WebSocket...');
 
-            const serverUrl = window.location.origin; // Usar a mesma origem
+            // Usar o servidor Railway que está rodando o backend
+            const serverUrl = 'https://spaceshiponsol-production-5493.up.railway.app';
 
             socket = io(serverUrl, {
                 transports: ['websocket', 'polling'],
@@ -520,19 +521,27 @@
 
                 console.log('✅ Sessão encontrada:', session.user.email);
 
-                // Obter perfil do usuário
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
+                // Obter player_state do usuário
+                const { data: playerState, error: playerStateError } = await supabase
+                    .from('player_state')
                     .select('*')
-                    .eq('id', session.user.id)
+                    .eq('user_id', session.user.id)
                     .single();
 
-                const username = profile?.username || session.user.email?.split('@')[0] || 'Player';
+                let username = session.user.email?.split('@')[0] || 'Player';
+
+                // Se encontrou player_state, usar username de lá
+                if (playerState && !playerStateError) {
+                    username = playerState.username || username;
+                }
+
+                console.log('👤 Player state:', playerState);
 
                 // Autenticar com o servidor multiplayer
                 socket.emit('auth', {
-                    token: session.access_token,
-                    username: username
+                    userId: session.user.id,
+                    username: username,
+                    email: session.user.email
                 });
 
                 return true;

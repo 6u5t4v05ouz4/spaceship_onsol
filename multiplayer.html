@@ -244,6 +244,25 @@
     <script type="module">
         // Importar dependências
         console.log('🔄 Carregando multiplayer.html (v' + Date.now() + ')');
+
+        // Interceptador global para capturar erros de JSON.stringify
+        const originalJSONStringify = JSON.stringify;
+        JSON.stringify = function(...args) {
+            try {
+                return originalJSONStringify.apply(this, args);
+            } catch (e) {
+                console.error('🚨 JSON.stringify Error capturado:', e.message);
+                console.error('🚨 Stack:', e.stack);
+                console.error('🚨 Args:', args.map(a => {
+                    if (typeof a === 'object' && a !== null) {
+                        return `[${a.constructor?.name || 'Object'}]`;
+                    }
+                    return String(a);
+                }));
+                throw e; // Re-throw para ver o erro original
+            }
+        };
+
         import socketService from '/services/socketService.js';
         import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
         
@@ -358,20 +377,46 @@
         const originalConsoleWarn = console.warn;
         const originalConsoleError = console.error;
 
-        console.log = function(...args) {
-            originalConsoleLog.apply(console, args);
+        // Função ultra segura para converter argumentos
+        const safeArgsToString = (args) => {
+            return args.map(arg => {
+                try {
+                    // Valores primitivos
+                    if (arg === null || arg === undefined) {
+                        return 'null';
+                    }
+                    if (typeof arg === 'string' || typeof arg === 'number' || typeof arg === 'boolean') {
+                        return String(arg);
+                    }
 
-            try {
-                const message = args.map(arg => {
-                    // Para objetos complexos, só mostrar tipo e propriedades básicas
-                    if (typeof arg === 'object' && arg !== null) {
+                    // Objetos complexos - só mostrar tipo
+                    if (typeof arg === 'object') {
+                        if (arg === window || arg === document) {
+                            return '[Window/Document]';
+                        }
                         if (arg.constructor && arg.constructor.name) {
                             return `[${arg.constructor.name}]`;
                         }
                         return '[Object]';
                     }
+
+                    // Funções
+                    if (typeof arg === 'function') {
+                        return '[Function]';
+                    }
+
                     return String(arg);
-                }).join(' ');
+                } catch (e) {
+                    return '[Unknown]';
+                }
+            }).join(' ');
+        };
+
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+
+            try {
+                const message = safeArgsToString(args);
 
                 // Filtrar apenas logs do servidor - conexão, autenticação, multiplayer
                 if (message.includes('🔌') || message.includes('🔐') || message.includes('📡') ||
@@ -394,15 +439,7 @@
             originalConsoleWarn.apply(console, args);
 
             try {
-                const message = args.map(arg => {
-                    if (typeof arg === 'object' && arg !== null) {
-                        if (arg.constructor && arg.constructor.name) {
-                            return `[${arg.constructor.name}]`;
-                        }
-                        return '[Object]';
-                    }
-                    return String(arg);
-                }).join(' ');
+                const message = safeArgsToString(args);
 
                 // Filtrar apenas warnings relacionados ao servidor
                 if (message.includes('SocketService') || message.includes('MultiplayerManager') ||
@@ -418,15 +455,7 @@
             originalConsoleError.apply(console, args);
 
             try {
-                const message = args.map(arg => {
-                    if (typeof arg === 'object' && arg !== null) {
-                        if (arg.constructor && arg.constructor.name) {
-                            return `[${arg.constructor.name}]`;
-                        }
-                        return '[Object]';
-                    }
-                    return String(arg);
-                }).join(' ');
+                const message = safeArgsToString(args);
 
                 // Filtrar apenas erros relacionados ao servidor
                 if (message.includes('SocketService') || message.includes('MultiplayerManager') ||

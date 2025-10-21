@@ -137,13 +137,10 @@ export default class ProjectileManager {
             // Armazena referência
             this.projectiles.push(projectile);
             
-            // Remove o projétil após 3 segundos - EXATO do GameScene antigo
+            // Remove o projétil após 3 segundos com efeitos de explosão
             this.scene.time.delayedCall(3000, () => {
                 if (projectile && projectile.active) {
-                    if (projectile._trailId && this.particleEffects) {
-                        this.particleEffects.removeEmitter(projectile._trailId);
-                    }
-                    projectile.destroy();
+                    this.destroyProjectile(projectile, true); // Com efeitos de explosão
                 }
             });
             
@@ -346,34 +343,115 @@ export default class ProjectileManager {
     }
     
     /**
-     * Destrói um projétil específico
+     * Destrói um projétil específico com efeitos de explosão
      */
-    destroyProjectile(projectile) {
+    destroyProjectile(projectile, createExplosion = true) {
         if (!projectile || !projectile.isAlive) return;
-        
-        console.log('💥 Projétil destruído');
-        
+
+        console.log('💥 Projétil destruído com efeitos');
+
         projectile.isAlive = false;
-        
+
+        // Cria efeitos de explosão (se solicitado)
+        if (createExplosion) {
+            this.createProjectileExplosion(projectile);
+        }
+
         // Remove trail effect
         if (projectile._trailId && this.particleEffects) {
             this.particleEffects.removeEmitter(projectile._trailId);
         }
-        
+
         // Remove do sistema de colisões
         if (this.collisionManager) {
             this.collisionManager.removeFromGroup('projectiles', projectile);
         }
-        
+
         // Destrói o sprite
         if (projectile.active) {
             projectile.destroy();
         }
-        
+
         // Remove da lista
         const index = this.projectiles.indexOf(projectile);
         if (index > -1) {
             this.projectiles.splice(index, 1);
+        }
+    }
+
+    /**
+     * Cria efeitos de explosão para projéteis
+     */
+    createProjectileExplosion(projectile) {
+        // Animação de explosão (baseado no CollisionManager)
+        if (this.scene && this.scene.textures.exists('explosion')) {
+            const explosion = this.scene.add.sprite(projectile.x, projectile.y, 'explosion');
+            explosion.setDepth(100);
+
+            // Usa a animação de explosão existente ou cria uma nova
+            if (this.scene.anims.exists('explosion_anim')) {
+                explosion.play('explosion_anim');
+            } else {
+                // Cria animação de explosão se não existir
+                this.createExplosionAnimation();
+                explosion.play('explosion_anim');
+            }
+
+            explosion.once('animationcomplete', () => {
+                explosion.destroy();
+            });
+        }
+
+        // Efeito de partículas de explosão pequena
+        if (this.particleEffects) {
+            this.particleEffects.createExplosion(projectile.x, projectile.y, 'small');
+        }
+
+        // Efeito de impacto (faíscas)
+        if (this.particleEffects) {
+            this.particleEffects.createImpactSparks(
+                projectile.x, projectile.y,
+                Phaser.Math.RadToDeg(projectile.rotation || 0)
+            );
+        }
+
+        // Screen shake pequeno
+        if (this.juiceManager) {
+            this.juiceManager.screenShake(30, 1);
+        }
+
+        // Som de explosão pequena
+        if (this.audioManager) {
+            this.audioManager.playExplosion('small');
+        }
+    }
+
+    /**
+     * Cria animação de explosão (baseado no GameSceneModular)
+     */
+    createExplosionAnimation() {
+        if (this.scene.anims.exists('explosion_anim')) return;
+
+        let explosionFrameNames = this.scene.textures.exists('explosion') ?
+            this.scene.textures.get('explosion').getFrameNames().filter(n => n !== '__BASE') : [];
+
+        explosionFrameNames = explosionFrameNames.sort((a, b) => {
+            const ra = a.match(/(\d+)/g);
+            const rb = b.match(/(\d+)/g);
+            const na = ra ? parseInt(ra[ra.length-1], 10) : 0;
+            const nb = rb ? parseInt(rb[rb.length-1], 10) : 0;
+            return na - nb;
+        });
+
+        if (explosionFrameNames.length > 0) {
+            const explosionFrames = explosionFrameNames.map(fn => ({ key: 'explosion', frame: fn }));
+
+            this.scene.anims.create({
+                key: 'explosion_anim',
+                frames: explosionFrames,
+                frameRate: 15,
+                repeat: 0
+            });
         }
     }
     

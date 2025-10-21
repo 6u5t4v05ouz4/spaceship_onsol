@@ -98,9 +98,13 @@ export default class CollisionManager {
         // Atualiza barra de vida do inimigo
         this.updateEnemyHealthBar(enemy);
         
-        // Destrói projétil
-        projectile.destroy();
-        
+        // Destrói projétil com efeitos
+        if (this.scene.projectileManager) {
+            this.scene.projectileManager.destroyProjectile(projectile, false); // Sem efeito adicional (já tem createImpactEffects)
+        } else {
+            projectile.destroy();
+        }
+
         // Verifica se inimigo foi destruído
         if (enemy.health <= 0) {
             this.destroyEnemy(enemy);
@@ -115,10 +119,14 @@ export default class CollisionManager {
         
         // Aplica dano
         meteor.health -= damage;
-        
-        // Destrói projétil
-        projectile.destroy();
-        
+
+        // Destrói projétil com efeitos
+        if (this.scene.projectileManager) {
+            this.scene.projectileManager.destroyProjectile(projectile, false); // Sem efeito adicional (já tem createImpactEffects)
+        } else {
+            projectile.destroy();
+        }
+
         // Verifica se meteoro foi destruído
         if (meteor.health <= 0) {
             this.destroyMeteor(meteor);

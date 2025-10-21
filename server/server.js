@@ -118,14 +118,13 @@ io.on('connection', (socket) => {
     socket.emit('pong', { timestamp: Date.now() });
   });
 
-  // Importar handlers do multiplayer
-  import('./multiplayer-handlers.js').then(({
+  // Importar handlers do multiplayer (sistema novo com Supabase)
+  import('./events/player-events.js').then(({
     handleAuth,
     handleChunkEnter,
     handlePlayerMove,
-    handleAttack,
-    handleRespawn,
-    handleDisconnect
+    handlePlayStart,
+    handlePlayStop
   }) => {
     // Event: auth (autenticação inicial)
     socket.on('auth', (data) => {
@@ -142,19 +141,20 @@ io.on('connection', (socket) => {
       handlePlayerMove(socket, data, io);
     });
 
-    // Event: battle:attack (atacar outro jogador)
-    socket.on('battle:attack', (data) => {
-      handleAttack(socket, data, io);
+    // Event: play:start (iniciar jogo)
+    socket.on('play:start', (data) => {
+      handlePlayStart(socket, data, io);
     });
 
-    // Event: battle:respawn (respawn após morte)
-    socket.on('battle:respawn', (data) => {
-      handleRespawn(socket, data, io);
+    // Event: play:stop (parar jogo)
+    socket.on('play:stop', (data) => {
+      handlePlayStop(socket, data, io);
     });
 
     // Event: disconnect (desconexão)
     socket.on('disconnect', (reason) => {
-      handleDisconnect(socket, reason, io);
+      console.log(`🔌 Client disconnected: ${socket.id} - ${reason}`);
+      // Cleanup será feito pelo cacheManager automaticamente
     });
   }).catch(error => {
     console.error('❌ Erro ao carregar multiplayer handlers:', error);

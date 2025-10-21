@@ -95,6 +95,7 @@
     <!-- Interface do jogador -->
     <div id="playerInfo" style="display: none;">
         <div>👤 <span id="playerName">Jogador</span></div>
+        <div>📡 <span id="connectionStatus">🔴 Desconectado</span></div>
         <div>📍 Chunk: <span id="playerChunk">0, 0</span></div>
         <div>⚡ Energia: <span id="playerEnergy">100</span>%</div>
         <div>🪨 Recursos: <span id="playerResources">0</span></div>
@@ -423,8 +424,157 @@
             });
         }
 
+        // Inicializar conexão WebSocket
+        let socket = null;
+        let playerId = null;
+        let isConnected = false;
+
+        function initializeSocket() {
+            console.log('🔌 Inicializando conexão WebSocket...');
+
+            const serverUrl = window.location.origin; // Usar a mesma origem
+
+            socket = io(serverUrl, {
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                reconnectionAttempts: 5
+            });
+
+            // Evento de conexão
+            socket.on('connect', () => {
+                console.log('✅ Conectado ao servidor multiplayer!');
+                isConnected = true;
+                updateConnectionStatus();
+            });
+
+            // Evento de desconexão
+            socket.on('disconnect', (reason) => {
+                console.log('❌ Desconectado do servidor:', reason);
+                isConnected = false;
+                updateConnectionStatus();
+            });
+
+            // Evento de autenticação
+            socket.on('auth:success', (data) => {
+                console.log('✅ Autenticado com sucesso:', data.playerId);
+                playerId = data.playerId;
+                updatePlayerInfo(data);
+
+                // Entrar no chunk inicial automaticamente
+                socket.emit('chunk:enter', { chunkX: 0, chunkY: 0 });
+            });
+
+            // Evento de erro de autenticação
+            socket.on('auth:error', (data) => {
+                console.error('❌ Erro de autenticação:', data.message);
+            });
+
+            // Evento de dados do chunk
+            socket.on('chunk:data', (data) => {
+                console.log('📦 Dados do chunk recebido:', data);
+                updateChunkInfo(data);
+            });
+
+            // Evento: jogador entrou (OUTRO jogador)
+            socket.on('player:joined', (data) => {
+                console.log('👤 Outro jogador entrou:', data.username);
+                console.log('🎮 Detalhes:', data);
+                // TODO: Adicionar sprite do outro jogador ao jogo
+            });
+
+            // Evento: jogador saiu
+            socket.on('player:left', (data) => {
+                console.log('👋 Jogador saiu:', data.playerId);
+                // TODO: Remover sprite do jogador
+            });
+
+            // Evento: jogador se moveu
+            socket.on('player:moved', (data) => {
+                console.log('🏃 Jogador se moveu:', data);
+                // TODO: Atualizar posição do sprite
+            });
+
+            // Evento de erro geral
+            socket.on('error', (data) => {
+                console.error('❌ Erro do servidor:', data.message);
+            });
+        }
+
+        // Função para autenticar com Supabase
+        async function authenticateWithSupabase() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    console.error('❌ Erro ao obter sessão:', error);
+                    return false;
+                }
+
+                if (!session) {
+                    console.log('🔐 Nenhuma sessão encontrada, redirecionando...');
+                    window.location.href = '/login';
+                    return false;
+                }
+
+                console.log('✅ Sessão encontrada:', session.user.email);
+
+                // Obter perfil do usuário
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                const username = profile?.username || session.user.email?.split('@')[0] || 'Player';
+
+                // Autenticar com o servidor multiplayer
+                socket.emit('auth', {
+                    token: session.access_token,
+                    username: username
+                });
+
+                return true;
+
+            } catch (error) {
+                console.error('❌ Erro na autenticação:', error);
+                return false;
+            }
+        }
+
+        // Funções de UI
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('connectionStatus');
+            if (statusElement) {
+                statusElement.textContent = isConnected ? '🟢 Conectado' : '🔴 Desconectado';
+                statusElement.style.color = isConnected ? '#00ff00' : '#ff0000';
+            }
+        }
+
+        function updatePlayerInfo(data) {
+            document.getElementById('playerName').textContent = data.username || 'Player';
+        }
+
+        function updateChunkInfo(data) {
+            if (data.chunkX !== undefined && data.chunkY !== undefined) {
+                document.getElementById('playerChunk').textContent = `${data.chunkX}, ${data.chunkY}`;
+            }
+        }
+
+        // Inicializar conexão antes de carregar o jogo
+        initializeSocket();
+
+        // Aguardar autenticação
+        setTimeout(async () => {
+            const isAuthenticated = await authenticateWithSupabase();
+            if (isAuthenticated) {
+                loadMultiplayerGame();
+            }
+        }, 1000);
+
         // Iniciar carregamento
-        loadMultiplayerGame();
+        // loadMultiplayerGame();
     </script>
 </body>
 </html>

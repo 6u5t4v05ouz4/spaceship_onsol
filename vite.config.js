@@ -89,7 +89,8 @@ const copyEffectsPlugin = {
     // Copiar arquivos de effects necessários para multiplayer
     const effectFiles = [
       'ParticleEffects.js',
-      'UIAnimations.js'
+      'UIAnimations.js',
+      'TrailEffects.js'
     ];
 
     effectFiles.forEach(file => {

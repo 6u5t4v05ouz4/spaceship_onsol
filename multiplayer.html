@@ -111,17 +111,20 @@
 
     <script type="module">
         // Usar Supabase via CDN
-        const { createClient } = window.supabase;
+        // Verificar se já existe uma instância do Supabase para evitar conflitos
+        let supabase;
 
-        // Criar cliente Supabase e disponibilizar globalmente
-        const supabase = createClient(
-            'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4'
-        );
-
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && window.supabase) {
+            // Usar instância existente do site principal
+            supabase = window.supabase;
             window.supabaseClient = supabase;
-            console.log('✅ Supabase client inicializado globalmente');
+            console.log('✅ Usando instância Supabase existente do site principal');
+        } else {
+            // NÃO criar nova instância - usar apenas a existente
+            console.error('❌ Nenhuma instância Supabase encontrada. O multiplayer precisa da instância do site principal.');
+            // Redirecionar para a página principal se não houver instância Supabase
+            window.location.href = '/';
+        }
 
             // ✅ Definir URL do servidor Railway globalmente
             window.VITE_SERVER_URL = 'https://spaceshiponsol-production-5493.up.railway.app';

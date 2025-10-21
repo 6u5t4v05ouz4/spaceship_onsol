@@ -6,7 +6,7 @@ import { copyFileSync, existsSync } from 'fs';
 const copyHtmlPlugin = {
   name: 'copy-html-files',
   writeBundle() {
-    const htmlFiles = ['game.html', 'login.html'];
+    const htmlFiles = ['game.html', 'login.html', 'multiplayer.html'];
     htmlFiles.forEach(file => {
       if (existsSync(file)) {
         copyFileSync(file, `dist/${file}`);

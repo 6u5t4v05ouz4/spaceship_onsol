@@ -73,12 +73,28 @@ class SocketService {
    * Configura event listeners
    */
   setupListeners() {
+    console.log('🔧 Configurando listeners do socket...');
+    console.log('🔍 Socket atual:', this.socket);
+    
     // ===== Conexão =====
     this.socket.on('connect', () => {
+      console.log('✅ Evento connect disparado!');
       console.log('✅ Conectado ao servidor:', this.socket.id);
       console.log('🔍 Socket conectado:', this.socket.connected);
+      console.log('🔍 Estado antes da atualização:', {
+        connected: this.connected,
+        authenticated: this.authenticated,
+        playerId: this.playerId
+      });
+      
       this.connected = true;
       this.reconnectAttempts = 0;
+      
+      console.log('🔍 Estado após atualização:', {
+        connected: this.connected,
+        authenticated: this.authenticated,
+        playerId: this.playerId
+      });
 
       // Disparar evento customizado
       window.dispatchEvent(new CustomEvent('socket:connected', {
@@ -422,14 +438,27 @@ class SocketService {
    * Verifica se está conectado
    */
   isConnected() {
-    return this.connected && this.socket?.connected;
+    const result = this.connected && this.socket?.connected;
+    console.log('🔍 isConnected() chamado:', {
+      thisConnected: this.connected,
+      socketConnected: this.socket?.connected,
+      result: result,
+      socketId: this.socket?.id
+    });
+    return result;
   }
 
   /**
    * Verifica se está autenticado
    */
   isAuthenticated() {
-    return this.authenticated;
+    const result = this.authenticated && !!this.playerId;
+    console.log('🔍 isAuthenticated() chamado:', {
+      thisAuthenticated: this.authenticated,
+      playerId: this.playerId,
+      result: result
+    });
+    return result;
   }
 
   /**

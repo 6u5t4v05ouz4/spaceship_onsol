@@ -85,6 +85,17 @@ export default class MultiplayerManager {
     // Aguardar confirmação de autenticação
     await this.waitForAuthentication();
 
+    // Verificar se temos playerId mesmo sem authenticated flag
+    if (!this.isAuthenticated && socketService.getPlayerId()) {
+      console.log('🔧 Corrigindo estado de autenticação - playerId presente');
+      this.isAuthenticated = true;
+      this.playerId = socketService.getPlayerId();
+      console.log('✅ Estado corrigido:', {
+        authenticated: this.isAuthenticated,
+        playerId: this.playerId
+      });
+    }
+
     // Setup event listeners
     this.setupEventListeners();
 
@@ -104,12 +115,14 @@ export default class MultiplayerManager {
     console.log('⏳ Aguardando autenticação...');
     console.log('🔍 Socket conectado:', socketService.isConnected());
     console.log('🔍 Socket autenticado:', socketService.isAuthenticated());
+    console.log('🔍 Player ID atual:', socketService.getPlayerId());
     
     return new Promise((resolve) => {
-      if (socketService.isAuthenticated()) {
+      // Se já temos playerId, consideramos autenticado
+      if (socketService.isAuthenticated() || socketService.getPlayerId()) {
         this.isAuthenticated = true;
         this.playerId = socketService.getPlayerId();
-        console.log('✅ Já autenticado:', this.playerId);
+        console.log('✅ Já autenticado ou playerId presente:', this.playerId);
         resolve();
         return;
       }
@@ -118,7 +131,7 @@ export default class MultiplayerManager {
 
       const checkAuth = () => {
         console.log('🔍 Evento socket:authenticated recebido!');
-        if (socketService.isAuthenticated()) {
+        if (socketService.isAuthenticated() || socketService.getPlayerId()) {
           this.isAuthenticated = true;
           this.playerId = socketService.getPlayerId();
           console.log('✅ Autenticação confirmada! Player ID:', this.playerId);

@@ -26,6 +26,32 @@ export default class ParticleEffects {
     }
 
     /**
+     * Cria efeito de muzzle flash (disparo de arma)
+     */
+    createMuzzleFlash(x, y, angle) {
+        // Cria emitter temporário para o muzzle flash
+        const flashEmitter = this.scene.particles.createEmitter({
+            x: x,
+            y: y,
+            speed: { min: 50, max: 100 },
+            angle: { min: angle - 30, max: angle + 30 },
+            scale: { start: 0.5, end: 0 },
+            alpha: { start: 1, end: 0 },
+            lifespan: 150,
+            quantity: 3,
+            blendMode: 'ADD',
+            tint: 0xffff00
+        });
+
+        // Remove o emitter após o tempo de vida
+        this.scene.time.delayedCall(200, () => {
+            flashEmitter.explode(0);
+        });
+
+        return flashEmitter;
+    }
+
+    /**
      * Cria texturas procedurais para partículas
      */
     createParticleTextures() {

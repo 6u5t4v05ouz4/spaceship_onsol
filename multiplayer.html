@@ -110,8 +110,8 @@
     </div>
 
     <script type="module">
-        // Importar SocketService
-        import SocketService from '/services/socketService.js';
+        // Importar SocketService (singleton)
+        import socketService from '/services/socketService.js';
         
         // Usar Supabase via CDN
         const { createClient } = window.supabase;
@@ -125,6 +125,11 @@
         if (typeof window !== 'undefined') {
             // Configurar Supabase
             console.log('🔍 Configurando Supabase...');
+            
+            // Definir variáveis do Supabase globalmente
+            window.SUPABASE_URL = 'https://cjrbhqlwfjebnjoyfjnc.supabase.co';
+            window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4';
+            
             console.log('🔍 SUPABASE_URL:', window.SUPABASE_URL);
             console.log('🔍 SUPABASE_ANON_KEY:', window.SUPABASE_ANON_KEY ? 'presente' : 'ausente');
             
@@ -137,7 +142,7 @@
             
             // Inicializar SocketService globalmente
             console.log('🔍 Inicializando SocketService...');
-            window.socketService = new SocketService();
+            window.socketService = socketService;
             console.log('✅ SocketService inicializado globalmente:', window.socketService);
         }
 

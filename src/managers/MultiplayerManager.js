@@ -262,15 +262,16 @@ export default class MultiplayerManager {
     if (data.players && data.players.length > 0) {
       console.log('👥 Processando players do chunk...');
       data.players.forEach(player => {
-        console.log(`  - Player: ${player.username} (ID: ${player.id})`);
+        console.log(`  - Player: ${player.username} (ID: ${player.id}) - Meu ID: ${this.playerId}`);
 
-        // Não adicionar o próprio player
-        if (player.id !== this.playerId) {
-          console.log(`    ✅ Adicionando player ${player.username}`);
-          this.addOtherPlayer(player);
-        } else {
-          console.log(`    ⏭️ Pulando (é você mesmo)`);
+        // NÃO adicionar o próprio player de forma alguma
+        if (player.id === this.playerId) {
+          console.log(`    ❌ BLOQUEADO: Tentando adicionar o próprio player ${player.username} - ISSO NÃO DEVE ACONTECER!`);
+          return; // Bloqueia completamente
         }
+
+        console.log(`    ✅ Adicionando player ${player.username} (ID diferente)`);
+        this.addOtherPlayer(player);
       });
     } else {
       console.log('⚠️ Nenhum player no chunk ou data.players vazio');
@@ -469,36 +470,31 @@ export default class MultiplayerManager {
       return;
     }
 
+    // BLOQUEAR nave "pilot" - isso parece ser um erro de spawn
+    if (data.username === 'pilot' || data.username === 'Pilot') {
+      console.log('❌ BLOQUEADO: Tentando criar nave "pilot" - isso é um erro!');
+      return;
+    }
+
     console.log('➕ Adicionando player:', data.username, `(${data.x}, ${data.y})`);
     console.log('📊 Data completa:', data);
 
-    // Verificar se o sprite 'enemy' existe
-    if (!this.scene.textures.exists('enemy')) {
-      console.error('❌ Sprite "enemy" não encontrado! Usando fallback...');
-      // Tentar usar o sprite da nave do player
-      const fallbackSprite = this.scene.textures.exists('nave') ? 'nave' : null;
-      if (!fallbackSprite) {
-        console.error('❌ Nenhum sprite disponível para outros players!');
-        return;
-      }
-    }
-
-    // Criar sprite do player (usar 'nave' como fallback)
-    const spriteKey = this.scene.textures.exists('enemy') ? 'enemy' : 'nave';
-    console.log('🎨 Usando sprite:', spriteKey);
+    // Usar sempre o sprite 'ship' (01.png) para todos os jogadores
+    const spriteKey = 'ship';
+    console.log('🎨 Usando sprite ship (01.png) para jogador:', data.username);
     
     const sprite = this.scene.physics.add.sprite(data.x, data.y, spriteKey);
     sprite.setScale(0.6);
     
-    // Tentar tocar animação se existir
+    // Usar animação da nave (ship_thrust)
     try {
-      if (this.scene.anims.exists('enemy_thrust')) {
-        sprite.play('enemy_thrust');
-      } else if (this.scene.anims.exists('nave_thrust')) {
-        sprite.play('nave_thrust');
+      if (this.scene.anims.exists('ship_thrust')) {
+        sprite.play('ship_thrust');
+      } else {
+        console.warn('⚠️ Animação ship_thrust não disponível');
       }
     } catch (e) {
-      console.warn('⚠️ Animação não disponível:', e.message);
+      console.warn('⚠️ Erro ao tocar animação:', e.message);
     }
     
     sprite.setDepth(10);

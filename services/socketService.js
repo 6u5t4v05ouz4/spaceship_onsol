@@ -10,10 +10,9 @@ const io = window.io;
 const safeLog = (message, data = null) => {
   try {
     if (data && typeof data === 'object') {
-      console.log(message + ': ' + JSON.stringify({
-        type: data.constructor?.name || 'Object',
-        id: data.id || 'N/A'
-      }));
+      const typeName = data.constructor?.name || 'Object';
+      const id = data.id || 'N/A';
+      console.log(message + ': [' + typeName + ' id:' + id + ']');
     } else if (data !== null && data !== undefined) {
       console.log(message + ': ' + String(data));
     } else {

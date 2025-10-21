@@ -513,6 +513,13 @@ class SocketService {
   }
 
   /**
+   * Obtém username do jogador
+   */
+  getUsername() {
+    return this.playerState?.username || null;
+  }
+
+  /**
    * Obtém estado do jogador
    */
   getPlayerState() {

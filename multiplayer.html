@@ -521,27 +521,13 @@
 
                 console.log('✅ Sessão encontrada:', session.user.email);
 
-                // Obter player_state do usuário
-                const { data: playerState, error: playerStateError } = await supabase
-                    .from('player_state')
-                    .select('*')
-                    .eq('user_id', session.user.id)
-                    .single();
-
+                // O servidor vai criar/buscar o player_state automaticamente
                 let username = session.user.email?.split('@')[0] || 'Player';
-
-                // Se encontrou player_state, usar username de lá
-                if (playerState && !playerStateError) {
-                    username = playerState.username || username;
-                }
-
-                console.log('👤 Player state:', playerState);
+                console.log('👤 Username:', username);
 
                 // Autenticar com o servidor multiplayer
                 socket.emit('auth', {
-                    userId: session.user.id,
-                    username: username,
-                    email: session.user.email
+                    token: session.access_token
                 });
 
                 return true;

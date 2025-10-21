@@ -233,10 +233,19 @@ export async function handleChunkEnter(socket, data, io) {
       timestamp: Date.now()
     });
 
-    // Notificar outros players no chunk sobre a chegada APENAS se estiver no multiplayer
+    // No multiplayer.html, o jogador entra automaticamente no jogo ao entrar no chunk
     const playerData = connectedPlayers.get(socket.id);
-    if (playerData && playerData.is_in_game) {
+    if (playerData) {
+      // Se não está no multiplayer, define como ativo automaticamente
+      if (!playerData.is_in_game) {
+        playerData.is_in_game = true;
+        await updatePlayerState(socket.userId, { is_in_game: true });
+        console.log(`🎮 ${socket.username} ativou multiplayer automaticamente`);
+      }
+
       console.log(`🚀 ${socket.username} está no multiplayer - emitindo player:joined para chunk (${chunkX}, ${chunkY})`);
+      console.log(`📡 Emitindo player:joined para ${io.sockets.adapter.rooms.get(`chunk:${chunkX}:${chunkY}`)?.size || 0} sockets`);
+
       socket.to(`chunk:${chunkX}:${chunkY}`).emit('player:joined', {
         id: socket.userId,
         username: socket.username,
@@ -246,14 +255,16 @@ export async function handleChunkEnter(socket, data, io) {
         maxHealth: playerState.max_health,
         currentChunk: `(${chunkX}, ${chunkY})`
       });
-    } else {
-      console.log(`🔍 ${socket.username} entrou no chunk (${chunkX}, ${chunkY}) mas não está no multiplayer (is_in_game: ${playerData?.is_in_game})`);
+
+      console.log(`✅ player:joined emitido com sucesso para ${socket.username}`);
     }
 
     // Juntar o socket à sala do chunk
     socket.join(`chunk:${chunkX}:${chunkY}`);
 
     console.log(`📦 Chunk (${chunkX}, ${chunkY}) enviado: ${asteroids.length} asteroides, ${crystals.length} cristais, ${otherPlayers.length} players`);
+    console.log(`🔍 Players encontrados no chunk:`, otherPlayers.map(p => `${p.username}(${p.id})`));
+    console.log(`🌐 Sockets na sala chunk:${chunkX}:${chunkY}:`, Array.from(io.sockets.adapter.rooms.get(`chunk:${chunkX}:${chunkY}`) || []));
 
   } catch (error) {
     console.error('❌ Erro ao entrar no chunk:', error);

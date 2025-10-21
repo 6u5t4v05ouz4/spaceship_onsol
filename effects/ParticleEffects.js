@@ -29,26 +29,50 @@ export default class ParticleEffects {
      * Cria efeito de muzzle flash (disparo de arma)
      */
     createMuzzleFlash(x, y, angle) {
-        // Cria emitter temporário para o muzzle flash
-        const flashEmitter = this.scene.particles.createEmitter({
-            x: x,
-            y: y,
-            speed: { min: 50, max: 100 },
-            angle: { min: angle - 30, max: angle + 30 },
-            scale: { start: 0.5, end: 0 },
-            alpha: { start: 1, end: 0 },
-            lifespan: 150,
-            quantity: 3,
-            blendMode: 'ADD',
-            tint: 0xffff00
+        // Cria gráfico temporário para o muzzle flash
+        const flashGraphics = this.scene.add.graphics();
+        flashGraphics.setDepth(1000); // Acima de tudo
+
+        // Calcula offset baseado no ângulo
+        const offsetX = Math.cos(angle) * 15;
+        const offsetY = Math.sin(angle) * 15;
+        const flashX = x + offsetX;
+        const flashY = y + offsetY;
+
+        // Desenha o flash
+        flashGraphics.fillStyle(0xffff00, 1); // Amarelo brilhante
+        flashGraphics.fillCircle(flashX, flashY, 8);
+
+        // Adiciona brilho ao redor
+        flashGraphics.lineStyle(2, 0xffffff, 0.8);
+        flashGraphics.strokeCircle(flashX, flashY, 10);
+
+        // Animação de desaparecimento
+        let alpha = 1;
+        let scale = 1;
+
+        const flashTween = this.scene.tweens.add({
+            targets: { alpha, scale },
+            alpha: 0,
+            scale: 0.5,
+            duration: 150,
+            ease: 'Power2',
+            onUpdate: () => {
+                flashGraphics.clear();
+                flashGraphics.fillStyle(0xffff00, alpha);
+                flashGraphics.fillCircle(flashX, flashY, 8 * scale);
+
+                if (alpha > 0.5) {
+                    flashGraphics.lineStyle(2, 0xffffff, alpha * 0.8);
+                    flashGraphics.strokeCircle(flashX, flashY, 10 * scale);
+                }
+            },
+            onComplete: () => {
+                flashGraphics.destroy();
+            }
         });
 
-        // Remove o emitter após o tempo de vida
-        this.scene.time.delayedCall(200, () => {
-            flashEmitter.explode(0);
-        });
-
-        return flashEmitter;
+        return flashGraphics;
     }
 
     /**

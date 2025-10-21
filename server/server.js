@@ -45,6 +45,12 @@ app.use(cors({
   origin: [
     'https://spaceshiponsol.vercel.app',
     'https://spaceship-onsol-production.up.railway.app',
+    'https://spaceshiponsol-production-5493.up.railway.app',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+    'file://', // Para arquivos HTML locais
     process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN
   ].filter(Boolean), // Remove valores undefined/null
   credentials: true
@@ -110,19 +116,29 @@ const io = new Server(server, {
     origin: [
       'https://spaceshiponsol.vercel.app',
       'https://spaceship-onsol-production.up.railway.app',
-      process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN,
-      'http://localhost:5173'
+      'https://spaceshiponsol-production-5493.up.railway.app',
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
+      'file://', // Para arquivos HTML locais
+      process.env.CORS_ORIGIN || process.env.RAILWAY_PUBLIC_DOMAIN
     ].filter(Boolean), // Remove valores undefined/null
     methods: ['GET', 'POST'],
     credentials: true
   },
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
+  transports: ['polling', 'websocket'],
+  allowEIO3: true
 });
 
 // Connection handler (com multiplayer handlers)
 io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
+  console.log(`🔍 Origin: ${socket.handshake.headers.origin}`);
+  console.log(`🔍 User-Agent: ${socket.handshake.headers['user-agent']}`);
+  console.log(`🔍 Transport: ${socket.conn.transport.name}`);
 
   // Ping-pong para teste de conexão
   socket.on('ping', () => {
@@ -139,6 +155,7 @@ io.on('connection', (socket) => {
   }) => {
     // Event: auth (autenticação inicial)
     socket.on('auth', (data) => {
+      console.log(`🔐 Auth attempt from ${socket.id}:`, data.token ? 'Token presente' : 'Token ausente');
       handleAuth(socket, data, io);
     });
 

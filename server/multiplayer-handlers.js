@@ -35,6 +35,8 @@ export async function initMultiplayer() {
 export async function handleAuth(socket, data, io) {
   try {
     console.log('🔐 Auth request:', data);
+    console.log('🔍 Socket ID:', socket.id);
+    console.log('🔍 Token length:', data.token ? data.token.length : 'undefined');
     const { token } = data;
 
     if (!token) {
@@ -44,10 +46,14 @@ export async function handleAuth(socket, data, io) {
     }
 
     // 1. Validar JWT com Supabase
+    console.log('🔍 Validando token com Supabase...');
     const {
       data: { user },
       error: authError,
     } = await supabaseAnonClient.auth.getUser(token);
+    
+    console.log('🔍 User:', user ? 'presente' : 'ausente');
+    console.log('🔍 Auth error:', authError);
 
     if (authError || !user) {
       console.error('❌ Auth falhou:', authError?.message);

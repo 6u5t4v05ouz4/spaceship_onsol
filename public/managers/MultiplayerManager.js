@@ -22,9 +22,12 @@ export default class MultiplayerManager {
    */
   async init() {
     console.log('🌐 Inicializando Multiplayer Manager...');
+    console.log('🔍 socketService disponível:', typeof socketService !== 'undefined');
+    console.log('🔍 socketService.isConnected():', socketService.isConnected());
 
     // Conectar ao servidor se não estiver conectado
     if (!socketService.isConnected()) {
+      console.log('🔌 Tentando conectar ao servidor...');
       socketService.connect();
       
       // Aguardar conexão
@@ -51,7 +54,15 @@ export default class MultiplayerManager {
 
     // Autenticar explicitamente (Supabase já está disponível aqui)
     console.log('🔐 Tentando autenticar...');
-    await socketService.authenticate();
+    console.log('🔍 Supabase disponível:', typeof window.supabaseClient !== 'undefined');
+    console.log('🔍 window.userSession:', window.userSession);
+    
+    try {
+      await socketService.authenticate();
+      console.log('✅ Autenticação enviada com sucesso');
+    } catch (error) {
+      console.error('❌ Erro na autenticação:', error);
+    }
 
     // Aguardar confirmação de autenticação
     await this.waitForAuthentication();
@@ -72,6 +83,7 @@ export default class MultiplayerManager {
    * Aguarda autenticação
    */
   async waitForAuthentication() {
+    console.log('⏳ Aguardando autenticação...');
     return new Promise((resolve) => {
       if (socketService.isAuthenticated()) {
         this.isAuthenticated = true;
@@ -80,6 +92,8 @@ export default class MultiplayerManager {
         resolve();
         return;
       }
+      
+      console.log('🔍 Aguardando evento socket:authenticated...');
 
       const checkAuth = () => {
         if (socketService.isAuthenticated()) {

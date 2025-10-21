@@ -194,8 +194,8 @@
 
                 // Tentar pegar sessão atual
                 console.log('🔍 Tentando getSession...');
-                console.log('🔍 Supabase client:', supabase);
-                const { data: { session }, error } = await supabase.auth.getSession();
+                console.log('🔍 Supabase client:', window.supabaseClient);
+                const { data: { session }, error } = await window.supabaseClient.auth.getSession();
 
                 console.log('📋 Sessão encontrada:', session);
                 console.log('❗ Erro na sessão:', error);
@@ -211,7 +211,7 @@
 
                     // Tentar refresh da sessão
                     console.log('🔄 Tentando refreshSession...');
-                    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                    const { data: refreshData, error: refreshError } = await window.supabaseClient.auth.refreshSession();
 
                     console.log('🔄 Refresh session result:', refreshData);
                     console.log('❌ Refresh session error:', refreshError);
@@ -267,13 +267,13 @@
                                 console.log('✅ Token validado com sucesso:', userData.user.email);
 
                                 // Restaurar sessão no cliente principal
-                                await supabase.auth.setSession({
+                                await window.supabaseClient.auth.setSession({
                                     access_token: sessionData.access_token,
                                     refresh_token: sessionData.refresh_token || sessionData.access_token
                                 });
 
                                 // Tentar pegar a sessão novamente
-                                const { data: { session: restoredSession } } = await supabase.auth.getSession();
+                                const { data: { session: restoredSession } } = await window.supabaseClient.auth.getSession();
                                 if (restoredSession) {
                                     console.log('✅ Sessão restaurada com sucesso!');
                                     window.userSession = restoredSession;
@@ -566,7 +566,7 @@
         // Função para autenticar com Supabase
         async function authenticateWithSupabase() {
             try {
-                const { data: { session }, error } = await supabase.auth.getSession();
+                const { data: { session }, error } = await window.supabaseClient.auth.getSession();
 
                 if (error) {
                     console.error('❌ Erro ao obter sessão:', error);

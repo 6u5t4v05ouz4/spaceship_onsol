@@ -62,7 +62,12 @@ const copyManagersPlugin = {
       'GameOverManager.js',
       'MultiplayerManager.js',
       'AssetManager.js',
-      'SpriteSheetManager.js'
+      'SpriteSheetManager.js',
+      'EnemyManager.js',
+      'MeteorManager.js',
+      'ProjectileManager.js',
+      'MiningManager.js',
+      'RocketManager.js'
     ];
 
     managerFiles.forEach(file => {

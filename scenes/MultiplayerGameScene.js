@@ -322,6 +322,13 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         // Nave do jogador (mantida)
         console.log('🔍 Criando nave do jogador...');
         await this.shipManager.create();
+
+        // Atualizar nome do jogador com username do multiplayer
+        if (this.multiplayerManager && this.multiplayerManager.username) {
+            console.log('🏷️ Atualizando nome do jogador para:', this.multiplayerManager.username);
+            this.shipManager.createPlayerNameText(this.multiplayerManager.username);
+        }
+
         console.log('✅ Nave criada:', this.shipManager.ship);
 
         // Configura câmera para seguir a nave (mantido)
@@ -485,10 +492,47 @@ export default class MultiplayerGameScene extends Phaser.Scene {
     }
 
     setupMultiplayerEvents() {
-        // Eventos específicos do multiplayer serão configurados aqui
-        // Estes eventos virão do MultiplayerManager
+        // Configurar eventos multiplayer vindo do MultiplayerManager
 
-        console.log('✅ Eventos multiplayer configurados');
+        // Player entrou no mesmo chunk
+        this.events.on('player:joined', (data) => {
+            console.log('👤 Player entrou na cena:', data.username);
+            // MultiplayerManager já cuida de criar o sprite
+        });
+
+        // Player saiu do chunk
+        this.events.on('player:left', (data) => {
+            console.log('👋 Player saiu da cena:', data.playerId);
+            // MultiplayerManager já cuida de remover o sprite
+        });
+
+        // Player se moveu
+        this.events.on('player:moved', (data) => {
+            // MultiplayerManager cuida da interpolação
+            console.log('🏃 Player se moveu:', data.playerId, `para (${data.x}, ${data.y})`);
+        });
+
+        // Dados do chunk recebidos
+        this.events.on('chunk:data', (data) => {
+            console.log('📦 Chunk data recebido na cena:', data);
+            // MultiplayerManager processa os dados
+        });
+
+        // Conexão multiplayer estabelecida
+        this.events.on('multiplayer:connected', () => {
+            console.log('🔌 Multiplayer conectado na cena');
+        });
+
+        // Autenticação multiplayer
+        this.events.on('multiplayer:authenticated', (data) => {
+            console.log('🔐 Multiplayer autenticado na cena:', data);
+            // Atualizar nome do jogador se ainda não tiver sido feito
+            if (this.shipManager && this.multiplayerManager && this.multiplayerManager.username) {
+                this.shipManager.createPlayerNameText(this.multiplayerManager.username);
+            }
+        });
+
+        console.log('✅ Eventos multiplayer configurados na cena');
     }
 
     createAnimations() {

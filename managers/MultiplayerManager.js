@@ -15,6 +15,7 @@ export default class MultiplayerManager {
     this.lastPositionUpdate = 0;
     this.positionUpdateInterval = 100; // ms
     this.playerId = null;
+    this.username = null;
     this.isConnected = false;
     this.isAuthenticated = false;
 
@@ -103,7 +104,8 @@ export default class MultiplayerManager {
       if (socketService.isAuthenticated()) {
         this.isAuthenticated = true;
         this.playerId = socketService.getPlayerId();
-        console.log('✅ Já autenticado:', this.playerId);
+        this.username = socketService.getUsername() || 'Player';
+        console.log('✅ Já autenticado:', this.playerId, 'username:', this.username);
         resolve();
         return;
       }
@@ -112,7 +114,8 @@ export default class MultiplayerManager {
         if (socketService.isAuthenticated()) {
           this.isAuthenticated = true;
           this.playerId = socketService.getPlayerId();
-          console.log('✅ Autenticado:', this.playerId);
+          this.username = socketService.getUsername() || 'Player';
+          console.log('✅ Autenticado:', this.playerId, 'username:', this.username);
 
           // Inicializar sistemas de rede com estado do jogador
           this.initializeNetworkSystems();
@@ -463,6 +466,11 @@ export default class MultiplayerManager {
         y: data.y
       }, null, data.health);
     }
+
+    // Emitir evento para a cena
+    if (this.scene && this.scene.events) {
+      this.scene.events.emit('player:joined', data);
+    }
   }
 
   /**
@@ -476,6 +484,11 @@ export default class MultiplayerManager {
     if (socketService.removeEntity && typeof socketService.removeEntity === 'function') {
       socketService.removeEntity(data.playerId);
     }
+
+    // Emitir evento para a cena
+    if (this.scene && this.scene.events) {
+      this.scene.events.emit('player:left', data);
+    }
   }
 
   /**
@@ -488,6 +501,11 @@ export default class MultiplayerManager {
         x: data.x,
         y: data.y
       }, null, data.health);
+    }
+
+    // Emitir evento para a cena
+    if (this.scene && this.scene.events) {
+      this.scene.events.emit('player:moved', data);
     }
 
     // Manter lógica existente como fallback
@@ -650,11 +668,9 @@ export default class MultiplayerManager {
       return;
     }
 
-    // BLOQUEAR nave "pilot" - isso parece ser um erro de spawn
-    if (data.username === 'pilot' || data.username === 'Pilot') {
-      console.log('❌ BLOQUEADO: Tentando criar nave "pilot" - isso é um erro!');
-      return;
-    }
+    // Permitir todos os jogadores (removido bloqueio de "pilot")
+    // O bloqueio estava impedindo que outros jogadores aparecessem
+    console.log('➕ Permitindo jogador:', data.username, `(${data.x}, ${data.y})`);
 
     console.log('➕ Adicionando player:', data.username, `(${data.x}, ${data.y})`);
     console.log('📊 Data completa:', data);

@@ -461,6 +461,11 @@
             socket.on('auth:success', (data) => {
                 console.log('✅ Autenticado com sucesso:', data.playerId);
                 playerId = data.playerId;
+
+                // Armazenar username globalmente para o jogo
+                window.currentPlayerUsername = data.username || 'Player';
+                console.log('🏷️ Username armazenado globalmente:', window.currentPlayerUsername);
+
                 updatePlayerInfo(data);
 
                 // Entrar no chunk inicial automaticamente

@@ -91,13 +91,22 @@ export default class ShipManager {
         }
     }
 
-    createPlayerNameText() {
+    createPlayerNameText(playerName = null) {
         if (!this.ship) {
             console.warn('⚠️ ShipManager: Tentando criar texto do jogador sem nave');
             return;
         }
-        
-        this.playerNameText = this.scene.add.text(this.ship.x, this.ship.y + 40, this.gameState.playerName, {
+
+        // Usar username fornecido ou pegar do multiplayer/auth ou global
+        const displayName = playerName ||
+                           (this.scene.multiplayerManager && this.scene.multiplayerManager.username) ||
+                           (typeof window !== 'undefined' && window.currentPlayerUsername) ||
+                           this.gameState.playerName ||
+                           'Player';
+
+        console.log('🏷️ ShipManager: Criando nome do jogador:', displayName);
+
+        this.playerNameText = this.scene.add.text(this.ship.x, this.ship.y + 40, displayName, {
             fontFamily: 'Arial',
             fontSize: '16px',
             color: '#ffffff',

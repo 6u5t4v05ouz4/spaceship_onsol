@@ -320,10 +320,18 @@ export default class MultiplayerGamePage {
     // Inicializa o jogo
     this.gameInstance = new Phaser.Game(config);
 
-    // Aguarda o jogo estar pronto
+    // Aguarda o jogo estar pronto e passa os dados do jogador
     return new Promise((resolve) => {
       this.gameInstance.events.on('ready', () => {
         console.log('✅ Jogo multiplayer inicializado');
+        
+        // Passa os dados do jogador para a cena
+        const scene = this.gameInstance.scene.getScene('MultiplayerGameScene');
+        if (scene) {
+          console.log('🔍 Passando dados do jogador para a cena:', this.playerData);
+          scene.setupScene(this.playerData);
+        }
+        
         this.updatePlayerInfo();
         resolve();
       });

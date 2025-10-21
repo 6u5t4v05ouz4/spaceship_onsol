@@ -16,7 +16,15 @@ export default class ParticleEffects {
         // Cria texturas procedurais para partículas
         this.createParticleTextures();
     }
-    
+
+    /**
+     * Atualiza todos os emitters de partículas (chamado no update do jogo)
+     */
+    update(time, delta) {
+        // Por enquanto, os emitters são atualizados automaticamente pelo Phaser
+        // Este método pode ser expandido para lógica adicional
+    }
+
     /**
      * Cria texturas procedurais para partículas
      */

@@ -134,7 +134,7 @@ export default class MultiplayerGameScene extends Phaser.Scene {
             this.initializeEssentialManagers(data);
 
             // Inicializa managers multiplayer (novos)
-            this.initializeMultiplayerManagers();
+            await this.initializeMultiplayerManagers();
 
             // Configura a cena
             this.setupScene(data);
@@ -224,13 +224,13 @@ export default class MultiplayerGameScene extends Phaser.Scene {
         console.log('✅ GameOverManager inicializado');
     }
 
-    initializeMultiplayerManagers() {
+    async initializeMultiplayerManagers() {
         console.log('🌐 Inicializando managers multiplayer...');
 
         // SpriteSheetManager (novo - para elementos do banco)
         console.log('🔍 Inicializando SpriteSheetManager...');
         this.spriteSheetManager = new SpriteSheetManager(this);
-        this.spriteSheetManager.createAllSpriteSheets();
+        await this.spriteSheetManager.init();
         console.log('✅ SpriteSheetManager inicializado');
 
         // AssetManager (novo - para gerenciar assets multiplayer)

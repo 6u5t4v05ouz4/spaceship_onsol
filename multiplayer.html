@@ -274,6 +274,36 @@
         // Instância global do logger
         window.uiLogger = new UILogger();
 
+        // Função segura para serializar objetos (evita circular structure)
+        function safeStringify(obj, depth = 0) {
+            if (depth > 3) return '[Max Depth Reached]';
+            if (obj === null) return 'null';
+            if (typeof obj !== 'object') return String(obj);
+            
+            try {
+                // Para objetos conhecidos, mostrar apenas propriedades relevantes
+                if (obj.constructor && obj.constructor.name === 'Socket') {
+                    return `Socket{id: ${obj.id}, connected: ${obj.connected}}`;
+                }
+                if (obj.constructor && obj.constructor.name === 'SocketService') {
+                    return `SocketService{connected: ${obj.connected}, authenticated: ${obj.authenticated}, playerId: ${obj.playerId}}`;
+                }
+                
+                // Para outros objetos, tentar JSON.stringify com replacer
+                return JSON.stringify(obj, (key, value) => {
+                    if (depth > 2) return '[Max Depth]';
+                    if (typeof value === 'object' && value !== null) {
+                        if (value.constructor && value.constructor.name === 'Socket') {
+                            return `Socket{id: ${value.id}, connected: ${value.connected}}`;
+                        }
+                    }
+                    return value;
+                }, 2);
+            } catch (e) {
+                return `[Circular Object: ${obj.constructor?.name || 'Unknown'}]`;
+            }
+        }
+
         // Interceptar console.log para mostrar na UI
         const originalConsoleLog = console.log;
         const originalConsoleWarn = console.warn;
@@ -281,12 +311,7 @@
 
         console.log = function(...args) {
             originalConsoleLog.apply(console, args);
-            const message = args.map(arg => {
-                if (typeof arg === 'object' && arg !== null) {
-                    return JSON.stringify(arg, null, 2);
-                }
-                return String(arg);
-            }).join(' ');
+            const message = args.map(arg => safeStringify(arg)).join(' ');
             
             // Filtrar apenas logs do servidor - conexão, autenticação, multiplayer
             if (message.includes('🔌') || message.includes('🔐') || message.includes('📡') ||

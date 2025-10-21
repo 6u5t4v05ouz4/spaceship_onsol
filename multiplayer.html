@@ -245,25 +245,7 @@
         // Importar dependências
         console.log('🔄 Carregando multiplayer.html (v' + Date.now() + ')');
 
-        // Error handler global para capturar qualquer erro não tratado
-        window.addEventListener('error', function(event) {
-            console.error('🚨 ERRO GLOBAL CAPTURADO:', {
-                message: event.message,
-                filename: event.filename,
-                lineno: event.lineno,
-                colno: event.colno,
-                error: event.error,
-                stack: event.error?.stack
-            });
-        });
-
-        // Error handler para Promise rejeitadas
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('🚨 PROMISE REJECTION CAPTURADO:', {
-                reason: event.reason,
-                stack: event.reason?.stack
-            });
-        });
+        // REMOVIDO: Error handlers globais que podem interferir com bibliotecas externas
 
         import socketService from '/services/socketService.js';
         import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
@@ -343,91 +325,11 @@
         // Instância global do logger
         window.uiLogger = new UILogger();
 
-        // Função ultra segura para converter qualquer argumento para string
-        function safeStringify(obj) {
-            // NUNCA usar JSON.stringify - sempre retornar representação simples
-            if (obj === null || obj === undefined) return 'null';
-            if (typeof obj === 'string') return obj;
-            if (typeof obj === 'number') return obj.toString();
-            if (typeof obj === 'boolean') return obj.toString();
-            if (typeof obj === 'function') return '[Function]';
+        // REMOVIDO: Função safeStringify que não estava sendo usada
 
-            // Objetos - apenas mostrar tipo, nunca conteúdo
-            if (typeof obj === 'object') {
-                if (obj === window || obj === document) return '[Window/Document]';
-                if (Array.isArray(obj)) return '[Array]';
-                if (obj.constructor && obj.constructor.name) return '[' + obj.constructor.name + ']';
-                return '[Object]';
-            }
-
-            return String(obj);
-        }
-
-        // Interceptar console.log para mostrar na UI
-        const originalConsoleLog = console.log;
-        const originalConsoleWarn = console.warn;
-        const originalConsoleError = console.error;
-
-        // Função ultra segura para converter argumentos
-        const safeArgsToString = (args) => {
-            return args.map(arg => safeStringify(arg)).join(' ');
-        };
-
-        console.log = function(...args) {
-            originalConsoleLog.apply(console, args);
-
-            try {
-                const message = safeArgsToString(args);
-
-                // Filtrar apenas logs do servidor - conexão, autenticação, multiplayer
-                if (message.includes('🔌') || message.includes('🔐') || message.includes('📡') ||
-                    message.includes('SocketService') || message.includes('MultiplayerManager') ||
-                    message.includes('socket:connected') || message.includes('socket:authenticated') ||
-                    message.includes('auth:success') || message.includes('auth:error') ||
-                    message.includes('Conectado ao servidor') || message.includes('Autenticado:') ||
-                    message.includes('isConnected') || message.includes('isAuthenticated') ||
-                    message.includes('Stats Multiplayer') || message.includes('Network Stats') ||
-                    message.includes('✅ Conexão') || message.includes('✅ Autenticação')) {
-                    window.uiLogger.addLog(message, 'info');
-                }
-            } catch (e) {
-                // Se der erro ao processar logs, apenas log no console original
-                originalConsoleLog('Erro ao processar log:', e);
-            }
-        };
-
-        console.warn = function(...args) {
-            originalConsoleWarn.apply(console, args);
-
-            try {
-                const message = safeArgsToString(args);
-
-                // Filtrar apenas warnings relacionados ao servidor
-                if (message.includes('SocketService') || message.includes('MultiplayerManager') ||
-                    message.includes('socket') || message.includes('auth') || message.includes('conexão')) {
-                    window.uiLogger.addLog(message, 'warning');
-                }
-            } catch (e) {
-                originalConsoleWarn('Erro ao processar warning:', e);
-            }
-        };
-
-        console.error = function(...args) {
-            originalConsoleError.apply(console, args);
-
-            try {
-                const message = safeArgsToString(args);
-
-                // Filtrar apenas erros relacionados ao servidor
-                if (message.includes('SocketService') || message.includes('MultiplayerManager') ||
-                    message.includes('socket') || message.includes('auth') || message.includes('conexão') ||
-                    message.includes('servidor') || message.includes('autenticação')) {
-                    window.uiLogger.addLog(message, 'error');
-                }
-            } catch (e) {
-                originalConsoleError('Erro ao processar error:', e);
-            }
-        };
+        // NÃO INTERCEPTAR O CONSOLE - DEIXAR FUNCIONAR NORMALMENTE
+        // O problema está vindo de bibliotecas externas (Phaser, Socket.io)
+        // Não vamos interferir nos logs para evitar problemas
 
         // Estados de conexão
         let connectionState = 'loading'; // loading, checking_auth, connecting, authenticating, ready, error

@@ -4,48 +4,8 @@
  */
 
 import socketService from '../services/socketService.js';
-
-// Classes simplificadas para evitar problemas de importação
-class SimpleAssetManager {
-    constructor(scene) {
-        this.scene = scene;
-    }
-
-    async init() {
-        // Implementação básica
-    }
-}
-
-class SimpleSpriteSheetManager {
-    constructor(scene) {
-        this.scene = scene;
-    }
-
-    async init() {
-        // Implementação básica
-    }
-}
-
-// Logger simplificado que usa o DebugLogger global se disponível
-const logger = {
-    log: (category, message, data) => {
-        if (typeof window !== 'undefined' && window.debugLogger) {
-            window.debugLogger.log(category, `[MultiplayerManager] ${message}`, data);
-        } else {
-            console.log(`[${category}] [MultiplayerManager] ${message}`, data || '');
-        }
-    },
-    auth: (message, data) => logger.log('AUTH', message, data),
-    socket: (message, data) => logger.log('SOCKET', message, data),
-    multiplayer: (message, data) => logger.log('MULTIPLAYER', message, data),
-    movement: (message, data) => logger.log('MOVEMENT', message, data),
-    chunk: (message, data) => logger.log('CHUNK', message, data),
-    game: (message, data) => logger.log('GAME', message, data),
-    error: (message, data) => logger.log('ERROR', message, data),
-    success: (message, data) => logger.log('SUCCESS', message, data),
-    warning: (message, data) => logger.log('WARNING', message, data),
-    debug: (message, data) => logger.log('DEBUG', message, data),
-};
+import AssetManager from './AssetManager.js';
+import SpriteSheetManager from './SpriteSheetManager.js';
 
 export default class MultiplayerManager {
   constructor(scene) {
@@ -59,9 +19,9 @@ export default class MultiplayerManager {
     this.isConnected = false;
     this.isAuthenticated = false;
 
-    // Asset managers simplificados
-    this.assetManager = new SimpleAssetManager(scene);
-    this.spriteSheetManager = new SimpleSpriteSheetManager(scene);
+    // Asset managers
+    this.assetManager = new AssetManager(scene);
+    this.spriteSheetManager = new SpriteSheetManager(scene);
     this.chunkElements = new Map(); // Map<chunkKey, elementSprites>
 
     // Sistemas de rede (novos)
@@ -88,23 +48,14 @@ export default class MultiplayerManager {
    * Inicializa o multiplayer
    */
   async init() {
-    logger.multiplayer('Inicializando Multiplayer Manager...');
+    console.log('🌐 Inicializando Multiplayer Manager...');
 
     // Inicializar asset managers (spriteSheetManager desativado - usa assets existentes)
     // await this.spriteSheetManager.init(); // Desativado - usa assets existentes
     // await this.assetManager.init(); // Desativado para evitar erros
 
-    // Verificar se já existe conexão WebSocket no HTML
-    if (typeof window !== 'undefined' && window.socket && window.socket.connected) {
-      console.log('✅ Usando conexão WebSocket existente do HTML');
-      this.isConnected = true;
-
-      // Configurar referência direta para evitar conflitos
-      socketService.socket = window.socket;
-      socketService.connected = true;
-    } else {
-      // Conectar ao servidor se não estiver conectado
-      console.log('🔌 Nenhuma conexão encontrada, criando nova via socketService...');
+    // Conectar ao servidor se não estiver conectado
+    if (!socketService.isConnected()) {
       socketService.connect();
 
       // Aguardar conexão
@@ -129,27 +80,12 @@ export default class MultiplayerManager {
       });
     }
 
-    // Verificar se já está autenticado através da conexão existente
-    if (typeof window !== 'undefined' && window.socket && window.socket.connected) {
-      console.log('🔐 Verificando autenticação existente...');
-      // Se já tem player definido globalmente, estamos autenticados
-      if (typeof window !== 'undefined' && window.playerId) {
-        this.playerId = window.playerId;
-        this.username = window.currentPlayerUsername || 'Player';
-        this.isAuthenticated = true;
-        console.log('✅ Já autenticado:', this.playerId, 'username:', this.username);
-      } else {
-        // Tentar autenticar se necessário
-        console.log('🔐 Tentando autenticar...');
-        await socketService.authenticate();
-        await this.waitForAuthentication();
-      }
-    } else {
-      // Autenticar explicitamente se criou nova conexão
-      console.log('🔐 Tentando autenticar...');
-      await socketService.authenticate();
-      await this.waitForAuthentication();
-    }
+    // Autenticar explicitamente (Supabase já está disponível aqui)
+    console.log('🔐 Tentando autenticar...');
+    await socketService.authenticate();
+
+    // Aguardar confirmação de autenticação
+    await this.waitForAuthentication();
 
     // Setup event listeners
     this.setupEventListeners();

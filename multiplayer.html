@@ -111,20 +111,17 @@
 
     <script type="module">
         // Usar Supabase via CDN
-        // Verificar se já existe uma instância do Supabase para evitar conflitos
-        let supabase;
+        const { createClient } = window.supabase;
 
-        if (typeof window !== 'undefined' && window.supabase) {
-            // Usar instância existente do site principal
-            supabase = window.supabase;
+        // Criar cliente Supabase e disponibilizar globalmente
+        const supabase = createClient(
+            'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4'
+        );
+
+        if (typeof window !== 'undefined') {
             window.supabaseClient = supabase;
-            console.log('✅ Usando instância Supabase existente do site principal');
-        } else {
-            // NÃO criar nova instância - usar apenas a existente
-            console.error('❌ Nenhuma instância Supabase encontrada. O multiplayer precisa da instância do site principal.');
-            // Redirecionar para a página principal se não houver instância Supabase
-            window.location.href = '/';
-        }
+            console.log('✅ Supabase client inicializado globalmente');
 
             // ✅ Definir URL do servidor Railway globalmente
             window.VITE_SERVER_URL = 'https://spaceshiponsol-production-5493.up.railway.app';
@@ -432,9 +429,6 @@
         let playerId = null;
         let isConnected = false;
 
-        // Expor socket globalmente para MultiplayerManager
-        window.socket = null;
-
         function initializeSocket() {
             console.log('🔌 Inicializando conexão WebSocket...');
 
@@ -448,10 +442,6 @@
                 reconnectionDelayMax: 5000,
                 reconnectionAttempts: 5
             });
-
-            // Exposer socket globalmente para MultiplayerManager
-            window.socket = socket;
-            console.log('🔌 Socket exposto globalmente');
 
             // Evento de conexão
             socket.on('connect', () => {
@@ -586,8 +576,5 @@
         // Iniciar carregamento
         // loadMultiplayerGame();
     </script>
-
-    <!-- Debug Logger -->
-    <script src="/debug-logger.js"></script>
 </body>
 </html>

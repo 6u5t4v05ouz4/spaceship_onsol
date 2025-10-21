@@ -263,6 +263,26 @@
             }
         };
 
+        // Error handler global para capturar qualquer erro não tratado
+        window.addEventListener('error', function(event) {
+            console.error('🚨 ERRO GLOBAL CAPTURADO:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error,
+                stack: event.error?.stack
+            });
+        });
+
+        // Error handler para Promise rejeitadas
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('🚨 PROMISE REJECTION CAPTURADO:', {
+                reason: event.reason,
+                stack: event.reason?.stack
+            });
+        });
+
         import socketService from '/services/socketService.js';
         import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
         
@@ -1032,6 +1052,18 @@
     
         // Inicializar quando a página carregar
         document.addEventListener('DOMContentLoaded', () => {
+            // Forçar reload se tiver parâmetro de versão antiga
+            const urlParams = new URLSearchParams(window.location.search);
+            const version = urlParams.get('v');
+            const currentVersion = Date.now().toString().slice(-6);
+
+            if (!version || version !== currentVersion) {
+                console.log('🔄 Forçando reload com nova versão:', currentVersion);
+                const newUrl = window.location.pathname + '?v=' + currentVersion;
+                window.location.replace(newUrl);
+                return;
+            }
+
             initializeGame();
         });
     </script>

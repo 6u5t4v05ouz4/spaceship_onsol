@@ -254,38 +254,11 @@ export async function handleOAuthCallback() {
   try {
     console.log('🔐 Processando OAuth callback...');
 
-    // Verificar se há token no hash (Google OAuth)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const refreshToken = hashParams.get('refresh_token');
-    const expiresAt = hashParams.get('expires_at');
-
-    if (accessToken) {
-      console.log('🔐 Processando token do hash...');
-      
-      // Criar sessão manualmente com os tokens do hash
-      const session = {
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_at: expiresAt ? parseInt(expiresAt) : null,
-        token_type: 'bearer',
-        user: {
-          id: 'temp-user-id', // Será atualizado após obter dados do usuário
-          email: 'temp@email.com', // Será atualizado após obter dados do usuário
-          user_metadata: {}
-        }
-      };
-
-      // Definir sessão no Supabase
-      const { error: setSessionError } = await supabase.auth.setSession(session);
-      
-      if (setSessionError) {
-        console.error('❌ Erro ao definir sessão:', setSessionError);
-        throw new Error(translateError(setSessionError));
-      }
-
-      console.log('✅ Sessão definida com sucesso');
-    }
+    // Tentar usar o método padrão do Supabase primeiro
+    console.log('🔐 Tentando método padrão do Supabase...');
+    
+    // Aguardar um pouco para o Supabase processar automaticamente
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Obter sessão atualizada
     const { data: { session }, error } = await supabase.auth.getSession();

@@ -6,23 +6,6 @@
 // Socket.io será carregado via script tag no HTML
 const io = window.io;
 
-// Função segura para evitar erros de circular structure nos logs
-const safeLog = (message, data = null) => {
-  try {
-    if (data && typeof data === 'object') {
-      const typeName = data.constructor?.name || 'Object';
-      const id = data.id || 'N/A';
-      console.log(message + ': [' + typeName + ' id:' + id + ']');
-    } else if (data !== null && data !== undefined) {
-      console.log(message + ': ' + String(data));
-    } else {
-      console.log(message);
-    }
-  } catch (e) {
-    console.log(message + ': [Object]');
-  }
-};
-
 // Supabase é global, carregado via script tag no HTML
 const getSupabase = () => {
   if (typeof window !== 'undefined' && window.supabaseClient) {
@@ -41,13 +24,6 @@ class SocketService {
     this.playerState = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
-
-    // Variáveis para rastreamento de estabilidade
-    this.stableSince = null;
-    this.lastConnectedState = false;
-    this.lastAuthenticatedState = false;
-    this.lastStableState = false;
-    this.connectionHealthChecks = 0;
   }
 
   /**
@@ -89,7 +65,7 @@ class SocketService {
       upgrade: true, // ✅ Permite upgrade para websocket
     });
 
-    console.log('✅ Socket criado: Socket{id: ' + (this.socket?.id || 'unknown') + '}');
+    console.log('✅ Socket criado:', this.socket);
     this.setupListeners();
   }
 
@@ -98,22 +74,30 @@ class SocketService {
    */
   setupListeners() {
     console.log('🔧 Configurando listeners do socket...');
-    console.log('🔍 Socket atual:', this.socket ? 'Socket{id: ' + (this.socket.id || 'unknown') + '}' : 'null');
+    console.log('🔍 Socket atual:', this.socket);
     
     // ===== Conexão =====
     this.socket.on('connect', () => {
       console.log('✅ Evento connect disparado!');
       console.log('✅ Conectado ao servidor:', this.socket.id);
       console.log('🔍 Socket conectado:', this.socket.connected);
-      console.log('🔍 Estado antes da atualização: connected=' + this.connected + ', authenticated=' + this.authenticated + ', playerId=' + this.playerId);
-
+      console.log('🔍 Estado antes da atualização:', {
+        connected: this.connected,
+        authenticated: this.authenticated,
+        playerId: this.playerId
+      });
+      
       // Verificar se o socket está realmente conectado
       if (this.socket.connected && this.socket.id) {
         console.log('✅ Socket realmente conectado, atualizando estado');
         this.connected = true;
         this.reconnectAttempts = 0;
-
-        console.log('🔍 Estado após atualização: connected=' + this.connected + ', authenticated=' + this.authenticated + ', playerId=' + this.playerId);
+        
+        console.log('🔍 Estado após atualização:', {
+          connected: this.connected,
+          authenticated: this.authenticated,
+          playerId: this.playerId
+        });
 
         // Disparar evento customizado
         window.dispatchEvent(new CustomEvent('socket:connected', {
@@ -127,7 +111,11 @@ class SocketService {
         }, 500);
       } else {
         console.warn('⚠️ Evento connect disparado mas socket não está realmente conectado');
-        console.log('🔍 Socket state: connected=' + this.socket.connected + ', id=' + this.socket.id + ', readyState=' + this.socket.readyState);
+        console.log('🔍 Socket state:', {
+          connected: this.socket.connected,
+          id: this.socket.id,
+          readyState: this.socket.readyState
+        });
       }
     });
 
@@ -135,8 +123,6 @@ class SocketService {
       console.log('❌ Desconectado:', reason);
       this.connected = false;
       this.authenticated = false;
-      this.playerId = null;
-      this.stableSince = null; // Resetar estabilidade
 
       window.dispatchEvent(new CustomEvent('socket:disconnected', {
         detail: { reason }
@@ -145,7 +131,12 @@ class SocketService {
 
     this.socket.on('connect_error', (error) => {
       console.error('❌ Erro de conexão:', error);
-      console.log('🔍 Detalhes do erro: message=' + error.message + ', type=' + error.type);
+      console.log('🔍 Detalhes do erro:', {
+        message: error.message,
+        description: error.description,
+        context: error.context,
+        type: error.type
+      });
       
       this.connected = false;
       this.reconnectAttempts++;
@@ -164,12 +155,6 @@ class SocketService {
       this.playerId = data.playerId;
       this.playerState = data.playerState;
 
-      // Marcar início da estabilidade (conectado + autenticado)
-      if (this.connected && this.authenticated) {
-        this.stableSince = Date.now();
-        console.log('🛡️ Conexão marcada como estável desde:', new Date(this.stableSince));
-      }
-
       console.log('📡 Disparando evento socket:authenticated');
       window.dispatchEvent(new CustomEvent('socket:authenticated', {
         detail: data
@@ -177,8 +162,7 @@ class SocketService {
       console.log('✅ Estado do socketService:', {
         connected: this.connected,
         authenticated: this.authenticated,
-        playerId: this.playerId,
-        stableSince: this.stableSince
+        playerId: this.playerId
       });
     });
 
@@ -242,7 +226,12 @@ class SocketService {
 
     // ===== Combate =====
     this.socket.on('battle:hit', (data) => {
-      safeLog('💥 Você foi atingido! attacker=' + data.attackerName + ', damage=' + data.damage + ', critical=' + data.isCritical + ', health=' + data.health + '/' + data.maxHealth);
+      console.log('💥 Você foi atingido!', {
+        attacker: data.attackerName,
+        damage: data.damage,
+        critical: data.isCritical,
+        health: `${data.health}/${data.maxHealth}`,
+      });
 
       window.dispatchEvent(new CustomEvent('socket:battle:hit', {
         detail: data
@@ -282,7 +271,10 @@ class SocketService {
     });
 
     this.socket.on('player:death', (data) => {
-      safeLog('💀 Você morreu! killer=' + data.killerName + ', respawnIn=' + (data.respawnDelay / 1000) + 's');
+      console.log('💀 Você morreu!', {
+        killer: data.killerName,
+        respawnIn: `${data.respawnDelay / 1000}s`,
+      });
 
       window.dispatchEvent(new CustomEvent('socket:player:death', {
         detail: data
@@ -321,7 +313,7 @@ class SocketService {
   async authenticate() {
     console.log('🔐 Iniciando processo de autenticação...');
     console.log('🔍 Conectado:', this.connected);
-    console.log('🔍 Socket:', this.socket ? 'Socket{id: ' + (this.socket.id || 'unknown') + ', connected: ' + this.socket.connected + '}' : 'null');
+    console.log('🔍 Socket:', this.socket);
     
     if (!this.connected) {
       console.error('❌ Não conectado ao servidor');
@@ -472,61 +464,6 @@ class SocketService {
       this.lastConnectedState = result;
     }
     return result;
-  }
-
-  /**
-   * Verifica se a conexão está estável (para uso no sistema de loading)
-   */
-  isStable() {
-    // Conexão estável se: está conectado, autenticado e temos playerId
-    const isStable = this.connected &&
-                    this.socket?.connected &&
-                    this.authenticated &&
-                    this.playerId &&
-                    this.socket.id;
-
-    // Log apenas quando o estado de estabilidade muda
-    if (this.lastStableState !== isStable) {
-      console.log('🔍 isStable() mudou:', {
-        connected: this.connected,
-        socketConnected: this.socket?.connected,
-        authenticated: this.authenticated,
-        playerId: this.playerId,
-        socketId: this.socket?.id,
-        isStable: isStable
-      });
-      this.lastStableState = isStable;
-    }
-
-    return isStable;
-  }
-
-  /**
-   * Verificação detalhada da saúde da conexão
-   */
-  getConnectionHealth() {
-    const health = {
-      connected: false,
-      authenticated: false,
-      hasPlayerId: false,
-      socketId: null,
-      lastActivity: null,
-      stableFor: 0
-    };
-
-    if (this.socket) {
-      health.connected = this.socket.connected;
-      health.socketId = this.socket.id;
-      health.authenticated = this.authenticated;
-      health.hasPlayerId = !!this.playerId;
-
-      // Verificar há quanto tempo está estável
-      if (this.stableSince) {
-        health.stableFor = Date.now() - this.stableSince;
-      }
-    }
-
-    return health;
   }
 
   /**

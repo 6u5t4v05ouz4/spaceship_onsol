@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Crypto Miner - Multiplayer (Fixed V12346)</title>
+    <title>Space Crypto Miner - Multiplayer</title>
     <link rel="icon" href="/assets/icones/icone.png" />
 
     <!-- CSS simples -->
@@ -92,17 +92,16 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            width: 450px;
-            max-height: 600px;
-            background: rgba(0, 0, 0, 0.95);
+            width: 400px;
+            max-height: 500px;
+            background: rgba(0, 0, 0, 0.9);
             border: 2px solid #00ff00;
             border-radius: 10px;
             color: #00ff00;
             font-family: 'Courier New', monospace;
-            font-size: 11px;
+            font-size: 12px;
             z-index: 1000;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         }
 
         .logs-header {
@@ -134,20 +133,16 @@
         }
 
         .logs-content {
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
-            padding: 12px;
-            line-height: 1.4;
+            padding: 10px;
         }
 
         .log-entry {
-            margin-bottom: 8px;
-            padding: 6px 8px;
-            border-radius: 4px;
+            margin-bottom: 5px;
+            padding: 2px 5px;
+            border-radius: 3px;
             word-wrap: break-word;
-            white-space: pre-wrap;
-            min-height: 20px;
-            display: block;
         }
 
         .log-entry.info {
@@ -225,7 +220,7 @@
     <script type="module">
         // Importar dependências
         import socketService from '/services/socketService.js';
-        import ENV_CONFIG from '/config/environment.js';
+        import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
         
         // Usar Supabase via CDN
         const { createClient } = window.supabase;
@@ -240,31 +235,8 @@
 
             addLog(message, type = 'info') {
                 const timestamp = new Date().toLocaleTimeString();
-                
-                // Quebrar mensagens muito longas em múltiplas linhas
-                const maxLineLength = 60;
-                let formattedMessage = message;
-                
-                if (message.length > maxLineLength) {
-                    const lines = [];
-                    let currentLine = '';
-                    const words = message.split(' ');
-                    
-                    for (const word of words) {
-                        if ((currentLine + word).length > maxLineLength) {
-                            if (currentLine) lines.push(currentLine.trim());
-                            currentLine = word + ' ';
-                        } else {
-                            currentLine += word + ' ';
-                        }
-                    }
-                    if (currentLine) lines.push(currentLine.trim());
-                    
-                    formattedMessage = lines.join('\n');
-                }
-                
                 const logEntry = {
-                    message: `[${timestamp}] ${formattedMessage}`,
+                    message: `[${timestamp}] ${message}`,
                     type: type
                 };
                 
@@ -302,42 +274,6 @@
         // Instância global do logger
         window.uiLogger = new UILogger();
 
-        // Função segura para serializar objetos (evita circular structure)
-        function safeStringify(obj, depth = 0) {
-            if (depth > 3) return '[Max Depth Reached]';
-            if (obj === null) return 'null';
-            if (typeof obj !== 'object') return String(obj);
-            
-            try {
-                // Para objetos conhecidos, mostrar apenas propriedades relevantes
-                if (obj.constructor && obj.constructor.name === 'Socket') {
-                    return `Socket{id: ${obj.id}, connected: ${obj.connected}}`;
-                }
-                if (obj.constructor && obj.constructor.name === 'SocketService') {
-                    return `SocketService{connected: ${obj.connected}, authenticated: ${obj.authenticated}, playerId: ${obj.playerId}}`;
-                }
-                
-                // Para outros objetos, tentar JSON.stringify com replacer
-                const jsonStr = JSON.stringify(obj, (key, value) => {
-                    if (depth > 2) return '[Max Depth]';
-                    if (typeof value === 'object' && value !== null) {
-                        if (value.constructor && value.constructor.name === 'Socket') {
-                            return `Socket{id: ${value.id}, connected: ${value.connected}}`;
-                        }
-                    }
-                    return value;
-                }, 2);
-                
-                // Limitar tamanho para evitar logs muito longos
-                if (jsonStr.length > 200) {
-                    return jsonStr.substring(0, 200) + '...';
-                }
-                return jsonStr;
-            } catch (e) {
-                return `[Circular Object: ${obj.constructor?.name || 'Unknown'}]`;
-            }
-        }
-
         // Interceptar console.log para mostrar na UI
         const originalConsoleLog = console.log;
         const originalConsoleWarn = console.warn;
@@ -345,7 +281,12 @@
 
         console.log = function(...args) {
             originalConsoleLog.apply(console, args);
-            const message = args.map(arg => safeStringify(arg)).join(' ');
+            const message = args.map(arg => {
+                if (typeof arg === 'object' && arg !== null) {
+                    return JSON.stringify(arg, null, 2);
+                }
+                return String(arg);
+            }).join(' ');
             
             // Filtrar apenas logs do servidor - conexão, autenticação, multiplayer
             if (message.includes('🔌') || message.includes('🔐') || message.includes('📡') ||
@@ -384,33 +325,35 @@
         async function initializeGame() {
             try {
                 console.log('🔍 Inicializando jogo...');
-
+                
                 // Carregar credenciais de forma segura
                 console.log('🔐 Carregando credenciais...');
-                const credentials = {
-                    SUPABASE_URL: ENV_CONFIG.SUPABASE_URL,
-                    SUPABASE_ANON_KEY: ENV_CONFIG.SUPABASE_ANON_KEY
-                };
-
+                const credentials = await loadSecureCredentials();
+                
                 // Configurar Supabase
                 console.log('🔍 Configurando Supabase...');
                 const supabase = createClient(
                     credentials.SUPABASE_URL,
                     credentials.SUPABASE_ANON_KEY
                 );
-
+                
                 // Disponibilizar globalmente
                 window.supabaseClient = supabase;
                 window.SUPABASE_URL = credentials.SUPABASE_URL;
                 window.SUPABASE_ANON_KEY = credentials.SUPABASE_ANON_KEY;
-                window.VITE_SERVER_URL = ENV_CONFIG.SERVER_URL || 'ws://localhost:3001';
-
+                window.VITE_SERVER_URL = GAME_CONFIG.SERVER_URL;
+                
                 console.log('✅ Supabase client configurado');
                 console.log('✅ URL do servidor definida:', window.VITE_SERVER_URL);
-
-                // Sistema de loading básico - aguardar conexão estável
-                await initializeWithStableConnection();
-
+                
+                // Inicializar SocketService globalmente
+                console.log('🔍 Inicializando SocketService...');
+                window.socketService = socketService;
+                console.log('✅ SocketService inicializado globalmente');
+                
+                // Carregar o jogo
+                await loadMultiplayerGame();
+                
             } catch (error) {
                 console.error('❌ Erro ao inicializar jogo:', error);
                 document.getElementById('loading').innerHTML = `
@@ -418,78 +361,6 @@
                         <h2>❌ Erro ao carregar o jogo</h2>
                         <p>${error.message}</p>
                         <button onclick="location.reload()">🔄 Tentar novamente</button>
-                    </div>
-                `;
-            }
-        }
-
-        // Sistema de loading básico sem interceptadores de console
-        async function initializeWithStableConnection() {
-            // Inicializar SocketService globalmente
-            console.log('🔍 Inicializando SocketService...');
-            window.socketService = socketService;
-            console.log('✅ SocketService inicializado globalmente');
-
-            // Atualizar UI para mostrar que está conectando
-            updateLoadingUI('Conectando ao servidor...');
-
-            // Conectar ao servidor
-            window.socketService.connect();
-
-            // Aguardar conexão estável
-            await waitForStableConnection();
-
-            // Carregar o jogo
-            await loadMultiplayerGame();
-        }
-
-        // Função para aguardar conexão estável sem interferir no console
-        async function waitForStableConnection() {
-            console.log('⏳ Aguardando conexão estável...');
-            updateLoadingUI('Verificando conexão...');
-
-            const maxAttempts = 30; // 30 segundos max
-            let attempts = 0;
-
-            return new Promise((resolve, reject) => {
-                const checkInterval = setInterval(() => {
-                    attempts++;
-
-                    // Verificar se está conectado e autenticado
-                    if (window.socketService &&
-                        window.socketService.isConnected() &&
-                        window.socketService.isAuthenticated()) {
-
-                        console.log('✅ Conexão estável estabelecida');
-                        clearInterval(checkInterval);
-                        updateLoadingUI('Conexão estabelecida!');
-                        setTimeout(resolve, 1000); // Pequeno delay para garantir estabilidade
-                        return;
-                    }
-
-                    // Verificar se excedeu o tempo máximo
-                    if (attempts >= maxAttempts) {
-                        clearInterval(checkInterval);
-                        reject(new Error('Timeout ao estabelecer conexão estável (30s)'));
-                        return;
-                    }
-
-                    // Atualizar UI a cada 5 segundos
-                    if (attempts % 5 === 0) {
-                        updateLoadingUI(`Aguardando conexão estável... (${attempts}s)`);
-                    }
-                }, 1000);
-            });
-        }
-
-        // Função simples para atualizar UI de loading
-        function updateLoadingUI(message) {
-            const loadingDiv = document.getElementById('loading');
-            if (loadingDiv) {
-                loadingDiv.innerHTML = `
-                    <div style="text-align: center; color: #00ff00; font-size: 24px;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">🚀</div>
-                        <div>${message}</div>
                     </div>
                 `;
             }

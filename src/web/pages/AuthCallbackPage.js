@@ -86,6 +86,26 @@ export default class AuthCallbackPage {
         return;
       }
 
+      // Se temos access_token no hash, processar manualmente
+      if (accessToken) {
+        console.log('🔐 Processando access_token do hash...');
+        
+        try {
+          // Processar o token manualmente
+          const result = await authService.handleOAuthCallback();
+          if (result) {
+            console.log('✅ Sessão criada com sucesso!');
+            this.showSuccess(container, 'Login realizado com sucesso! Redirecionando...');
+            setTimeout(() => navigateTo('/dashboard'), 1500);
+            return;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao processar token:', error);
+          this.showError(container, 'Erro ao processar autenticação: ' + error.message);
+          return;
+        }
+      }
+
       // Supabase SDK com detectSessionInUrl: true já processa automaticamente
       // Apenas precisamos verificar se a session foi estabelecida
       console.log('🔐 Verificando sessão com Supabase...');
@@ -165,6 +185,22 @@ export default class AuthCallbackPage {
     errorMessage.textContent = message;
 
     console.error('❌ Erro exibido:', message);
+  }
+
+  /**
+   * Mostrar sucesso
+   */
+  showSuccess(container, message) {
+    const loadingState = container.querySelector('#loadingState');
+    const errorState = container.querySelector('#errorState');
+    const errorMessage = container.querySelector('#errorMessage');
+
+    loadingState.style.display = 'none';
+    errorState.style.display = 'block';
+    errorMessage.textContent = message;
+    errorMessage.style.color = '#4ade80'; // Verde para sucesso
+
+    console.log('✅ Sucesso:', message);
   }
 
   /**

@@ -5,14 +5,22 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Variáveis de ambiente
+// Variáveis de ambiente com debug
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const REDIRECT_URL = import.meta.env.VITE_SUPABASE_REDIRECT_TO || `${window.location.origin}/auth-callback`;
 
+// Debug das variáveis de ambiente
+console.log('🔍 Debug variáveis de ambiente:');
+console.log('  - VITE_SUPABASE_URL:', SUPABASE_URL);
+console.log('  - VITE_SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? '✅ Definido' : '❌ Não definido');
+console.log('  - import.meta.env:', import.meta.env);
+
 // Validar configuração
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('❌ Supabase não configurado. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY');
+} else {
+  console.log('✅ Supabase configurado:', SUPABASE_URL);
 }
 
 // Criar cliente Supabase

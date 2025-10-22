@@ -21,20 +21,20 @@
   background: transparent;
 }
 
-.server-status-header h3 {
+.server-status-widget .server-status-header h3 {
   margin: 0 0 var(--spacing-md) 0;
   font-size: var(--font-size-lg);
   color: var(--text-primary);
   font-weight: 600;
 }
 
-.server-status-content {
+.server-status-widget .server-status-content {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
 }
 
-.status-row {
+.server-status-widget .status-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -43,23 +43,23 @@
   margin-bottom: var(--spacing-xs);
 }
 
-.status-row:last-child {
+.server-status-widget .status-row:last-child {
   margin-bottom: 0;
 }
 
-.status-label {
+.server-status-widget .status-label {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   font-weight: 500;
 }
 
-.status-indicator {
+.server-status-widget .status-indicator {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
 }
 
-.status-dot {
+.server-status-widget .status-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -67,13 +67,13 @@
   position: relative;
 }
 
-.status-dot.online {
+.server-status-widget .status-dot.online {
   background-color: var(--success);
   box-shadow: 0 0 8px var(--success);
   animation: pulse-online 2s ease-in-out infinite;
 }
 
-.status-dot.offline {
+.server-status-widget .status-dot.offline {
   background-color: var(--text-muted);
 }
 
@@ -86,13 +86,13 @@
   }
 }
 
-.status-text {
+.server-status-widget .status-text {
   font-size: var(--font-size-sm);
   color: var(--text-primary);
   font-weight: 500;
 }
 
-.status-value {
+.server-status-widget .status-value {
   font-size: var(--font-size-sm);
   color: var(--text-primary);
   font-family: 'Courier New', monospace;

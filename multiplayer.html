@@ -219,8 +219,48 @@
 
     <script type="module">
         // Importar dependências
-        import socketService from '/src/services/socketService.js';
         import { GAME_CONFIG } from '/src/config/environment.js';
+        
+        // SocketService simplificado (sem imports externos)
+        class SocketService {
+            constructor() {
+                this.socket = null;
+                this.isConnected = false;
+                this.isAuthenticated = false;
+            }
+            
+            connect() {
+                console.log('🔌 Conectando ao servidor...');
+                // Socket.io já está carregado via CDN
+                this.socket = io('http://localhost:3001', {
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 5000,
+                    reconnectionAttempts: 5
+                });
+                
+                this.socket.on('connect', () => {
+                    console.log('✅ Conectado ao servidor!');
+                    this.isConnected = true;
+                });
+                
+                this.socket.on('disconnect', () => {
+                    console.log('❌ Desconectado do servidor');
+                    this.isConnected = false;
+                });
+            }
+            
+            disconnect() {
+                if (this.socket) {
+                    this.socket.disconnect();
+                    this.socket = null;
+                    this.isConnected = false;
+                }
+            }
+        }
+        
+        const socketService = new SocketService();
         
         // Usar Supabase via CDN
         const { createClient } = window.supabase;

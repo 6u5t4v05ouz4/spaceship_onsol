@@ -183,9 +183,9 @@ export default defineConfig({
 		'process.env.VITE_APP_REDIRECT_PATH': JSON.stringify('/auth-callback'),
 		// URL do servidor Railway para WebSocket
 		'import.meta.env.VITE_SERVER_URL': JSON.stringify(process.env.RAILWAY_PUBLIC_DOMAIN || 'https://spaceshiponsol-production.up.railway.app'),
-		// Variáveis do Supabase para produção
-		'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
-		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
+		// Variáveis do Supabase para produção (comentado para usar .env)
+		// 'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
+		// 'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
 	},
   publicDir: 'public',
   plugins: [spaFallbackPlugin, copyHtmlPlugin, copyScenesPlugin, copyManagersPlugin, copyEffectsPlugin, copyWebPagesPlugin],

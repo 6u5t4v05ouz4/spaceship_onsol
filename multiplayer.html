@@ -219,8 +219,8 @@
 
     <script type="module">
         // Importar dependências
-        import socketService from '/services/socketService.js';
-        import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
+        import socketService from '/src/services/socketService.js';
+        import { GAME_CONFIG } from '/src/config/environment.js';
         
         // Usar Supabase via CDN
         const { createClient } = window.supabase;
@@ -321,6 +321,14 @@
             }
         };
 
+        // Função para carregar credenciais
+        function loadSecureCredentials() {
+            return {
+                SUPABASE_URL: 'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+                SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4'
+            };
+        }
+
         // Função para inicializar o jogo de forma segura
         async function initializeGame() {
             try {
@@ -328,7 +336,7 @@
                 
                 // Carregar credenciais de forma segura
                 console.log('🔐 Carregando credenciais...');
-                const credentials = await loadSecureCredentials();
+                const credentials = loadSecureCredentials();
                 
                 // Configurar Supabase
                 console.log('🔍 Configurando Supabase...');
@@ -341,7 +349,7 @@
                 window.supabaseClient = supabase;
                 window.SUPABASE_URL = credentials.SUPABASE_URL;
                 window.SUPABASE_ANON_KEY = credentials.SUPABASE_ANON_KEY;
-                window.VITE_SERVER_URL = GAME_CONFIG.SERVER_URL;
+                window.VITE_SERVER_URL = 'http://localhost:3001';
                 
                 console.log('✅ Supabase client configurado');
                 console.log('✅ URL do servidor definida:', window.VITE_SERVER_URL);

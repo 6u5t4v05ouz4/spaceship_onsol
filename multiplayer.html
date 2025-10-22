@@ -323,7 +323,12 @@
             originalConsoleLog.apply(console, args);
             const message = args.map(arg => {
                 if (typeof arg === 'object' && arg !== null) {
-                    return JSON.stringify(arg, null, 2);
+                    try {
+                        return JSON.stringify(arg, null, 2);
+                    } catch (error) {
+                        // Se houver erro de serialização (referência circular), usar toString
+                        return arg.toString();
+                    }
                 }
                 return String(arg);
             }).join(' ');

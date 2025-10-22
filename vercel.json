@@ -11,15 +11,11 @@
       "destination": "/multiplayer.html"
     },
     {
-      "source": "/login",
-      "destination": "/login.html"
-    },
-    {
       "source": "/play",
       "destination": "/play.html"
     },
     {
-      "source": "/((?!api|health|metrics|assets).*)",
+      "source": "/((?!api|health|metrics|assets|game|multiplayer|play).*)",
       "destination": "/index.html"
     }
   ]

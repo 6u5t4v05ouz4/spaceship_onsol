@@ -138,10 +138,25 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
     credentials: true
   },
+  // Configurações de compressão para melhor performance
+  compression: true,
+  perMessageDeflate: {
+    threshold: 1024, // Comprimir mensagens > 1KB
+    concurrencyLimit: 10, // Máximo 10 compressões simultâneas
+    memLevel: 7, // Nível de memória (1-9, 7 é balanceado)
+    compressionLevel: 6 // Nível de compressão (1-9, 6 é balanceado)
+  },
+  // Configurações de ping/pong otimizadas
   pingTimeout: 60000,
   pingInterval: 25000,
-  transports: ['polling', 'websocket'],
-  allowEIO3: true
+  // Configurações de transporte otimizadas
+  transports: ['websocket', 'polling'], // WebSocket primeiro para melhor performance
+  allowEIO3: true,
+  // Configurações de buffer para melhor throughput
+  maxHttpBufferSize: 1e6, // 1MB
+  // Configurações de heartbeat para detectar conexões mortas
+  heartbeatTimeout: 60000,
+  heartbeatInterval: 25000
 });
 
 // Connection handler (com multiplayer handlers)

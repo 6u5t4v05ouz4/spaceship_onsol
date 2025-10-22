@@ -38,44 +38,86 @@ export default class BackgroundManager {
     }
     
     /**
-     * Cria o background com sistema infinito SIMPLIFICADO (sem efeitos de luz)
+     * Cria o background com sistema infinito (mantendo estrelas bonitas, sem nebulosas)
      */
     createBackground() {
         const screenWidth = this.scene.scale.width;
         const screenHeight = this.scene.scale.height;
 
-        console.log(`🌌 Criando background simples para tela ${screenWidth}x${screenHeight}`);
+        console.log(`🌌 Criando background com estrelas bonitas para tela ${screenWidth}x${screenHeight}`);
 
-        // Fundo preto sólido simples
-        this.scene.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000)
+        // Fundo azul escuro (mantido do original)
+        this.scene.add.rectangle(0, 0, screenWidth, screenHeight, 0x001133)
             .setOrigin(0.5).setDepth(-10);
-        console.log('✅ Fundo preto criado');
+        console.log('✅ Fundo azul escuro criado');
 
-        // Criar múltiplos TileSprites para cobertura infinita (sem movimento)
+        // Criar múltiplos TileSprites para cobertura infinita
         this.createInfiniteStarTiles();
         console.log('✅ Sistema de TileSprites infinitos criado');
 
-        // Estrelas estáticas simples (sem efeitos de brilho)
-        const starCount = Math.floor((screenWidth * screenHeight) / 8000); // Menos estrelas
-        console.log(`🌌 Criando ${starCount} estrelas estáticas...`);
+        // Estrelas procedurais individuais bonitas (com pulsação visível)
+        const starCount = Math.floor((screenWidth * screenHeight) / 4000);
+        console.log(`🌌 Criando ${starCount} estrelas bonitas com pulsação visível...`);
 
         for (let i = 0; i < starCount; i++) {
             const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
             const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
-            const size = Phaser.Math.Between(1, 2);
-            const star = this.scene.add.rectangle(x, y, size, size, 0x666666);
+            const size = Phaser.Math.Between(0.5, 2);
+            
+            // Criar estrela circular pequena
+            const star = this.scene.add.circle(x, y, size, 0xffffff);
             star.setDepth(-8);
-            star.setAlpha(0.6); // Brilho fixo e baixo
+            star.setAlpha(Phaser.Math.FloatBetween(0.2, 0.6)); // Brilho inicial mais baixo
+
+            // Adicionar pulsação visível para mais estrelas
+            if (Math.random() < 0.6) { // 60% das estrelas têm pulsação
+                this.scene.tweens.add({
+                    targets: star,
+                    alpha: { from: 0.1, to: 1 }, // Variação muito maior de brilho
+                    scale: { from: 0.8, to: 1.2 }, // Pequena variação de tamanho
+                    duration: Phaser.Math.Between(1000, 2500), // Mais rápido
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+            }
 
             // Armazenar para proteger do culling
             this.stars.push(star);
         }
 
-        console.log(`✅ Background simples criado: ${starCount} estrelas estáticas`);
+        // Adicionar estrelas grandes bonitas esparsas (com pulsação visível)
+        const bigStarCount = Math.floor((screenWidth * screenHeight) / 60000);
+        console.log(`🌌 Criando ${bigStarCount} estrelas grandes bonitas com pulsação visível...`);
+
+        for (let i = 0; i < bigStarCount; i++) {
+            const x = Phaser.Math.Between(-screenWidth/2, screenWidth/2);
+            const y = Phaser.Math.Between(-screenHeight/2, screenHeight/2);
+            
+            // Criar estrela grande circular
+            const bigStar = this.scene.add.circle(x, y, 3, 0xaaccff);
+            bigStar.setDepth(-8);
+            bigStar.setAlpha(0.5);
+
+            // Pulsação visível para estrelas grandes
+            this.scene.tweens.add({
+                targets: bigStar,
+                alpha: { from: 0.2, to: 1 }, // Variação muito maior de brilho
+                scale: { from: 0.9, to: 1.3 }, // Variação de tamanho mais visível
+                duration: Phaser.Math.Between(1500, 3000),
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            this.stars.push(bigStar);
+        }
+
+        console.log(`✅ Background com estrelas bonitas criado: ${starCount + bigStarCount} estrelas com brilho pulsante`);
     }
     
     /**
-     * Cria múltiplos TileSprites para cobertura infinita (sem movimento)
+     * Cria múltiplos TileSprites para cobertura infinita (com parallax sutil)
      */
     createInfiniteStarTiles() {
         const screenWidth = this.scene.scale.width;
@@ -89,7 +131,17 @@ export default class BackgroundManager {
                 const tileY = y * tileSize;
                 
                 const starTile = this.scene.add.tileSprite(tileX, tileY, tileSize, tileSize, 'stars');
-                starTile.setOrigin(0.5).setDepth(-9).setAlpha(0.3).setTint(0x444444); // Cinza escuro e pouco brilhante
+                starTile.setOrigin(0.5).setDepth(-9).setAlpha(0.6).setTint(0xaaaaff); // Azul claro e brilhante
+                
+                // Adicionar movimento parallax muito sutil
+                this.scene.tweens.add({
+                    targets: starTile,
+                    tilePositionX: { from: 0, to: tileSize * 0.1 }, // Movimento muito pequeno
+                    tilePositionY: { from: 0, to: tileSize * 0.1 }, // Movimento muito pequeno
+                    duration: 300000, // 5 minutos para movimento extremamente lento
+                    repeat: -1,
+                    ease: 'Linear'
+                });
                 
                 // Armazenar informações do tile
                 starTile.tileX = tileX;
@@ -101,7 +153,7 @@ export default class BackgroundManager {
             }
         }
         
-        console.log(`✅ Criados ${this.starTiles.length} TileSprites estáticos para cobertura infinita`);
+        console.log(`✅ Criados ${this.starTiles.length} TileSprites com parallax sutil para cobertura infinita`);
     }
 
     /**

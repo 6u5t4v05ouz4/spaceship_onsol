@@ -12,9 +12,13 @@ import {
   removePlayerOnline
 } from './database.js';
 import { supabaseAdmin, supabaseAnonClient } from './config/supabase.js';
+import ChunkManager from './chunk-manager.js';
 
 // Map de players conectados por socket
 const connectedPlayers = new Map();
+
+// ChunkManager para gerenciar chunks na memória
+let chunkManager = null;
 
 /**
  * Inicializa o sistema multiplayer
@@ -26,6 +30,25 @@ export async function initMultiplayer() {
   } else {
     console.warn('⚠️ Sistema multiplayer operando sem banco de dados');
   }
+
+  // Inicializar ChunkManager
+  chunkManager = new ChunkManager({
+    chunkTTL: 300000, // 5 minutos
+    cleanupInterval: 60000, // 1 minuto
+    maxChunksInMemory: 100,
+    enableStats: true
+  });
+
+  // Iniciar cleanup automático
+  chunkManager.startCleanup();
+
+  // Configurar callback de cleanup
+  chunkManager.onCleanupComplete = (stats) => {
+    console.log('📊 Cleanup stats:', stats);
+  };
+
+  console.log('✅ ChunkManager inicializado e cleanup automático ativado');
+
   return success;
 }
 
@@ -164,6 +187,38 @@ export async function handleChunkEnter(socket, data, io) {
 
     console.log(`📍 Player ${socket.username} entrando no chunk (${chunkX}, ${chunkY})`);
 
+    // Verificar se chunk já está carregado no ChunkManager
+    const chunkId = `${chunkX},${chunkY}`;
+    let chunkData = null;
+
+    if (chunkManager && chunkManager.isChunkLoaded(chunkId)) {
+      console.log(`📦 Chunk ${chunkId} já carregado, usando cache`);
+      chunkData = chunkManager.getChunk(chunkId);
+    } else {
+      console.log(`🆕 Carregando chunk ${chunkId} do banco de dados`);
+      
+      // Obter ou criar o chunk do banco
+      const chunk = await getOrCreateChunk(chunkX, chunkY);
+      
+      // Obter elementos do chunk
+      const elements = await getChunkElements(chunkX, chunkY);
+      
+      // Preparar dados do chunk
+      chunkData = {
+        chunk: {
+          chunkX,
+          chunkY,
+          zoneType: chunk.zone_type
+        },
+        elements: elements
+      };
+
+      // Carregar no ChunkManager se disponível
+      if (chunkManager) {
+        chunkManager.loadChunk(chunkId, chunkData);
+      }
+    }
+
     // Atualizar posição do jogador
     const playerState = await updatePlayerState(socket.playerId, {
       socketId: socket.id,
@@ -172,19 +227,6 @@ export async function handleChunkEnter(socket, data, io) {
       chunkX,
       chunkY
     });
-
-    // Atualizar chunk do player conectado
-    const connectedPlayer = connectedPlayers.get(socket.id);
-    if (connectedPlayer) {
-      connectedPlayer.chunkX = chunkX;
-      connectedPlayer.chunkY = chunkY;
-    }
-
-    // Obter ou criar o chunk
-    const chunk = await getOrCreateChunk(chunkX, chunkY);
-
-    // Obter elementos do chunk
-    const elements = await getChunkElements(chunkX, chunkY);
 
     // Obter outros players no chunk
     const playersInChunk = await getPlayersInChunk(chunkX, chunkY);
@@ -616,7 +658,7 @@ export async function handlePlayStop(socket, data, io) {
  * Obtém estatísticas do servidor
  */
 export function getServerStats() {
-  return {
+  const baseStats = {
     connectedPlayers: connectedPlayers.size,
     playersByChunk: Array.from(connectedPlayers.values()).reduce((acc, player) => {
       const key = `${player.chunkX},${player.chunkY}`;
@@ -624,4 +666,15 @@ export function getServerStats() {
       return acc;
     }, {})
   };
+
+  // Adicionar estatísticas do ChunkManager se disponível
+  if (chunkManager) {
+    const chunkStats = chunkManager.getStats();
+    return {
+      ...baseStats,
+      chunkManager: chunkStats
+    };
+  }
+
+  return baseStats;
 }

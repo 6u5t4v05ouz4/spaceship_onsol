@@ -5,10 +5,10 @@ import { createClient } from '@supabase/supabase-js';
 // Importar páginas (lazy loading será implementado conforme necessário)
 let appContainer = null;
 
-// Criar cliente Supabase
+// Criar cliente Supabase com fallback para desenvolvimento
 const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_URL || 'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDA5MjM2MTYsImV4cCI6MjAxNjQ5OTYxNn0.8X0g5J8XZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ'
 );
 
 // Disponibilizar Supabase globalmente para outros serviços

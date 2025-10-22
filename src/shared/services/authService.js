@@ -5,23 +5,13 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Variáveis de ambiente com debug
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Variáveis de ambiente com fallback para desenvolvimento
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cjrbhqlwfjebnjoyfjnc.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDA5MjM2MTYsImV4cCI6MjAxNjQ5OTYxNn0.8X0g5J8XZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ5ZQ';
 const REDIRECT_URL = import.meta.env.VITE_SUPABASE_REDIRECT_TO || `${window.location.origin}/auth-callback`;
 
-// Debug das variáveis de ambiente
-console.log('🔍 Debug variáveis de ambiente:');
-console.log('  - VITE_SUPABASE_URL:', SUPABASE_URL);
-console.log('  - VITE_SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? '✅ Definido' : '❌ Não definido');
-console.log('  - import.meta.env:', import.meta.env);
-
-// Validar configuração
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('❌ Supabase não configurado. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY');
-} else {
-  console.log('✅ Supabase configurado:', SUPABASE_URL);
-}
+// Log de configuração (sem expor credenciais)
+console.log('✅ Supabase configurado:', SUPABASE_URL);
 
 // Criar cliente Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

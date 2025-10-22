@@ -35,15 +35,13 @@ export default class ServerStatus {
             <span class="status-text" data-auth-text>Não autenticado</span>
           </div>
         </div>
-        <div class="player-info" data-player-info style="display: none;">
-          <div class="status-row">
-            <span class="status-label">Player ID:</span>
-            <span class="status-value" data-player-id>-</span>
-          </div>
-          <div class="status-row">
-            <span class="status-label">Socket ID:</span>
-            <span class="status-value" data-socket-id>-</span>
-          </div>
+        <div class="status-row" data-player-id-row style="display: none;">
+          <span class="status-label">Player ID:</span>
+          <span class="status-value" data-player-id>-</span>
+        </div>
+        <div class="status-row" data-socket-id-row style="display: none;">
+          <span class="status-label">Socket ID:</span>
+          <span class="status-value" data-socket-id>-</span>
         </div>
         <button class="btn btn-sm btn-primary" data-connect-btn style="margin-top: 1rem;">
           Conectar
@@ -56,7 +54,8 @@ export default class ServerStatus {
     this.statusText = this.container.querySelector('[data-status-text]');
     this.authDot = this.container.querySelector('[data-auth-dot]');
     this.authText = this.container.querySelector('[data-auth-text]');
-    this.playerInfo = this.container.querySelector('[data-player-info]');
+    this.playerIdRow = this.container.querySelector('[data-player-id-row]');
+    this.socketIdRow = this.container.querySelector('[data-socket-id-row]');
     this.playerIdEl = this.container.querySelector('[data-player-id]');
     this.socketIdEl = this.container.querySelector('[data-socket-id]');
     this.connectBtn = this.container.querySelector('[data-connect-btn]');
@@ -132,7 +131,8 @@ export default class ServerStatus {
     if (isAuthenticated) {
       this.authDot.className = 'status-dot online';
       this.authText.textContent = 'Autenticado';
-      this.playerInfo.style.display = 'block';
+      this.playerIdRow.style.display = 'flex';
+      this.socketIdRow.style.display = 'flex';
 
       // Informações do player
       const playerId = socketService.getPlayerId();
@@ -143,7 +143,8 @@ export default class ServerStatus {
     } else {
       this.authDot.className = 'status-dot offline';
       this.authText.textContent = 'Não autenticado';
-      this.playerInfo.style.display = 'none';
+      this.playerIdRow.style.display = 'none';
+      this.socketIdRow.style.display = 'none';
     }
   }
 

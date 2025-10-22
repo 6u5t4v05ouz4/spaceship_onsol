@@ -1,0 +1,349 @@
+/* =====================================================
+   SPACE CRYPTO MINER - SISTEMA DE BACKGROUND
+   ===================================================== */
+
+/* =====================================================
+   BACKGROUND PRINCIPAL
+   ===================================================== */
+.background-primary {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: var(--z-bg-primary);
+    pointer-events: none;
+}
+
+/* =====================================================
+   SISTEMA DE ESTRELAS
+   ===================================================== */
+.stars-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: var(--z-bg-stars);
+    pointer-events: none;
+}
+
+/* =====================================================
+   PARTÍCULAS FLUTUANTES
+   ===================================================== */
+.particles-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-bg-particles);
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    background: transparent;
+    border-radius: 50%;
+    animation: twinkle 3s infinite;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+.particle:nth-child(odd) {
+    animation-delay: 1s;
+}
+
+.particle:nth-child(even) {
+    animation-delay: 2s;
+}
+
+/* =====================================================
+   SIMULAÇÃO DE GAMEPLAY
+   ===================================================== */
+#simulation-container,
+.simulation-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 5; /* ✅ Acima dos backgrounds CSS (-3, -2, -1) mas abaixo do conteúdo (10) */
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 1; /* Opacity inicial (será ajustada por página via JS) */
+    /* Remover qualquer overlay escuro */
+    background: transparent !important;
+}
+
+#simulation-container canvas,
+.simulation-container canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important; /* Fixed para não criar scroll */
+    top: 0 !important;
+    left: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    z-index: 5 !important; /* ✅ Mesmo z-index do container */
+}
+
+/* Controles da simulação */
+.simulation-controls {
+    position: fixed;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+    z-index: var(--z-content);
+    display: flex;
+    gap: var(--spacing-sm);
+    opacity: 0;
+    transition: var(--transition-normal);
+}
+
+.simulation-controls:hover {
+    opacity: 1;
+}
+
+.simulation-control-btn {
+    background: transparent;
+    
+    border: 1px solid var(--primary-cyan-light);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm);
+    color: var(--text-primary);
+    font-size: var(--text-body);
+    cursor: pointer;
+    transition: var(--transition-normal);
+}
+
+.simulation-control-btn:hover {
+    border-color: var(--primary-cyan);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    transform: translateY(-2px);
+}
+
+.simulation-control-btn:focus-visible {
+    outline: 2px solid var(--primary-cyan);
+    outline-offset: 2px;
+}
+
+.simulation-control-btn-danger {
+    border-color: rgba(255, 68, 68, 0.5);
+}
+
+.simulation-control-btn-danger:hover {
+    border-color: var(--error);
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+}
+
+/* ✅ Indicador de modo de performance */
+.simulation-mode-indicator {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+}
+
+.mode-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mode-badge-lite {
+    background: transparent;
+    color: #ffaa00;
+    border: 1px solid rgba(255, 170, 0, 0.5);
+}
+
+.mode-badge-full {
+    background: transparent;
+    color: #00ff66;
+    border: 1px solid rgba(0, 255, 102, 0.5);
+}
+
+/* ✅ Toast de feedback de atalhos */
+.simulation-shortcut-toast {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    background: transparent;
+    color: #000;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: var(--font-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    z-index: var(--z-tooltip);
+    box-shadow: 0 4px 12px rgba(0, 255, 204, 0.3);
+    animation: slideInRight 0.3s ease-out;
+    transition: opacity 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* =====================================================
+   CONTAINER PRINCIPAL
+   ===================================================== */
+.main-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: var(--z-content);
+    text-align: center;
+    padding: var(--container-padding);
+}
+
+/* =====================================================
+   ANIMAÇÕES
+   ===================================================== */
+
+/* Parallax das estrelas */
+@keyframes parallax {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50px); }
+}
+
+/* Twinkle das partículas */
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* Fade In Up */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Title Glow */
+@keyframes titleGlow {
+    0%, 100% { 
+        text-shadow: var(--text-glow-secondary);
+    }
+    50% { 
+        text-shadow: 
+            0 0 25px rgba(0, 255, 204, 1.2),
+            0 0 50px rgba(0, 255, 204, 1),
+            0 0 75px rgba(0, 255, 204, 0.8);
+    }
+}
+
+/* =====================================================
+   UTILITÁRIOS DE BACKGROUND
+   ===================================================== */
+
+/* Background Glass */
+.bg-glass {
+    background: transparent;
+}
+
+/* Background Card */
+.bg-card {
+    background: transparent;
+}
+
+.bg-card-hover {
+    background: transparent;
+}
+
+/* Background Panel */
+.bg-panel {
+    background: transparent;
+}
+
+.bg-panel-hover {
+    background: transparent;
+}
+
+/* =====================================================
+   GRADIENTES
+   ===================================================== */
+.bg-gradient-primary {
+    background: transparent;
+}
+
+.bg-gradient-secondary {
+    background: transparent;
+}
+
+.bg-gradient-accent {
+    background: transparent;
+}
+
+.bg-gradient-space {
+    background: transparent;
+}
+
+/* =====================================================
+   RESPONSIVIDADE
+   ===================================================== */
+@media (max-width: 768px) {
+    .main-container {
+        padding: var(--spacing-md);
+    }
+    
+    .simulation-container {
+        opacity: 0.8;
+    }
+    
+    .stars-background {
+        opacity: 0.3;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: var(--spacing-sm);
+    }
+    
+    .simulation-container {
+        opacity: 0.6;
+    }
+    
+    .stars-background {
+        opacity: 0.2;
+    }
+}
+
+/* =====================================================
+   REDUÇÃO DE MOVIMENTO
+   ===================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .stars-background {
+        animation: none;
+    }
+    
+    .particle {
+        animation: none;
+        opacity: 0.6;
+    }
+    
+    .simulation-container {
+        opacity: 0.3;
+    }
+}

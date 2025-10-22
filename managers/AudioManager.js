@@ -87,7 +87,7 @@ export default class AudioManager {
      * Reproduz som de tiro com variação
      */
     playShoot() {
-        this.play('bullet', {
+        this.play('laser', {
             volume: 0.3,
             pitchVariation: 0.25,
             category: 'sfx'

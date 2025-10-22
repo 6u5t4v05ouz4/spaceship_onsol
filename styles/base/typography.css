@@ -1,0 +1,350 @@
+/* =====================================================
+   SPACE CRYPTO MINER - TIPOGRAFIA
+   ===================================================== */
+
+/* =====================================================
+   IMPORTAÇÃO DE FONTES
+   ===================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Audiowide&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+/* =====================================================
+   FONTE PERSONALIZADA SD GLITCH ROBOT
+   ===================================================== */
+@font-face {
+    font-family: 'SD Glitch Robot';
+    src: url('/fonts/Sdglitchrobotdemo-GOPdO.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* =====================================================
+   CLASSES DE TIPOGRAFIA
+   ===================================================== */
+
+/* Títulos Principais */
+.title-primary {
+    font-family: var(--font-primary);
+    font-size: var(--text-xxl);
+    font-weight: normal;
+    color: var(--primary-cyan);
+    text-shadow: var(--text-glow-primary);
+    letter-spacing: var(--letter-spacing-xl);
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin-bottom: var(--spacing-md);
+}
+
+.title-secondary {
+    font-family: var(--font-primary);
+    font-size: var(--text-xl);
+    font-weight: normal;
+    color: var(--primary-cyan);
+    text-shadow: var(--text-glow-secondary);
+    letter-spacing: var(--letter-spacing-lg);
+    text-transform: uppercase;
+    line-height: 1.2;
+    margin-bottom: var(--spacing-md);
+}
+
+.title-tertiary {
+    font-family: var(--font-primary);
+    font-size: var(--text-lg);
+    font-weight: normal;
+    color: var(--primary-cyan);
+    text-shadow: var(--text-glow-secondary);
+    letter-spacing: var(--letter-spacing-md);
+    text-transform: uppercase;
+    line-height: 1.3;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Subtítulos */
+.subtitle-primary {
+    font-family: var(--font-secondary);
+    font-size: var(--text-md);
+    font-weight: 300;
+    color: var(--text-secondary);
+    letter-spacing: var(--letter-spacing-lg);
+    text-transform: uppercase;
+    line-height: 1.4;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.8;
+}
+
+.subtitle-secondary {
+    font-family: var(--font-secondary);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    color: var(--text-secondary);
+    letter-spacing: var(--letter-spacing-md);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-sm);
+    opacity: 0.9;
+}
+
+/* Texto do Corpo */
+.text-body {
+    font-family: var(--font-secondary);
+    font-size: var(--text-body);
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-sm);
+}
+
+.text-body-large {
+    font-family: var(--font-secondary);
+    font-size: var(--text-body-lg);
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+}
+
+.text-body-small {
+    font-family: var(--font-secondary);
+    font-size: var(--text-body-sm);
+    font-weight: 400;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-xs);
+}
+
+/* Texto Monospace */
+.text-mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-body-sm);
+    font-weight: 400;
+    color: var(--text-muted);
+    line-height: 1.4;
+    letter-spacing: var(--letter-spacing-xs);
+}
+
+.text-mono-large {
+    font-family: var(--font-mono);
+    font-size: var(--text-body);
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.4;
+    letter-spacing: var(--letter-spacing-xs);
+}
+
+/* Texto de Dashboard */
+.text-dashboard {
+    font-family: var(--font-dashboard);
+    font-size: var(--text-body);
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.5;
+    letter-spacing: var(--letter-spacing-xs);
+}
+
+.text-dashboard-large {
+    font-family: var(--font-dashboard);
+    font-size: var(--text-body-lg);
+    font-weight: 700;
+    color: var(--primary-cyan);
+    line-height: 1.4;
+    letter-spacing: var(--letter-spacing-sm);
+    text-transform: uppercase;
+}
+
+/* =====================================================
+   EFEITOS DE TEXTO
+   ===================================================== */
+
+/* Glow Effect */
+.text-glow {
+    text-shadow: var(--text-glow-primary);
+}
+
+.text-glow-secondary {
+    text-shadow: var(--text-glow-secondary);
+}
+
+.text-glow-accent {
+    text-shadow: var(--text-glow-accent);
+}
+
+/* Gradient Text */
+.text-gradient {
+    background: transparent;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+}
+
+.text-gradient-accent {
+    background: transparent;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+}
+
+/* =====================================================
+   UTILITÁRIOS DE TIPOGRAFIA
+   ===================================================== */
+
+/* Pesos de Fonte */
+.font-light { font-weight: 300; }
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+.font-black { font-weight: 900; }
+
+/* Tamanhos */
+.text-xs { font-size: var(--text-caption); }
+.text-sm { font-size: var(--text-body-sm); }
+.text-base { font-size: var(--text-body); }
+.text-lg { font-size: var(--text-body-lg); }
+.text-xl { font-size: var(--text-sm); }
+.text-2xl { font-size: var(--text-md); }
+.text-3xl { font-size: var(--text-lg); }
+.text-4xl { font-size: var(--text-xl); }
+.text-5xl { font-size: var(--text-xxl); }
+
+/* Cores */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--text-accent); }
+.text-cyan { color: var(--primary-cyan); }
+.text-blue { color: var(--secondary-blue); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-error { color: var(--error); }
+
+/* Alinhamento */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+
+/* Transformação */
+.uppercase { text-transform: uppercase; }
+.lowercase { text-transform: lowercase; }
+.capitalize { text-transform: capitalize; }
+.normal-case { text-transform: none; }
+
+/* Decoração */
+.underline { text-decoration: underline; }
+.line-through { text-decoration: line-through; }
+.no-underline { text-decoration: none; }
+
+/* Letter Spacing */
+.tracking-tighter { letter-spacing: -0.05em; }
+.tracking-tight { letter-spacing: -0.025em; }
+.tracking-normal { letter-spacing: 0em; }
+.tracking-wide { letter-spacing: 0.025em; }
+.tracking-wider { letter-spacing: 0.05em; }
+.tracking-widest { letter-spacing: 0.1em; }
+
+/* Line Height */
+.leading-none { line-height: 1; }
+.leading-tight { line-height: 1.25; }
+.leading-snug { line-height: 1.375; }
+.leading-normal { line-height: 1.5; }
+.leading-relaxed { line-height: 1.625; }
+.leading-loose { line-height: 2; }
+
+/* =====================================================
+   ANIMAÇÕES DE TEXTO
+   ===================================================== */
+
+/* Glow Pulsante */
+@keyframes textGlow {
+    0%, 100% { 
+        text-shadow: var(--text-glow-secondary);
+    }
+    50% { 
+        text-shadow: 
+            0 0 20px rgba(0, 255, 204, 1),
+            0 0 40px rgba(0, 255, 204, 0.8),
+            0 0 60px rgba(0, 255, 204, 0.6);
+    }
+}
+
+.text-glow-animate {
+    animation: textGlow 2s ease-in-out infinite alternate;
+}
+
+/* Fade In */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.text-fade-in {
+    animation: fadeInUp 1s ease-out;
+}
+
+.text-fade-in-delay-1 {
+    animation: fadeInUp 1s ease-out 0.5s both;
+}
+
+.text-fade-in-delay-2 {
+    animation: fadeInUp 1s ease-out 1s both;
+}
+
+.text-fade-in-delay-3 {
+    animation: fadeInUp 1s ease-out 1.5s both;
+}
+
+/* =====================================================
+   RESPONSIVIDADE
+   ===================================================== */
+
+@media (max-width: 768px) {
+    .title-primary {
+        font-size: var(--text-xl);
+        letter-spacing: var(--letter-spacing-lg);
+    }
+    
+    .title-secondary {
+        font-size: var(--text-lg);
+        letter-spacing: var(--letter-spacing-md);
+    }
+    
+    .title-tertiary {
+        font-size: var(--text-md);
+        letter-spacing: var(--letter-spacing-sm);
+    }
+    
+    .subtitle-primary {
+        font-size: var(--text-body-lg);
+        letter-spacing: var(--letter-spacing-sm);
+    }
+    
+    .text-body-large {
+        font-size: var(--text-body);
+    }
+}
+
+@media (max-width: 480px) {
+    .title-primary {
+        font-size: var(--text-lg);
+        letter-spacing: var(--letter-spacing-md);
+    }
+    
+    .title-secondary {
+        font-size: var(--text-md);
+        letter-spacing: var(--letter-spacing-sm);
+    }
+    
+    .subtitle-primary {
+        font-size: var(--text-body);
+        letter-spacing: var(--letter-spacing-xs);
+    }
+}

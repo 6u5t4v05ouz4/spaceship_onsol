@@ -26,53 +26,28 @@ export default class ParticleEffects {
     }
 
     /**
-     * Cria efeito de muzzle flash (disparo de arma)
+     * Cria efeito de muzzle flash (disparo de arma) - REMOVIDO
      */
     createMuzzleFlash(x, y, angle) {
-        // Cria gráfico temporário para o muzzle flash
-        const flashGraphics = this.scene.add.graphics();
-        flashGraphics.setDepth(1000); // Acima de tudo
+        // Efeito removido - não criar círculo amarelo
+        return null;
+    }
 
-        // Calcula offset baseado no ângulo
-        const offsetX = Math.cos(angle) * 15;
-        const offsetY = Math.sin(angle) * 15;
-        const flashX = x + offsetX;
-        const flashY = y + offsetY;
-
-        // Desenha o flash
-        flashGraphics.fillStyle(0xffff00, 1); // Amarelo brilhante
-        flashGraphics.fillCircle(flashX, flashY, 8);
-
-        // Adiciona brilho ao redor
-        flashGraphics.lineStyle(2, 0xffffff, 0.8);
-        flashGraphics.strokeCircle(flashX, flashY, 10);
-
-        // Animação de desaparecimento
-        let alpha = 1;
-        let scale = 1;
-
-        const flashTween = this.scene.tweens.add({
-            targets: { alpha, scale },
-            alpha: 0,
-            scale: 0.5,
-            duration: 150,
-            ease: 'Power2',
-            onUpdate: () => {
-                flashGraphics.clear();
-                flashGraphics.fillStyle(0xffff00, alpha);
-                flashGraphics.fillCircle(flashX, flashY, 8 * scale);
-
-                if (alpha > 0.5) {
-                    flashGraphics.lineStyle(2, 0xffffff, alpha * 0.8);
-                    flashGraphics.strokeCircle(flashX, flashY, 10 * scale);
-                }
-            },
-            onComplete: () => {
-                flashGraphics.destroy();
+    /**
+     * Toca som de disparo
+     */
+    playShootingSound() {
+        try {
+            // Tocar som de laser se disponível
+            if (this.scene.sound && this.scene.sound.get('laser')) {
+                this.scene.sound.play('laser', {
+                    volume: 0.3,
+                    rate: Phaser.Math.FloatBetween(0.9, 1.1) // Variação sutil de pitch
+                });
             }
-        });
-
-        return flashGraphics;
+        } catch (error) {
+            console.warn('⚠️ Erro ao tocar som de disparo:', error);
+        }
     }
 
     /**

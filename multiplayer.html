@@ -7,7 +7,7 @@
     <link rel="icon" href="/assets/icones/icone.png" />
 
     <!-- CSS simples -->
-    <link rel="stylesheet" href="/main.css">
+    <link rel="stylesheet" href="/src/styles/main.css">
 
     <!-- Phaser.js -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
@@ -30,6 +30,7 @@
         #gameCanvas {
             display: block;
             margin: 0 auto;
+            border: 2px solid #00ff00; /* Debug: borda verde para ver se o canvas está sendo renderizado */
         }
 
         #loading {
@@ -44,7 +45,7 @@
 
         #playerInfo {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             left: 20px;
             color: #00ff00;
             font-size: 14px;
@@ -57,7 +58,7 @@
 
         #gameControls {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             right: 20px;
             z-index: 100;
             display: flex;
@@ -219,8 +220,48 @@
 
     <script type="module">
         // Importar dependências
-        import socketService from '/services/socketService.js';
-        import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
+        import { ENV_CONFIG } from '/src/config/environment.js';
+        
+        // SocketService simplificado (sem imports externos)
+        class SocketService {
+            constructor() {
+                this.socket = null;
+                this.isConnected = false;
+                this.isAuthenticated = false;
+            }
+            
+            connect() {
+                console.log('🔌 Conectando ao servidor...');
+                // Socket.io já está carregado via CDN
+                this.socket = io('http://localhost:3001', {
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 5000,
+                    reconnectionAttempts: 5
+                });
+                
+                this.socket.on('connect', () => {
+                    console.log('✅ Conectado ao servidor!');
+                    this.isConnected = true;
+                });
+                
+                this.socket.on('disconnect', () => {
+                    console.log('❌ Desconectado do servidor');
+                    this.isConnected = false;
+                });
+            }
+            
+            disconnect() {
+                if (this.socket) {
+                    this.socket.disconnect();
+                    this.socket = null;
+                    this.isConnected = false;
+                }
+            }
+        }
+        
+        const socketService = new SocketService();
         
         // Usar Supabase via CDN
         const { createClient } = window.supabase;
@@ -283,7 +324,12 @@
             originalConsoleLog.apply(console, args);
             const message = args.map(arg => {
                 if (typeof arg === 'object' && arg !== null) {
-                    return JSON.stringify(arg, null, 2);
+                    try {
+                        return JSON.stringify(arg, null, 2);
+                    } catch (error) {
+                        // Se houver erro de serialização (referência circular), usar toString
+                        return arg.toString();
+                    }
                 }
                 return String(arg);
             }).join(' ');
@@ -321,6 +367,14 @@
             }
         };
 
+        // Função para carregar credenciais
+        function loadSecureCredentials() {
+            return {
+                SUPABASE_URL: 'https://cjrbhqlwfjebnjoyfjnc.supabase.co',
+                SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcmJocWx3ZmplYm5qb3lmam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MDIwNTMsImV4cCI6MjA3NTI3ODA1M30.X4uaKnfrmHYYSkVXz1qWYF0wmy-bkjHgbvonubYUTA4'
+            };
+        }
+
         // Função para inicializar o jogo de forma segura
         async function initializeGame() {
             try {
@@ -328,7 +382,7 @@
                 
                 // Carregar credenciais de forma segura
                 console.log('🔐 Carregando credenciais...');
-                const credentials = await loadSecureCredentials();
+                const credentials = loadSecureCredentials();
                 
                 // Configurar Supabase
                 console.log('🔍 Configurando Supabase...');
@@ -341,7 +395,7 @@
                 window.supabaseClient = supabase;
                 window.SUPABASE_URL = credentials.SUPABASE_URL;
                 window.SUPABASE_ANON_KEY = credentials.SUPABASE_ANON_KEY;
-                window.VITE_SERVER_URL = GAME_CONFIG.SERVER_URL;
+                window.VITE_SERVER_URL = 'http://localhost:3001';
                 
                 console.log('✅ Supabase client configurado');
                 console.log('✅ URL do servidor definida:', window.VITE_SERVER_URL);
@@ -570,38 +624,63 @@
             if (!isAuthenticated) return;
 
             try {
+                console.log('🔍 Tentando importar MultiplayerGameScene...');
                 // Carregar MultiplayerGameScene
-                const module = await import('/scenes/MultiplayerGameScene.js');
+                const module = await import('/src/scenes/MultiplayerGameScene.js');
                 console.log('✅ MultiplayerGameScene carregado com sucesso');
+                console.log('🔍 Módulo importado:', module);
+                console.log('🔍 Default export:', module.default);
 
                 // Obter a classe MultiplayerGameScene do módulo
                 const MultiplayerGameScene = module.default;
 
-                // Configuração do jogo multiplayer
-                console.log('🔧 Configurando Phaser...');
-                const config = {
-                    type: Phaser.AUTO,
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    backgroundColor: '#000000',
-                    physics: {
-                        default: 'arcade',
-                        arcade: {
-                            gravity: { x: 0, y: 0 },
-                            debug: false
-                        }
-                    },
-                    scene: [MultiplayerGameScene],
-                    scale: {
-                        mode: Phaser.Scale.RESIZE,
-                        autoCenter: Phaser.Scale.CENTER_BOTH
-                    }
-                };
-                console.log('✅ Configuração do Phaser:', config);
+                       // Configuração do jogo multiplayer
+                       console.log('🔧 Configurando Phaser...');
+                       console.log('🔍 Dimensões da janela:', window.innerWidth, 'x', window.innerHeight);
+                       
+                       const config = {
+                           type: Phaser.AUTO,
+                           width: window.innerWidth,
+                           height: window.innerHeight,
+                           backgroundColor: '#000000',
+                           physics: {
+                               default: 'arcade',
+                               arcade: {
+                                   gravity: { x: 0, y: 0 },
+                                   debug: false
+                               }
+                           },
+                           scene: [MultiplayerGameScene],
+                           scale: {
+                               mode: Phaser.Scale.RESIZE,
+                               autoCenter: Phaser.Scale.CENTER_BOTH
+                           },
+                           parent: 'gameCanvas' // Especificar o container pai
+                       };
+                       console.log('✅ Configuração do Phaser:', config);
 
-                // Inicializar o jogo multiplayer
-                const game = new Phaser.Game(config);
-                console.log('✅ Jogo multiplayer inicializado:', game);
+                       // Inicializar o jogo multiplayer
+                       const game = new Phaser.Game(config);
+                       console.log('✅ Jogo multiplayer inicializado:', game);
+                       
+                       // Verificar se o canvas foi criado
+                       setTimeout(() => {
+                           const canvas = document.querySelector('canvas');
+                           console.log('🔍 Canvas encontrado:', canvas ? 'Sim' : 'Não');
+                           if (canvas) {
+                               console.log('🔍 Canvas dimensões:', canvas.width, 'x', canvas.height);
+                               console.log('🔍 Canvas estilo:', canvas.style.cssText);
+                               console.log('🔍 Canvas visível:', canvas.offsetWidth > 0 && canvas.offsetHeight > 0);
+                           }
+                           
+                           // Verificar se há elementos no jogo
+                           const gameObjects = game.scene.getScene('MultiplayerGameScene');
+                           if (gameObjects) {
+                               console.log('🔍 Scene encontrada:', gameObjects.scene.key);
+                               console.log('🔍 Children na scene:', gameObjects.children.list.length);
+                               console.log('🔍 Physics groups:', Object.keys(gameObjects.physics.world.groups));
+                           }
+                       }, 2000);
                 
                 // Inicializar socket para comunicação em tempo real
                 console.log('🔌 Inicializando socket...');

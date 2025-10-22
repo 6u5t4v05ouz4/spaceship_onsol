@@ -62,19 +62,61 @@ export default class AuthCallbackPage {
     this.isProcessing = true;
 
     try {
-      // Extrair query params
-      const params = new URLSearchParams(window.location.search);
-      const error = params.get('error');
-      const errorDescription = params.get('error_description');
-      const code = params.get('code');
+      // Extrair parâmetros do hash (Google OAuth envia no hash)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const queryParams = new URLSearchParams(window.location.search);
+      
+      // Combinar parâmetros do hash e query
+      const error = hashParams.get('error') || queryParams.get('error');
+      const errorDescription = hashParams.get('error_description') || queryParams.get('error_description');
+      const code = hashParams.get('code') || queryParams.get('code');
+      const accessToken = hashParams.get('access_token');
 
-      console.log('🔐 OAuth Callback params:', { error, code: code ? '***' : undefined });
+      console.log('🔐 OAuth Callback params:', { 
+        error, 
+        code: code ? '***' : undefined,
+        accessToken: accessToken ? '***' : undefined,
+        hash: window.location.hash.substring(0, 50) + '...'
+      });
 
       // Se tem erro no callback, exibir
       if (error) {
         const errorMsg = this.translateOAuthError(error, errorDescription);
         this.showError(container, errorMsg);
         return;
+      }
+
+      // Se temos access_token no hash, deixar o Supabase processar automaticamente
+      if (accessToken) {
+        console.log('🔐 Access token detectado no hash, aguardando processamento automático do Supabase...');
+        
+        // Aguardar um pouco para o Supabase processar automaticamente
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Verificar se a sessão foi criada automaticamente
+        const session = await authService.getSession();
+        if (session) {
+          console.log('✅ Sessão criada automaticamente pelo Supabase!');
+          this.showSuccess(container, 'Login realizado com sucesso! Redirecionando...');
+          setTimeout(() => navigateTo('/dashboard'), 1500);
+          return;
+        }
+        
+        // Se não funcionou automaticamente, tentar método manual como fallback
+        console.log('🔐 Processamento automático falhou, tentando método manual...');
+        try {
+          const result = await authService.handleOAuthCallback();
+          if (result) {
+            console.log('✅ Sessão criada com método manual!');
+            this.showSuccess(container, 'Login realizado com sucesso! Redirecionando...');
+            setTimeout(() => navigateTo('/dashboard'), 1500);
+            return;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao processar token:', error);
+          this.showError(container, 'Erro ao processar autenticação: ' + error.message);
+          return;
+        }
       }
 
       // Supabase SDK com detectSessionInUrl: true já processa automaticamente
@@ -156,6 +198,22 @@ export default class AuthCallbackPage {
     errorMessage.textContent = message;
 
     console.error('❌ Erro exibido:', message);
+  }
+
+  /**
+   * Mostrar sucesso
+   */
+  showSuccess(container, message) {
+    const loadingState = container.querySelector('#loadingState');
+    const errorState = container.querySelector('#errorState');
+    const errorMessage = container.querySelector('#errorMessage');
+
+    loadingState.style.display = 'none';
+    errorState.style.display = 'block';
+    errorMessage.textContent = message;
+    errorMessage.style.color = '#4ade80'; // Verde para sucesso
+
+    console.log('✅ Sucesso:', message);
   }
 
   /**

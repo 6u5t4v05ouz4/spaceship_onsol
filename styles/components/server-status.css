@@ -1,0 +1,116 @@
+/**
+ * Server Status Widget
+ * Estilos para o componente de status do servidor
+ */
+
+.server-status-widget {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  min-width: 280px;
+  max-width: 320px;
+}
+
+/* Quando dentro do dropdown, remover margens */
+.server-status-dropdown .server-status-widget {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.server-status-widget .server-status-header h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.server-status-widget .server-status-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.server-status-widget .status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) 0;
+  min-height: 24px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.server-status-widget .status-row:last-child {
+  margin-bottom: 0;
+}
+
+.server-status-widget .status-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.server-status-widget .status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.server-status-widget .status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+}
+
+.server-status-widget .status-dot.online {
+  background-color: var(--success);
+  box-shadow: 0 0 8px var(--success);
+  animation: pulse-online 2s ease-in-out infinite;
+}
+
+.server-status-widget .status-dot.offline {
+  background-color: var(--text-muted);
+}
+
+@keyframes pulse-online {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.server-status-widget .status-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.server-status-widget .status-value {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+  background: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: var(--border-radius-sm);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .status-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .status-indicator {
+    width: 100%;
+  }
+}
+

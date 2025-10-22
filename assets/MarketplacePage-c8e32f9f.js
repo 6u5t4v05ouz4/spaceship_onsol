@@ -1,4 +1,4 @@
-import{g as c,n as d}from"./main-880cce80.js";import{e as m,H as u}from"./HeaderNavigation-475cb1e8.js";import"./phaser-aaa04cbd.js";async function f(n,e="all"){try{console.log("🛒 Fetching marketplace listings, category:",e);let t=n.from("marketplace_listings").select(`
+import{g as c,n as d}from"./main-22c0600e.js";import{e as m,H as u}from"./HeaderNavigation-e3081217.js";import"./phaser-aaa04cbd.js";async function f(n,e="all"){try{console.log("🛒 Fetching marketplace listings, category:",e);let t=n.from("marketplace_listings").select(`
         *,
         seller:seller_id (
           id,

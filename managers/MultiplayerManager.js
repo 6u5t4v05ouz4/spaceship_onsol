@@ -6,6 +6,10 @@
 import socketService from '../services/socketService.js';
 import AssetManager from './AssetManager.js';
 import SpriteSheetManager from './SpriteSheetManager.js';
+import NetworkOptimizer from './NetworkOptimizer.js';
+import ConnectionManager from './ConnectionManager.js';
+import ConnectionTester from './ConnectionTester.js';
+import PerformanceMonitor from './PerformanceMonitor.js';
 
 export default class MultiplayerManager {
   constructor(scene) {
@@ -23,6 +27,40 @@ export default class MultiplayerManager {
     this.assetManager = new AssetManager(scene);
     this.spriteSheetManager = new SpriteSheetManager(scene);
     this.chunkElements = new Map(); // Map<chunkKey, elementSprites>
+
+    // NetworkOptimizer para otimizar dados de rede
+    this.networkOptimizer = new NetworkOptimizer({
+      movementThrottle: 100, // ms
+      enableDeltaSync: true,
+      enableCompression: true
+    });
+
+    // ConnectionManager para gerenciar conexões robustas
+    this.connectionManager = new ConnectionManager({
+      maxReconnectAttempts: 5,
+      reconnectDelay: 1000,
+      enableHeartbeat: true,
+      preserveState: true,
+      onConnect: () => this.handleConnectionEstablished(),
+      onDisconnect: (reason) => this.handleConnectionLost(reason),
+      onReconnect: () => this.handleReconnectionSuccess(),
+      onHeartbeatFail: () => this.handleHeartbeatFailure()
+    });
+
+    // ConnectionTester para validar reconexão
+    this.connectionTester = new ConnectionTester({
+      enableAutoTests: false, // Desabilitado por padrão
+      testInterval: 300000, // 5 minutos
+      enableStressTests: false
+    });
+
+    // PerformanceMonitor para monitorar melhorias
+    this.performanceMonitor = new PerformanceMonitor({
+      enableRealTimeMonitoring: true,
+      monitoringInterval: 5000, // 5 segundos
+      enableAlerts: true,
+      maxHistorySize: 1000
+    });
 
     // Sistemas de rede (novos)
     this.networkStats = {
@@ -58,6 +96,9 @@ export default class MultiplayerManager {
     if (!socketService.isConnected()) {
       socketService.connect();
 
+      // Configurar ConnectionManager
+      this.connectionManager.setup(socketService.socket, socketService);
+
       // Aguardar conexão
       await new Promise((resolve) => {
         if (socketService.isConnected()) {
@@ -78,7 +119,24 @@ export default class MultiplayerManager {
           }, 5000);
         }
       });
+    } else {
+      // Se já conectado, configurar ConnectionManager
+      this.connectionManager.setup(socketService.socket, socketService);
     }
+
+    // Configurar ConnectionTester
+    this.connectionTester.setup(this.connectionManager, socketService);
+
+    // Configurar PerformanceMonitor
+    this.performanceMonitor.setup({
+      chunkManager: null, // Será configurado quando disponível
+      networkOptimizer: this.networkOptimizer,
+      connectionManager: this.connectionManager,
+      connectionTester: this.connectionTester
+    });
+
+    // Iniciar monitoramento de performance
+    this.performanceMonitor.startMonitoring();
 
     // Autenticar explicitamente (Supabase já está disponível aqui)
     console.log('🔐 Tentando autenticar...');
@@ -330,7 +388,19 @@ export default class MultiplayerManager {
     }
 
     // Enviar posição com predição client-side
-    socketService.updatePosition(Math.floor(x), Math.floor(y), chunkX, chunkY);
+    // Otimizar dados de movimento antes do envio
+    const movementData = {
+      x: Math.floor(x),
+      y: Math.floor(y),
+      chunkX,
+      chunkY
+    };
+
+    const optimizedData = this.networkOptimizer.optimizeMovementData(movementData);
+    
+    if (optimizedData) {
+      socketService.updatePosition(optimizedData.x, optimizedData.y, optimizedData.chunkX, optimizedData.chunkY);
+    }
   }
 
   /**
@@ -1150,7 +1220,15 @@ export default class MultiplayerManager {
       socketServiceStatus: socketService.isConnected() ? 'Connected' : 'Disconnected',
       // Estatísticas avançadas de rede
       network: this.networkStats,
-      localPlayerPosition: this.getPlayerPosition()
+      localPlayerPosition: this.getPlayerPosition(),
+      // Estatísticas do NetworkOptimizer
+      networkOptimizer: this.networkOptimizer.getStats(),
+      // Estatísticas do ConnectionManager
+      connectionManager: this.connectionManager.getStats(),
+      // Estatísticas do ConnectionTester
+      connectionTester: this.connectionTester.getStats(),
+      // Estatísticas do PerformanceMonitor
+      performanceMonitor: this.performanceMonitor.getStats()
     };
 
     // Adicionar informações dos outros players
@@ -1179,6 +1257,115 @@ export default class MultiplayerManager {
     }
 
     return stats;
+  }
+
+  /**
+   * Callbacks do ConnectionManager
+   */
+  handleConnectionEstablished() {
+    console.log('🔌 Conexão estabelecida via ConnectionManager');
+    this.isConnected = true;
+    
+    // Emitir evento para a cena
+    this.scene.events.emit('multiplayer:connected');
+  }
+
+  handleConnectionLost(reason) {
+    console.log('🔌 Conexão perdida via ConnectionManager:', reason);
+    this.isConnected = false;
+    this.isAuthenticated = false;
+    
+    // Emitir evento para a cena
+    this.scene.events.emit('multiplayer:disconnected', { reason });
+  }
+
+  handleReconnectionSuccess() {
+    console.log('🔄 Reconexão bem-sucedida via ConnectionManager');
+    this.isConnected = true;
+    
+    // Reautenticar se necessário
+    if (this.playerId && socketService.authenticate) {
+      socketService.authenticate();
+    }
+    
+    // Emitir evento para a cena
+    this.scene.events.emit('multiplayer:reconnected');
+  }
+
+  handleHeartbeatFailure() {
+    console.warn('💔 Falha no heartbeat via ConnectionManager');
+    
+    // Emitir evento para a cena
+    this.scene.events.emit('multiplayer:heartbeat_failure');
+  }
+
+  /**
+   * Métodos para controle de testes de reconexão
+   */
+  startConnectionTests() {
+    if (this.connectionTester) {
+      this.connectionTester.startAutoTests();
+      console.log('🧪 Testes de reconexão iniciados');
+    }
+  }
+
+  stopConnectionTests() {
+    if (this.connectionTester) {
+      this.connectionTester.stopAutoTests();
+      console.log('⏹️ Testes de reconexão parados');
+    }
+  }
+
+  async runSingleConnectionTest() {
+    if (this.connectionTester) {
+      return await this.connectionTester.runReconnectionTest();
+    }
+    return null;
+  }
+
+  async runStressTest(iterations = 5) {
+    if (this.connectionTester) {
+      return await this.connectionTester.runStressTest(iterations);
+    }
+    return [];
+  }
+
+  getConnectionTestStats() {
+    if (this.connectionTester) {
+      return this.connectionTester.getStats();
+    }
+    return null;
+  }
+
+  /**
+   * Métodos para controle de monitoramento de performance
+   */
+  startPerformanceMonitoring() {
+    if (this.performanceMonitor) {
+      this.performanceMonitor.startMonitoring();
+      console.log('📊 Monitoramento de performance iniciado');
+    }
+  }
+
+  stopPerformanceMonitoring() {
+    if (this.performanceMonitor) {
+      this.performanceMonitor.stopMonitoring();
+      console.log('⏹️ Monitoramento de performance parado');
+    }
+  }
+
+  getPerformanceReport(timeRange = 3600000) {
+    if (this.performanceMonitor) {
+      return this.performanceMonitor.generateReport(timeRange);
+    }
+    return null;
+  }
+
+  getPerformanceAlerts() {
+    if (this.performanceMonitor) {
+      return this.performanceMonitor.getRecentAlerts();
+    }
+    return [];
   }
 
   /**
@@ -1211,6 +1398,26 @@ export default class MultiplayerManager {
     // Limpar sistemas de rede
     if (socketService.resetNetworkSystems && typeof socketService.resetNetworkSystems === 'function') {
       socketService.resetNetworkSystems();
+    }
+
+    // Limpar ConnectionManager
+    if (this.connectionManager) {
+      this.connectionManager.destroy();
+    }
+
+    // Limpar NetworkOptimizer
+    if (this.networkOptimizer) {
+      this.networkOptimizer.destroy();
+    }
+
+    // Limpar ConnectionTester
+    if (this.connectionTester) {
+      this.connectionTester.destroy();
+    }
+
+    // Limpar PerformanceMonitor
+    if (this.performanceMonitor) {
+      this.performanceMonitor.destroy();
     }
 
     // Limpar event listeners de rede

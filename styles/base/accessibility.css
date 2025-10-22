@@ -1,0 +1,339 @@
+/* =====================================================
+   SPACE CRYPTO MINER - ACESSIBILIDADE (WCAG 2.1)
+   ===================================================== */
+
+/* =====================================================
+   FOCUS VISIBLE GLOBAL
+   ===================================================== */
+
+/* ✅ P0: Focus visible global para todos os elementos interativos */
+*:focus-visible {
+    outline: 2px solid var(--primary-cyan);
+    outline-offset: 2px;
+    border-radius: var(--border-radius-xs);
+}
+
+/* Focus para inputs e textareas */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--primary-cyan);
+    outline-offset: 2px;
+    border-color: var(--primary-cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+}
+
+/* Focus para cards clicáveis */
+.card:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--primary-cyan);
+    outline-offset: 2px;
+}
+
+/* Focus para links */
+a:focus-visible {
+    outline: 2px solid var(--primary-cyan);
+    outline-offset: 2px;
+    text-decoration: underline;
+}
+
+/* =====================================================
+   SKIP LINKS (Navegação por Teclado)
+   ===================================================== */
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary-cyan);
+    color: #000;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-decoration: none;
+    font-weight: 600;
+    z-index: var(--z-overlay);
+    border-radius: var(--border-radius-sm);
+    transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+    top: var(--spacing-sm);
+    outline: 2px solid #000;
+    outline-offset: 2px;
+}
+
+/* =====================================================
+   SCREEN READER ONLY
+   ===================================================== */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* =====================================================
+   HIGH CONTRAST MODE
+   ===================================================== */
+
+@media (prefers-contrast: high) {
+    :root {
+        --text-secondary: #ffffff;
+        --text-muted: #cccccc;
+        --primary-cyan: #00ffff;
+        --secondary-blue: #0099ff;
+    }
+    
+    .btn:focus-visible {
+        outline-width: 3px;
+    }
+    
+    *:focus-visible {
+        outline-width: 3px;
+    }
+}
+
+/* =====================================================
+   REDUCED MOTION (Acessibilidade)
+   ===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .btn-loading::after {
+        animation: none;
+    }
+}
+
+/* =====================================================
+   ARIA LIVE REGIONS
+   ===================================================== */
+
+[role="alert"],
+[role="status"],
+[aria-live="polite"],
+[aria-live="assertive"] {
+    position: relative;
+}
+
+/* Estilo para mensagens de erro com role="alert" */
+[role="alert"] {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    background: var(--error-light);
+    border: 1px solid var(--error);
+    color: var(--text-primary);
+    margin: var(--spacing-sm) 0;
+}
+
+/* Estilo para mensagens de sucesso */
+[role="status"].success {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    background: var(--success-light);
+    border: 1px solid var(--success);
+    color: var(--text-primary);
+    margin: var(--spacing-sm) 0;
+}
+
+/* =====================================================
+   TOUCH TARGETS (Mobile)
+   ===================================================== */
+
+@media (max-width: 768px) {
+    /* ✅ P0: Garantir touch targets mínimos */
+    button,
+    a,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"],
+    [role="button"],
+    [tabindex] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Cards de inventory touch-friendly */
+    .card-inventory {
+        min-height: 100px;
+        padding: var(--spacing-md);
+    }
+}
+
+/* =====================================================
+   INDICADORES VISUAIS DE ESTADO
+   ===================================================== */
+
+/* Campos obrigatórios */
+[required]::after,
+[aria-required="true"]::after {
+    content: " *";
+    color: var(--error);
+    font-weight: bold;
+}
+
+/* Campos inválidos */
+[aria-invalid="true"] {
+    border-color: var(--error) !important;
+    box-shadow: 0 0 0 1px var(--error) !important;
+}
+
+/* Campos válidos */
+[aria-invalid="false"]:not(:placeholder-shown) {
+    border-color: var(--success);
+}
+
+/* =====================================================
+   TOOLTIPS ACESSÍVEIS
+   ===================================================== */
+
+[aria-describedby] {
+    position: relative;
+}
+
+.tooltip {
+    position: absolute;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-xs);
+    font-size: var(--text-body-sm);
+    white-space: nowrap;
+    z-index: var(--z-tooltip);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+[aria-describedby]:hover + .tooltip,
+[aria-describedby]:focus + .tooltip {
+    opacity: 1;
+}
+
+/* =====================================================
+   LOADING STATES ACESSÍVEIS
+   ===================================================== */
+
+[aria-busy="true"] {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+[aria-busy="true"]::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--primary-cyan);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* =====================================================
+   MODAL TRAP DE FOCO
+   ===================================================== */
+
+[role="dialog"],
+[role="alertdialog"] {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: var(--z-modal);
+    background: var(--panel-bg);
+    border: 2px solid var(--primary-cyan);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Overlay de modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: calc(var(--z-modal) - 1);
+    backdrop-filter: blur(4px);
+}
+
+/* =====================================================
+   LANDMARKS ARIA
+   ===================================================== */
+
+[role="banner"],
+[role="main"],
+[role="contentinfo"],
+[role="navigation"],
+[role="complementary"],
+[role="search"] {
+    position: relative;
+}
+
+/* =====================================================
+   CONTRASTE DE CORES (WCAG AA)
+   ===================================================== */
+
+/* Garantir contraste mínimo de 4.5:1 para texto normal */
+.text-low-contrast {
+    color: var(--text-secondary); /* 5.2:1 ✅ */
+}
+
+.text-medium-contrast {
+    color: var(--text-muted); /* 4.8:1 ✅ */
+}
+
+.text-high-contrast {
+    color: var(--text-primary); /* 21:1 ✅ */
+}
+
+/* =====================================================
+   ÍCONES ACESSÍVEIS
+   ===================================================== */
+
+/* Ícones devem ter aria-label ou role="img" */
+.icon[aria-label],
+.icon[role="img"] {
+    display: inline-block;
+}
+
+/* Ícones decorativos */
+.icon[aria-hidden="true"] {
+    pointer-events: none;
+    user-select: none;
+}
+

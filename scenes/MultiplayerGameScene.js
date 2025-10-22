@@ -134,7 +134,7 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
     async create(data) {
         console.log('🚀 Iniciando MultiplayerGameScene...');
-        console.log('📊 Dados recebidos:', data);
+        console.log('📊 Dados recebidos:', data ? Object.keys(data) : 'nenhum dado');
 
         try {
             // Inicializa managers de efeitos visuais (mantidos do original)
@@ -329,7 +329,7 @@ export default class MultiplayerGameScene extends Phaser.Scene {
             this.shipManager.createPlayerNameText(this.multiplayerManager.username);
         }
 
-        console.log('✅ Nave criada:', this.shipManager.ship);
+        console.log('✅ Nave criada:', this.shipManager.ship ? 'sim' : 'não');
 
         // Configura câmera para seguir a nave (mantido)
         if (this.shipManager.ship) {
@@ -496,25 +496,25 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
         // Player entrou no mesmo chunk
         this.events.on('player:joined', (data) => {
-            console.log('👤 Player entrou na cena:', data.username);
+            console.log('👤 Player entrou na cena:', data?.username || 'desconhecido');
             // MultiplayerManager já cuida de criar o sprite
         });
 
         // Player saiu do chunk
         this.events.on('player:left', (data) => {
-            console.log('👋 Player saiu da cena:', data.playerId);
+            console.log('👋 Player saiu da cena:', data?.playerId || 'desconhecido');
             // MultiplayerManager já cuida de remover o sprite
         });
 
         // Player se moveu
         this.events.on('player:moved', (data) => {
             // MultiplayerManager cuida da interpolação
-            console.log('🏃 Player se moveu:', data.playerId, `para (${data.x}, ${data.y})`);
+            console.log('🏃 Player se moveu:', data?.playerId || 'desconhecido', `para (${data?.x || 0}, ${data?.y || 0})`);
         });
 
         // Dados do chunk recebidos
         this.events.on('chunk:data', (data) => {
-            console.log('📦 Chunk data recebido na cena:', data);
+            console.log('📦 Chunk data recebido na cena:', data ? Object.keys(data) : 'nenhum dado');
             // MultiplayerManager processa os dados
         });
 
@@ -525,7 +525,7 @@ export default class MultiplayerGameScene extends Phaser.Scene {
 
         // Autenticação multiplayer
         this.events.on('multiplayer:authenticated', (data) => {
-            console.log('🔐 Multiplayer autenticado na cena:', data);
+            console.log('🔐 Multiplayer autenticado na cena:', data ? Object.keys(data) : 'nenhum dado');
             // Atualizar nome do jogador se ainda não tiver sido feito
             if (this.shipManager && this.multiplayerManager && this.multiplayerManager.username) {
                 this.shipManager.createPlayerNameText(this.multiplayerManager.username);
@@ -630,9 +630,19 @@ export default class MultiplayerGameScene extends Phaser.Scene {
     // Métodos de gameplay (adaptados para multiplayer)
 
     fireProjectile() {
+        console.log('🔫 Disparo detectado!');
+        
         // Usa o ProjectileManager para manter consistência com o original
         if (this.projectileManager) {
             this.projectileManager.fireProjectile();
+        }
+        
+        // Tocar som de disparo quando usuário clica no mouse
+        if (this.audioManager) {
+            console.log('🔊 Tocando som de disparo...');
+            this.audioManager.playShoot();
+        } else {
+            console.warn('⚠️ AudioManager não disponível');
         }
     }
 

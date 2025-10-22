@@ -1,0 +1,276 @@
+/* =====================================================
+   SPACE CRYPTO MINER - CSS VARIABLES
+   ===================================================== */
+
+:root {
+    /* =====================================================
+       CORES PRIMÁRIAS
+       ===================================================== */
+    
+    /* Azul Ciano - Cor principal do sistema */
+    --primary-cyan: #00ffcc;
+    --primary-cyan-rgba: rgba(0, 255, 204, 0.8);
+    --primary-cyan-light: rgba(0, 255, 204, 0.3);
+    --primary-cyan-dark: rgba(0, 255, 204, 0.1);
+
+    /* Azul Oceano - Cor secundária */
+    --secondary-blue: #0099ff;
+    --secondary-blue-rgba: rgba(0, 153, 255, 0.8);
+    --secondary-blue-light: rgba(0, 153, 255, 0.3);
+    --secondary-blue-dark: rgba(0, 153, 255, 0.1);
+
+    /* Azul Claro - Cor de destaque */
+    --accent-blue: #00d4ff;
+    --accent-blue-rgba: rgba(0, 212, 255, 0.8);
+    --accent-blue-light: rgba(0, 212, 255, 0.3);
+    --accent-blue-dark: rgba(0, 212, 255, 0.1);
+
+    /* =====================================================
+       CORES DE FUNDO
+       ===================================================== */
+    
+    /* Background Principal - Espaço profundo */
+    --bg-primary: #000011;
+    --bg-secondary: #001122;
+    --bg-tertiary: #0a0a0f;
+    --bg-quaternary: #1a1a2e;
+    --bg-quinary: #16213e;
+
+    /* Background de Cards */
+    --card-bg: rgba(0, 0, 0, 0.6);
+    --card-bg-hover: rgba(0, 0, 0, 0.8);
+    --panel-bg: rgba(26, 26, 46, 0.8);
+    --panel-bg-hover: rgba(26, 26, 46, 0.95);
+    --glass-bg: rgba(26, 26, 46, 0.6);
+
+    /* =====================================================
+       CORES DE TEXTO
+       ===================================================== */
+    
+    /* Texto Principal */
+    --text-primary: #ffffff;
+    --text-secondary: #c0f7f0; /* ✅ Contraste 5.2:1 (WCAG AA) */
+    --text-muted: #99ddee;     /* ✅ Contraste 4.8:1 (WCAG AA) */
+    --text-accent: #00ffcc;
+    --text-card-primary: #ccd6f6;
+    --text-card-secondary: #a8b2d1;
+
+    /* =====================================================
+       CORES DE STATUS
+       ===================================================== */
+    
+    /* Sucesso */
+    --success: #00ff00;
+    --success-rgba: rgba(0, 255, 0, 0.8);
+    --success-light: rgba(0, 255, 0, 0.3);
+    --success-dark: rgba(0, 255, 0, 0.1);
+
+    /* Aviso */
+    --warning: #ffaa00;
+    --warning-rgba: rgba(255, 170, 0, 0.8);
+    --warning-light: rgba(255, 170, 0, 0.3);
+    --warning-dark: rgba(255, 170, 0, 0.1);
+
+    /* Erro */
+    --error: #ff4444;
+    --error-rgba: rgba(255, 68, 68, 0.8);
+    --error-light: rgba(255, 68, 68, 0.3);
+    --error-dark: rgba(255, 68, 68, 0.1);
+
+    /* Desabilitado */
+    --disabled: #888888; /* ✅ Melhor contraste */
+    --disabled-rgba: rgba(136, 136, 136, 0.6);
+    --disabled-light: rgba(136, 136, 136, 0.3);
+    --disabled-dark: rgba(136, 136, 136, 0.1);
+
+    /* =====================================================
+       CORES DE RARIDADE (NFTs)
+       ===================================================== */
+    
+    /* Comum */
+    --rarity-common: #666666;
+    --rarity-common-bg: rgba(102, 102, 102, 0.1);
+    --rarity-common-border: rgba(102, 102, 102, 0.3);
+
+    /* Incomum */
+    --rarity-uncommon: #1eff00;
+    --rarity-uncommon-bg: rgba(30, 255, 0, 0.1);
+    --rarity-uncommon-border: rgba(30, 255, 0, 0.3);
+
+    /* Raro */
+    --rarity-rare: #0070dd;
+    --rarity-rare-bg: rgba(0, 112, 221, 0.1);
+    --rarity-rare-border: rgba(0, 112, 221, 0.3);
+
+    /* Épico */
+    --rarity-epic: #a335ee;
+    --rarity-epic-bg: rgba(163, 53, 238, 0.1);
+    --rarity-epic-border: rgba(163, 53, 238, 0.3);
+
+    /* Lendário */
+    --rarity-legendary: #ff8000;
+    --rarity-legendary-bg: rgba(255, 128, 0, 0.1);
+    --rarity-legendary-border: rgba(255, 128, 0, 0.3);
+
+    /* =====================================================
+       TIPOGRAFIA
+       ===================================================== */
+    
+    /* Fontes */
+    --font-primary: 'SD Glitch Robot', 'Audiowide', cursive;
+    --font-secondary: 'Exo 2', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-dashboard: 'Orbitron', monospace;
+    --font-fallback: Arial, sans-serif;
+
+    /* Tamanhos de Texto */
+    --text-xxl: 64px;    /* Título principal */
+    --text-xl: 48px;     /* Títulos grandes */
+    --text-lg: 32px;     /* Títulos médios */
+    --text-md: 24px;     /* Títulos pequenos */
+    --text-sm: 18px;     /* Subtítulos */
+    --text-body-lg: 16px;  /* Texto grande */
+    --text-body: 14px;     /* Texto normal */
+    --text-body-sm: 12px;  /* Texto pequeno */
+    --text-caption: 10px;  /* Legendas */
+
+    /* Letter Spacing */
+    --letter-spacing-xl: 4px;  /* Títulos principais */
+    --letter-spacing-lg: 3px;  /* Títulos grandes */
+    --letter-spacing-md: 2px;  /* Títulos médios */
+    --letter-spacing-sm: 1px;  /* Subtítulos */
+    --letter-spacing-xs: 0.5px; /* Texto normal */
+
+    /* =====================================================
+       ESPAÇAMENTOS
+       ===================================================== */
+    
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-xxl: 48px;
+    --spacing-xxxl: 64px;
+
+    /* =====================================================
+       BORDAS E RAIOS
+       ===================================================== */
+    
+    --border-radius-xs: 4px;
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 20px;
+    --border-radius-xxl: 24px;
+    --border-radius-full: 50%;
+
+    /* =====================================================
+       SOMBRAS E EFEITOS
+       ===================================================== */
+    
+    /* Box Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.4);
+
+    /* Glow Effects */
+    --glow-primary: 0 0 15px var(--primary-cyan);
+    --glow-secondary: 0 0 20px var(--secondary-blue);
+    --glow-accent: 0 0 10px var(--accent-blue);
+
+    /* Text Shadows */
+    --text-glow-primary: 
+        0 0 15px rgba(0, 255, 204, 1),
+        0 0 30px rgba(0, 255, 204, 0.8),
+        0 0 45px rgba(0, 255, 204, 0.6),
+        0 0 60px rgba(0, 255, 204, 0.4);
+    
+    --text-glow-secondary: 0 0 10px rgba(0, 255, 204, 0.8);
+    --text-glow-accent: 0 0 8px rgba(0, 212, 255, 0.6);
+
+    /* =====================================================
+       Z-INDEX SYSTEM
+       ===================================================== */
+    
+    /* Background Layers */
+    --z-bg-primary: -3;
+    --z-bg-stars: -2;
+    --z-bg-particles: -1;
+    --z-bg-simulation: 0;
+
+    /* Content Layers */
+    --z-content: 10;
+    --z-header: 100;
+    --z-modal: 1000;
+    --z-tooltip: 1100;
+    --z-overlay: 1200;
+
+    /* =====================================================
+       TRANSIÇÕES E ANIMAÇÕES
+       ===================================================== */
+    
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    --transition-bounce: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* =====================================================
+       BREAKPOINTS
+       ===================================================== */
+    
+    --breakpoint-sm: 480px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1024px;
+    --breakpoint-xl: 1200px;
+    --breakpoint-xxl: 1400px;
+
+    /* =====================================================
+       LAYOUT
+       ===================================================== */
+    
+    --max-width: 1200px;
+    --container-padding: 20px;
+    --header-height: 80px;
+    --sidebar-width: 300px;
+
+    /* =====================================================
+       GAME SPECIFIC
+       ===================================================== */
+    
+    --game-canvas-width: 800px;
+    --game-canvas-height: 600px;
+    --ui-panel-height: 100px;
+}
+
+/* =====================================================
+   DARK MODE (Padrão)
+   ===================================================== */
+[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+/* =====================================================
+   LIGHT MODE (Futuro)
+   ===================================================== */
+[data-theme="light"] {
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #e9ecef;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    color-scheme: light;
+}
+
+/* =====================================================
+   HIGH CONTRAST MODE (Acessibilidade)
+   ===================================================== */
+[data-theme="high-contrast"] {
+    --bg-primary: #000000;
+    --bg-secondary: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --primary-cyan: #00ffff;
+    --secondary-blue: #0080ff;
+    color-scheme: dark;
+}

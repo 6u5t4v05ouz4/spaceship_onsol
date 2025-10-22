@@ -12,6 +12,8 @@ const REDIRECT_URL = import.meta.env.VITE_SUPABASE_REDIRECT_TO || `${window.loca
 
 // Log de configuração (sem expor credenciais)
 console.log('✅ Supabase configurado:', SUPABASE_URL);
+console.log('🔍 ANON_KEY configurado:', SUPABASE_ANON_KEY ? 'Sim' : 'Não');
+console.log('🔍 ANON_KEY length:', SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.length : 0);
 
 // Criar cliente Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

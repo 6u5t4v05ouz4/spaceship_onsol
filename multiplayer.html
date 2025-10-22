@@ -623,9 +623,12 @@
             if (!isAuthenticated) return;
 
             try {
+                console.log('🔍 Tentando importar MultiplayerGameScene...');
                 // Carregar MultiplayerGameScene
                 const module = await import('/src/scenes/MultiplayerGameScene.js');
                 console.log('✅ MultiplayerGameScene carregado com sucesso');
+                console.log('🔍 Módulo importado:', module);
+                console.log('🔍 Default export:', module.default);
 
                 // Obter a classe MultiplayerGameScene do módulo
                 const MultiplayerGameScene = module.default;

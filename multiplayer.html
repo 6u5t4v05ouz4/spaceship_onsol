@@ -225,7 +225,7 @@
     <script type="module">
         // Importar dependências
         import socketService from '/services/socketService.js';
-        import { GAME_CONFIG, loadSecureCredentials } from '/config/game-config.js';
+        import ENV_CONFIG from '/config/environment.js';
         
         // Usar Supabase via CDN
         const { createClient } = window.supabase;
@@ -387,7 +387,10 @@
 
                 // Carregar credenciais de forma segura
                 console.log('🔐 Carregando credenciais...');
-                const credentials = await loadSecureCredentials();
+                const credentials = {
+                    SUPABASE_URL: ENV_CONFIG.SUPABASE_URL,
+                    SUPABASE_ANON_KEY: ENV_CONFIG.SUPABASE_ANON_KEY
+                };
 
                 // Configurar Supabase
                 console.log('🔍 Configurando Supabase...');
@@ -400,7 +403,7 @@
                 window.supabaseClient = supabase;
                 window.SUPABASE_URL = credentials.SUPABASE_URL;
                 window.SUPABASE_ANON_KEY = credentials.SUPABASE_ANON_KEY;
-                window.VITE_SERVER_URL = GAME_CONFIG.SERVER_URL;
+                window.VITE_SERVER_URL = ENV_CONFIG.SERVER_URL || 'ws://localhost:3001';
 
                 console.log('✅ Supabase client configurado');
                 console.log('✅ URL do servidor definida:', window.VITE_SERVER_URL);

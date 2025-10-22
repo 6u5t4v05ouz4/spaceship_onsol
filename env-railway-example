@@ -1,0 +1,33 @@
+# Configurações para usar Redis do Railway
+# Copie as variáveis do Railway Dashboard para cá
+
+# Redis Railway (substitua pelos valores reais do Railway)
+REDIS_URL=redis://default:BRmMVQUwedHgTrEdvELHsAbHTIAUfjnc@redis.railway.internal:6379
+REDIS_HOST=redis.railway.internal
+REDIS_PORT=6379
+REDIS_PASSWORD=BRmMVQUwedHgTrEdvELHsAbHTIAUfjnc
+
+# Ou se o Railway criou variáveis diferentes, use:
+# REDIS_URL=redis://default:password@redis-xxxxx.upstash.io:6379
+# REDIS_HOST=redis-xxxxx.upstash.io
+# REDIS_PORT=6379
+# REDIS_PASSWORD=password
+
+# Cluster Configuration
+INSTANCE_ID=railway-instance-1
+HOST=localhost
+PORT=3001
+MAX_PLAYERS_PER_INSTANCE=100
+
+# Load Balancer Configuration
+LOAD_BALANCER_ALGORITHM=least-connections
+
+# Performance Monitoring
+ENABLE_ADVANCED_METRICS=true
+METRICS_INTERVAL=5000
+ENABLE_ALERTS=true
+
+# Development/Testing
+ENABLE_FALLBACK=true
+ENABLE_AUTO_TESTS=false
+ENABLE_STRESS_TESTS=false

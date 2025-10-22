@@ -14,6 +14,9 @@ const REDIRECT_URL = import.meta.env.VITE_SUPABASE_REDIRECT_TO || `${window.loca
 console.log('✅ Supabase configurado:', SUPABASE_URL);
 console.log('🔍 ANON_KEY configurado:', SUPABASE_ANON_KEY ? 'Sim' : 'Não');
 console.log('🔍 ANON_KEY length:', SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.length : 0);
+console.log('🔍 ANON_KEY início:', SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'Não definido');
+console.log('🔍 VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+console.log('🔍 VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Definido' : 'Não definido');
 
 // Criar cliente Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

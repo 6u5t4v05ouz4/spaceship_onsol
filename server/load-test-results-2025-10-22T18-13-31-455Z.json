@@ -1,0 +1,31 @@
+{
+  "summary": {
+    "testDuration": 50463,
+    "totalPlayers": 50,
+    "successfulConnections": 50,
+    "failedConnections": 0,
+    "successRate": 100,
+    "totalMovements": 0,
+    "totalChunkChanges": 0,
+    "errors": 50,
+    "disconnections": 50
+  },
+  "performance": {
+    "playersPerSecond": 0.99,
+    "movementsPerSecond": 0,
+    "chunkChangesPerSecond": 0,
+    "averageLatency": 0,
+    "minLatency": 0,
+    "peakLatency": 0,
+    "errorRate": null
+  },
+  "configuration": {
+    "serverUrl": "http://localhost:3001",
+    "maxConcurrentPlayers": 50,
+    "testDuration": 30000,
+    "rampUpTime": 10000,
+    "rampDownTime": 10000,
+    "movementInterval": 100,
+    "chunkChangeInterval": 5000
+  }
+}

@@ -16,6 +16,7 @@ import ChunkManager from './chunk-manager.js';
 import RedisManager from './redis-manager.js';
 import ClusterManager from './cluster-manager.js';
 import LoadBalancer from './load-balancer.js';
+import { getRedisConfig, getEnvironmentInfo } from './config/redis-config.js';
 
 // Map de players conectados por socket (fallback local)
 const connectedPlayers = new Map();
@@ -37,27 +38,40 @@ export async function initMultiplayer() {
     console.warn('⚠️ Sistema multiplayer operando sem banco de dados');
   }
 
-  // Inicializar RedisManager
-  redisManager = new RedisManager({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD || null,
-    keyPrefix: 'space_crypto_miner:',
-    defaultTTL: 3600, // 1 hora
-    enableFallback: true
+  // Obter informações do ambiente
+  const envInfo = getEnvironmentInfo();
+  const redisConfig = getRedisConfig();
+  
+  console.log('🌍 Ambiente detectado:', {
+    environment: envInfo.environment,
+    isRailway: envInfo.isRailway,
+    redisHost: redisConfig.host,
+    redisPort: redisConfig.port,
+    instanceId: envInfo.instanceId
   });
 
+  // Inicializar RedisManager (com fallback automático)
+  redisManager = new RedisManager({
+    host: redisConfig.host,
+    port: redisConfig.port,
+    password: redisConfig.password,
+    keyPrefix: 'space_crypto_miner:',
+    defaultTTL: 3600, // 1 hora
+    enableFallback: true // ✅ Fallback automático ativado
+  });
+
+  // Tentar conectar ao Redis (opcional)
   const redisConnected = await redisManager.connect();
   if (redisConnected) {
-    console.log('✅ RedisManager conectado');
+    console.log('✅ RedisManager conectado ao Redis');
   } else {
-    console.warn('⚠️ RedisManager usando fallback local');
+    console.log('🔄 RedisManager usando fallback local (Map) - funcionando normalmente');
   }
 
   // Inicializar ClusterManager
   clusterManager = new ClusterManager({
-    instanceId: process.env.INSTANCE_ID || `instance-${Date.now()}`,
-    port: process.env.PORT || 3000,
+    instanceId: envInfo.instanceId,
+    port: envInfo.port,
     host: process.env.HOST || 'localhost',
     maxPlayersPerInstance: parseInt(process.env.MAX_PLAYERS_PER_INSTANCE) || 100,
     redisManager: redisManager

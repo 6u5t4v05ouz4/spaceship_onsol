@@ -17,13 +17,14 @@
 
 import LoadTester from './load-tester.js';
 import { performance } from 'perf_hooks';
+import fs from 'fs';
 
 // Parse argumentos da linha de comando
 const args = process.argv.slice(2);
 const options = {
   players: 100,
   duration: 60,
-  server: 'http://localhost:3000',
+  server: 'http://localhost:3001', // Mudança para porta 3001
   rampUp: 10,
   rampDown: 10
 };
@@ -157,7 +158,6 @@ const loadTester = new LoadTester({
     const filename = `load-test-results-${timestamp}.json`;
     
     try {
-      const fs = await import('fs');
       fs.writeFileSync(filename, JSON.stringify(results, null, 2));
       console.log(`\n💾 Resultados salvos em: ${filename}`);
     } catch (error) {

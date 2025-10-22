@@ -1,0 +1,53 @@
+# Configurações de Desenvolvimento Local
+# Copie este arquivo para .env
+
+# Redis Local (desenvolvimento)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+
+# Redis Railway (produção) - descomente quando usar Railway
+# REDIS_URL=redis://default:password@redis.railway.internal:6379
+
+# Cluster Configuration
+INSTANCE_ID=dev-instance-1
+HOST=localhost
+PORT=3001
+MAX_PLAYERS_PER_INSTANCE=100
+
+# Load Balancer Configuration
+LOAD_BALANCER_ALGORITHM=least-connections
+
+# Performance Monitoring
+ENABLE_ADVANCED_METRICS=true
+METRICS_INTERVAL=5000
+ENABLE_ALERTS=true
+
+# Health Check Configuration
+HEALTH_CHECK_INTERVAL=10000
+INSTANCE_TIMEOUT=30000
+MAX_RETRIES=3
+
+# Chunk Management
+CHUNK_TTL=300000
+CLEANUP_INTERVAL=60000
+MAX_CHUNKS_IN_MEMORY=100
+
+# Network Optimization
+MOVEMENT_THROTTLE=100
+ENABLE_DELTA_SYNC=true
+ENABLE_COMPRESSION=true
+
+# Connection Management
+MAX_RECONNECT_ATTEMPTS=5
+RECONNECT_DELAY=1000
+ENABLE_HEARTBEAT=true
+HEARTBEAT_INTERVAL=15000
+HEARTBEAT_TIMEOUT=5000
+
+# Development/Testing
+ENABLE_FALLBACK=true
+ENABLE_AUTO_TESTS=false
+ENABLE_STRESS_TESTS=false
+TEST_INTERVAL=300000

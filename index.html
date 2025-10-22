@@ -10,12 +10,13 @@
     <link rel="icon" href="/assets/icones/icone.png" />
     
     <!-- CSS Global -->
-    <link rel="stylesheet" href="/main.css">
+    <link rel="stylesheet" href="/src/styles/main.css">
     
-    <!-- Scripts principais -->
-    <script type="module" crossorigin src="/assets/main-c26637d3.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/phaser-aaa04cbd.js">
-    <link rel="stylesheet" href="/assets/index-7c2f8fd6.css">
+    <!-- Script de entrada principal (module type para ES6) -->
+    <script type="module" src="/src/main.js"></script>
+    
+    <!-- Simulação de Gameplay em Background -->
+    <script type="module" src="/src/simulation/background-simulation.js"></script>
 </head>
 <body>
     <!-- Container para simulação de gameplay em background -->

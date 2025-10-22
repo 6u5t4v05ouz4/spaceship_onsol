@@ -258,7 +258,7 @@ export default class DashboardPage {
     const multiplayerBtn = container.querySelector('#multiplayerBtn');
     if (multiplayerBtn) {
       multiplayerBtn.addEventListener('click', () => {
-        window.open('/play.html', '_blank');
+        window.open('/multiplayer.html', '_blank');
       });
     }
 

@@ -102,12 +102,10 @@
 }
 
 .player-info {
-  margin-top: var(--spacing-sm);
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  display: contents;
 }
 
 .player-info .status-row {
@@ -115,8 +113,8 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-xs) 0;
-  min-height: 20px;
-  margin-bottom: 0;
+  min-height: 24px;
+  margin-bottom: var(--spacing-xs);
 }
 
 /* Responsivo */

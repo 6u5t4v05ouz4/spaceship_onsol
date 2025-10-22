@@ -86,15 +86,28 @@ export default class AuthCallbackPage {
         return;
       }
 
-      // Se temos access_token no hash, processar manualmente
+      // Se temos access_token no hash, deixar o Supabase processar automaticamente
       if (accessToken) {
-        console.log('🔐 Processando access_token do hash...');
+        console.log('🔐 Access token detectado no hash, aguardando processamento automático do Supabase...');
         
+        // Aguardar um pouco para o Supabase processar automaticamente
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Verificar se a sessão foi criada automaticamente
+        const session = await authService.getSession();
+        if (session) {
+          console.log('✅ Sessão criada automaticamente pelo Supabase!');
+          this.showSuccess(container, 'Login realizado com sucesso! Redirecionando...');
+          setTimeout(() => navigateTo('/dashboard'), 1500);
+          return;
+        }
+        
+        // Se não funcionou automaticamente, tentar método manual como fallback
+        console.log('🔐 Processamento automático falhou, tentando método manual...');
         try {
-          // Processar o token manualmente
           const result = await authService.handleOAuthCallback();
           if (result) {
-            console.log('✅ Sessão criada com sucesso!');
+            console.log('✅ Sessão criada com método manual!');
             this.showSuccess(container, 'Login realizado com sucesso! Redirecionando...');
             setTimeout(() => navigateTo('/dashboard'), 1500);
             return;

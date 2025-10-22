@@ -62,13 +62,22 @@ export default class AuthCallbackPage {
     this.isProcessing = true;
 
     try {
-      // Extrair query params
-      const params = new URLSearchParams(window.location.search);
-      const error = params.get('error');
-      const errorDescription = params.get('error_description');
-      const code = params.get('code');
+      // Extrair parâmetros do hash (Google OAuth envia no hash)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const queryParams = new URLSearchParams(window.location.search);
+      
+      // Combinar parâmetros do hash e query
+      const error = hashParams.get('error') || queryParams.get('error');
+      const errorDescription = hashParams.get('error_description') || queryParams.get('error_description');
+      const code = hashParams.get('code') || queryParams.get('code');
+      const accessToken = hashParams.get('access_token');
 
-      console.log('🔐 OAuth Callback params:', { error, code: code ? '***' : undefined });
+      console.log('🔐 OAuth Callback params:', { 
+        error, 
+        code: code ? '***' : undefined,
+        accessToken: accessToken ? '***' : undefined,
+        hash: window.location.hash.substring(0, 50) + '...'
+      });
 
       // Se tem erro no callback, exibir
       if (error) {

@@ -30,6 +30,7 @@
         #gameCanvas {
             display: block;
             margin: 0 auto;
+            border: 2px solid #00ff00; /* Debug: borda verde para ver se o canvas está sendo renderizado */
         }
 
         #loading {
@@ -633,31 +634,53 @@
                 // Obter a classe MultiplayerGameScene do módulo
                 const MultiplayerGameScene = module.default;
 
-                // Configuração do jogo multiplayer
-                console.log('🔧 Configurando Phaser...');
-                const config = {
-                    type: Phaser.AUTO,
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    backgroundColor: '#000000',
-                    physics: {
-                        default: 'arcade',
-                        arcade: {
-                            gravity: { x: 0, y: 0 },
-                            debug: false
-                        }
-                    },
-                    scene: [MultiplayerGameScene],
-                    scale: {
-                        mode: Phaser.Scale.RESIZE,
-                        autoCenter: Phaser.Scale.CENTER_BOTH
-                    }
-                };
-                console.log('✅ Configuração do Phaser:', config);
+                       // Configuração do jogo multiplayer
+                       console.log('🔧 Configurando Phaser...');
+                       console.log('🔍 Dimensões da janela:', window.innerWidth, 'x', window.innerHeight);
+                       
+                       const config = {
+                           type: Phaser.AUTO,
+                           width: window.innerWidth,
+                           height: window.innerHeight,
+                           backgroundColor: '#000000',
+                           physics: {
+                               default: 'arcade',
+                               arcade: {
+                                   gravity: { x: 0, y: 0 },
+                                   debug: false
+                               }
+                           },
+                           scene: [MultiplayerGameScene],
+                           scale: {
+                               mode: Phaser.Scale.RESIZE,
+                               autoCenter: Phaser.Scale.CENTER_BOTH
+                           },
+                           parent: 'gameCanvas' // Especificar o container pai
+                       };
+                       console.log('✅ Configuração do Phaser:', config);
 
-                // Inicializar o jogo multiplayer
-                const game = new Phaser.Game(config);
-                console.log('✅ Jogo multiplayer inicializado:', game);
+                       // Inicializar o jogo multiplayer
+                       const game = new Phaser.Game(config);
+                       console.log('✅ Jogo multiplayer inicializado:', game);
+                       
+                       // Verificar se o canvas foi criado
+                       setTimeout(() => {
+                           const canvas = document.querySelector('canvas');
+                           console.log('🔍 Canvas encontrado:', canvas ? 'Sim' : 'Não');
+                           if (canvas) {
+                               console.log('🔍 Canvas dimensões:', canvas.width, 'x', canvas.height);
+                               console.log('🔍 Canvas estilo:', canvas.style.cssText);
+                               console.log('🔍 Canvas visível:', canvas.offsetWidth > 0 && canvas.offsetHeight > 0);
+                           }
+                           
+                           // Verificar se há elementos no jogo
+                           const gameObjects = game.scene.getScene('MultiplayerGameScene');
+                           if (gameObjects) {
+                               console.log('🔍 Scene encontrada:', gameObjects.scene.key);
+                               console.log('🔍 Children na scene:', gameObjects.children.list.length);
+                               console.log('🔍 Physics groups:', Object.keys(gameObjects.physics.world.groups));
+                           }
+                       }, 2000);
                 
                 // Inicializar socket para comunicação em tempo real
                 console.log('🔌 Inicializando socket...');

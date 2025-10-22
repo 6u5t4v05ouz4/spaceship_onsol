@@ -109,6 +109,39 @@ const copyEffectsPlugin = {
   }
 };
 
+// Plugin para copiar páginas web
+const copyWebPagesPlugin = {
+  name: 'copy-web-pages',
+  writeBundle() {
+    // Garantir que o diretório dist/web/pages exista
+    if (!existsSync('dist/web/pages')) {
+      mkdirSync('dist/web/pages', { recursive: true });
+      console.log('📁 Diretório dist/web/pages criado');
+    }
+
+    // Copiar arquivos de páginas web necessários para SPA
+    const pageFiles = [
+      'HomePage.js',
+      'LoginPage.js',
+      'DashboardPage.js',
+      'ProfilePage.js',
+      'SettingsPage.js',
+      'MissionsPage.js',
+      'MarketplacePage.js',
+      'AuthCallbackPage.js'
+    ];
+
+    pageFiles.forEach(file => {
+      const srcPath = join('src/web/pages', file);
+      const destPath = join('dist/web/pages', file);
+      if (existsSync(srcPath)) {
+        copyFileSync(srcPath, destPath);
+        console.log(`✅ ${file} copiado para dist/web/pages/`);
+      }
+    });
+  }
+};
+
 // Plugin SPA Fallback
 const spaFallbackPlugin = {
   name: 'spa-fallback',
@@ -155,7 +188,7 @@ export default defineConfig({
 		'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
 	},
   publicDir: 'public',
-  plugins: [spaFallbackPlugin, copyHtmlPlugin, copyScenesPlugin, copyManagersPlugin, copyEffectsPlugin],
+  plugins: [spaFallbackPlugin, copyHtmlPlugin, copyScenesPlugin, copyManagersPlugin, copyEffectsPlugin, copyWebPagesPlugin],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

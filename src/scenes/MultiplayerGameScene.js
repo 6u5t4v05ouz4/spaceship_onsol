@@ -630,9 +630,19 @@ export default class MultiplayerGameScene extends Phaser.Scene {
     // Métodos de gameplay (adaptados para multiplayer)
 
     fireProjectile() {
+        console.log('🔫 Disparo detectado!');
+        
         // Usa o ProjectileManager para manter consistência com o original
         if (this.projectileManager) {
             this.projectileManager.fireProjectile();
+        }
+        
+        // Tocar som de disparo quando usuário clica no mouse
+        if (this.audioManager) {
+            console.log('🔊 Tocando som de disparo...');
+            this.audioManager.playShoot();
+        } else {
+            console.warn('⚠️ AudioManager não disponível');
         }
     }
 

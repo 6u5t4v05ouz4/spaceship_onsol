@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { parse } from 'node:url';
-import { copyFileSync, existsSync, mkdirSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 // Plugin para copiar arquivos HTML
@@ -142,6 +142,41 @@ const copyWebPagesPlugin = {
   }
 };
 
+// Plugin para copiar arquivos CSS
+const copyStylesPlugin = {
+  name: 'copy-styles-files',
+  writeBundle() {
+    // Garantir que o diretório dist/styles exista
+    if (!existsSync('dist/styles')) {
+      mkdirSync('dist/styles', { recursive: true });
+      console.log('📁 Diretório dist/styles criado');
+    }
+
+    // Copiar estrutura completa de styles
+    const copyDirRecursive = (srcDir, destDir) => {
+      if (!existsSync(destDir)) {
+        mkdirSync(destDir, { recursive: true });
+      }
+
+      const items = readdirSync(srcDir);
+      items.forEach(item => {
+        const srcPath = join(srcDir, item);
+        const destPath = join(destDir, item);
+        
+        if (statSync(srcPath).isDirectory()) {
+          copyDirRecursive(srcPath, destPath);
+        } else {
+          copyFileSync(srcPath, destPath);
+          console.log(`✅ ${item} copiado para ${destDir}/`);
+        }
+      });
+    };
+
+    // Copiar toda a estrutura src/styles para dist/styles
+    copyDirRecursive('src/styles', 'dist/styles');
+  }
+};
+
 // Plugin SPA Fallback
 const spaFallbackPlugin = {
   name: 'spa-fallback',
@@ -188,7 +223,7 @@ export default defineConfig({
 		// 'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
 	},
   publicDir: 'public',
-  plugins: [spaFallbackPlugin, copyHtmlPlugin, copyScenesPlugin, copyManagersPlugin, copyEffectsPlugin, copyWebPagesPlugin],
+  plugins: [spaFallbackPlugin, copyHtmlPlugin, copyScenesPlugin, copyManagersPlugin, copyEffectsPlugin, copyWebPagesPlugin, copyStylesPlugin],
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

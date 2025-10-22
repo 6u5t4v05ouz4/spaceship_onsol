@@ -87,6 +87,7 @@ export async function signIn(email, password) {
 export async function signInWithOAuth(provider = 'google') {
   try {
     console.log(`🔐 Iniciando OAuth com ${provider}...`);
+    console.log('🔍 Redirect URL:', REDIRECT_URL);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider,

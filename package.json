@@ -12,7 +12,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "vercel-build": "npm run build",
-    "start": "cd server && node server.js"
+    "start": "cd server && node server.js",
+    "test-load": "cd server && node test-load.js",
+    "test-load:small": "cd server && node test-load.js --players 50 --duration 30",
+    "test-load:medium": "cd server && node test-load.js --players 100 --duration 60",
+    "test-load:large": "cd server && node test-load.js --players 200 --duration 120"
   },
   "keywords": [
     "game",
@@ -30,6 +34,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "ioredis": "^5.3.2",
+    "os-utils": "^0.0.3",
     "page": "^1.11.6",
     "pg": "^8.16.3",
     "phaser": "^3.90.0",

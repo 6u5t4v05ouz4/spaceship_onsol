@@ -13,15 +13,21 @@ import {
 } from './database.js';
 import { supabaseAdmin, supabaseAnonClient } from './config/supabase.js';
 import ChunkManager from './chunk-manager.js';
+import RedisManager from './redis-manager.js';
+import ClusterManager from './cluster-manager.js';
+import LoadBalancer from './load-balancer.js';
 
-// Map de players conectados por socket
+// Map de players conectados por socket (fallback local)
 const connectedPlayers = new Map();
 
-// ChunkManager para gerenciar chunks na memória
+// Managers para escalabilidade
 let chunkManager = null;
+let redisManager = null;
+let clusterManager = null;
+let loadBalancer = null;
 
 /**
- * Inicializa o sistema multiplayer
+ * Inicializa o sistema multiplayer com escalabilidade
  */
 export async function initMultiplayer() {
   const success = await initDatabase();
@@ -30,6 +36,58 @@ export async function initMultiplayer() {
   } else {
     console.warn('⚠️ Sistema multiplayer operando sem banco de dados');
   }
+
+  // Inicializar RedisManager
+  redisManager = new RedisManager({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+    password: process.env.REDIS_PASSWORD || null,
+    keyPrefix: 'space_crypto_miner:',
+    defaultTTL: 3600, // 1 hora
+    enableFallback: true
+  });
+
+  const redisConnected = await redisManager.connect();
+  if (redisConnected) {
+    console.log('✅ RedisManager conectado');
+  } else {
+    console.warn('⚠️ RedisManager usando fallback local');
+  }
+
+  // Inicializar ClusterManager
+  clusterManager = new ClusterManager({
+    instanceId: process.env.INSTANCE_ID || `instance-${Date.now()}`,
+    port: process.env.PORT || 3000,
+    host: process.env.HOST || 'localhost',
+    maxPlayersPerInstance: parseInt(process.env.MAX_PLAYERS_PER_INSTANCE) || 100,
+    redisManager: redisManager
+  });
+
+  const clusterInitialized = await clusterManager.init(redisManager);
+  if (clusterInitialized) {
+    console.log('✅ ClusterManager inicializado');
+  } else {
+    console.warn('⚠️ ClusterManager não inicializado');
+  }
+
+  // Inicializar LoadBalancer
+  loadBalancer = new LoadBalancer({
+    algorithm: process.env.LOAD_BALANCER_ALGORITHM || 'least-connections',
+    healthCheckInterval: 10000, // 10s
+    instanceTimeout: 30000, // 30s
+    maxRetries: 3
+  });
+
+  // Adicionar instância local ao LoadBalancer
+  loadBalancer.addInstance(clusterManager.instanceId, {
+    host: clusterManager.host,
+    port: clusterManager.port,
+    weight: 1,
+    maxConnections: clusterManager.maxPlayersPerInstance
+  });
+
+  loadBalancer.startHealthChecks();
+  console.log('✅ LoadBalancer inicializado');
 
   // Inicializar ChunkManager
   chunkManager = new ChunkManager({
@@ -148,7 +206,54 @@ export async function handleAuth(socket, data, io) {
     socket.playerId = playerState.id;
     socket.username = playerState.username;
 
-    // 5. Adicionar aos players conectados
+    // 5. Verificar se jogador já está conectado em outra instância
+    if (redisManager) {
+      const existingPlayer = await redisManager.getPlayerState(user.id);
+      if (existingPlayer && existingPlayer.instanceId !== clusterManager?.instanceId) {
+        console.log(`🔄 Jogador ${playerState.username} já conectado em instância ${existingPlayer.instanceId}`);
+        
+        // Notificar migração
+        if (clusterManager) {
+          await clusterManager.migratePlayer(user.id, existingPlayer.instanceId, 'duplicate_connection');
+        }
+        
+        socket.emit('auth:error', { 
+          message: 'Jogador já conectado em outra instância',
+          redirectTo: existingPlayer.instanceId 
+        });
+        return;
+      }
+
+      // Armazenar estado do jogador no Redis
+      const playerRedisState = {
+        userId: user.id,
+        playerId: playerState.id,
+        username: playerState.username,
+        instanceId: clusterManager?.instanceId || 'local',
+        socketId: socket.id,
+        connectedAt: Date.now(),
+        lastSeen: Date.now(),
+        chunkX: Math.floor(playerState.x / 1000),
+        chunkY: Math.floor(playerState.y / 1000),
+        x: playerState.x,
+        y: playerState.y,
+        is_in_game: false
+      };
+
+      await redisManager.setPlayerState(user.id, playerRedisState);
+      
+      // Adicionar jogador local ao ClusterManager
+      if (clusterManager) {
+        clusterManager.addLocalPlayer(user.id);
+      }
+      
+      // Atualizar LoadBalancer
+      if (loadBalancer && clusterManager) {
+        loadBalancer.releaseConnection(clusterManager.instanceId);
+      }
+    }
+
+    // 6. Adicionar aos players conectados (fallback local)
     connectedPlayers.set(socket.id, {
       userId: user.id,
       playerId: playerState.id,
@@ -165,8 +270,22 @@ export async function handleAuth(socket, data, io) {
     socket.emit('auth:success', {
       playerId: playerState.id,
       username: playerState.username,
-      playerState: playerState
+      playerState: playerState,
+      instanceId: clusterManager?.instanceId || 'local'
     });
+
+    // Notificar outras instâncias sobre novo jogador
+    if (redisManager && clusterManager) {
+      await redisManager.publish('cluster:events', {
+        type: 'player:join',
+        instanceId: clusterManager.instanceId,
+        data: {
+          userId: user.id,
+          username: playerState.username,
+          timestamp: Date.now()
+        }
+      });
+    }
 
   } catch (error) {
     console.error('❌ Erro na autenticação:', error);
@@ -550,6 +669,28 @@ export async function handleDisconnect(socket, reason, io) {
 
     console.log(`👋 Player ${socket.username} desconectou: ${reason}`);
 
+    // Remover do Redis se disponível
+    if (redisManager) {
+      await redisManager.removePlayerState(socket.userId);
+      
+      // Remover jogador local do ClusterManager
+      if (clusterManager) {
+        clusterManager.removeLocalPlayer(socket.userId);
+      }
+      
+      // Notificar outras instâncias sobre desconexão
+      await redisManager.publish('cluster:events', {
+        type: 'player:leave',
+        instanceId: clusterManager?.instanceId || 'local',
+        data: {
+          userId: socket.userId,
+          username: socket.username,
+          reason: reason,
+          timestamp: Date.now()
+        }
+      });
+    }
+
     // Remover do banco
     await removePlayerOnline(socket.id);
 
@@ -664,16 +805,28 @@ export function getServerStats() {
       const key = `${player.chunkX},${player.chunkY}`;
       acc[key] = (acc[key] || 0) + 1;
       return acc;
-    }, {})
+    }, {}),
+    timestamp: Date.now()
   };
 
   // Adicionar estatísticas do ChunkManager se disponível
   if (chunkManager) {
-    const chunkStats = chunkManager.getStats();
-    return {
-      ...baseStats,
-      chunkManager: chunkStats
-    };
+    baseStats.chunkManager = chunkManager.getStats();
+  }
+
+  // Adicionar estatísticas do RedisManager se disponível
+  if (redisManager) {
+    baseStats.redisManager = redisManager.getStats();
+  }
+
+  // Adicionar estatísticas do ClusterManager se disponível
+  if (clusterManager) {
+    baseStats.clusterManager = clusterManager.getStats();
+  }
+
+  // Adicionar estatísticas do LoadBalancer se disponível
+  if (loadBalancer) {
+    baseStats.loadBalancer = loadBalancer.getStats();
   }
 
   return baseStats;

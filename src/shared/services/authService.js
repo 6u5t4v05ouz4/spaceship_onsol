@@ -254,13 +254,62 @@ export async function handleOAuthCallback() {
   try {
     console.log('🔐 Processando OAuth callback...');
 
-    // Tentar usar o método padrão do Supabase primeiro
-    console.log('🔐 Tentando método padrão do Supabase...');
+    // Extrair parâmetros do hash e query
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const queryParams = new URLSearchParams(window.location.search);
     
-    // Aguardar um pouco para o Supabase processar automaticamente
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    const code = queryParams.get('code');
+
+    console.log('🔍 Parâmetros encontrados:', {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      hasCode: !!code
+    });
+
+    // Se temos access_token no hash, usar setSession
+    if (accessToken) {
+      console.log('🔐 Processando access_token do hash...');
+      
+      const sessionData = {
+        access_token: accessToken,
+        refresh_token: refreshToken || null,
+        expires_at: null, // Deixar o Supabase calcular
+        token_type: 'bearer',
+        user: null // Será preenchido pelo Supabase
+      };
+
+      const { data, error } = await supabase.auth.setSession(sessionData);
+      
+      if (error) {
+        console.error('❌ Erro ao definir sessão:', error);
+        throw new Error(translateError(error));
+      }
+
+      console.log('✅ Sessão definida com sucesso');
+      return data.session;
+    }
+
+    // Se temos code, usar exchangeCodeForSession
+    if (code) {
+      console.log('🔐 Trocando código por sessão...');
+      
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      
+      if (error) {
+        console.error('❌ Erro ao trocar código:', error);
+        throw new Error(translateError(error));
+      }
+
+      console.log('✅ Código trocado por sessão');
+      return data.session;
+    }
+
+    // Tentar método padrão como fallback
+    console.log('🔐 Tentando método padrão do Supabase...');
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Obter sessão atualizada
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error) {
